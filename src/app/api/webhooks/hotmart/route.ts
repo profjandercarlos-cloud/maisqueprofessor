@@ -53,12 +53,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "transação ausente no payload" }, { status: 400 });
   }
 
+  // A mesma transação (compra) gera vários eventos DIFERENTES ao longo do
+  // tempo — aprovada agora, talvez cancelada/reembolsada semanas depois. A
+  // chave de idempotência precisa incluir o tipo do evento, senão o segundo
+  // evento de uma transação já vista é descartado como "duplicata" mesmo
+  // sendo uma ação diferente (ex.: reembolso nunca revogaria o acesso,
+  // porque o ID já teria sido "gasto" pelo evento de aprovação).
+  const idempotencyKey = `${transactionId}:${event}`;
+
   // Idempotência: a Hotmart pode reenviar o mesmo evento até 5x. Tentamos
-  // "reivindicar" a transação criando o registro primeiro — se já existir,
-  // a unique constraint falha e sabemos que já foi processada.
+  // "reivindicar" a transação+evento criando o registro primeiro — se já
+  // existir, a unique constraint falha e sabemos que já foi processado.
   try {
     await db.hotmartTransaction.create({
-      data: { transactionId, eventType: event, payload: payload as Prisma.InputJsonValue },
+      data: { transactionId: idempotencyKey, eventType: event, payload: payload as Prisma.InputJsonValue },
     });
   } catch (err: unknown) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
@@ -85,7 +93,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (userId) {
-    await db.hotmartTransaction.update({ where: { transactionId }, data: { userId } });
+    await db.hotmartTransaction.update({ where: { transactionId: idempotencyKey }, data: { userId } });
   }
 
   return NextResponse.json({ ok: true });
