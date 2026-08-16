@@ -1,4 +1,4 @@
-import { resend, EMAIL_FROM } from "./client";
+import { getResend, EMAIL_FROM } from "./client";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -8,7 +8,7 @@ export async function sendCheckinReminder(params: {
   planId: string;
   weekNumber: string | number;
 }) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: EMAIL_FROM,
     to: params.to,
     subject: "Seu check-in semanal está esperando",
@@ -24,7 +24,7 @@ export async function sendEscalationMessage(params: {
   planId: string;
   weeksWithoutCheckin: number;
 }) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: EMAIL_FROM,
     to: params.to,
     subject: "Faz tempo que você não faz check-in — o que você quer fazer?",
@@ -44,7 +44,7 @@ export async function sendAccessExpiringReminder(params: {
   name: string;
   daysRemaining: number;
 }) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: EMAIL_FROM,
     to: params.to,
     subject: `Seu acesso expira em ${params.daysRemaining} dias`,
