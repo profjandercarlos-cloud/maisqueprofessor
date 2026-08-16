@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =========================================================================
+// Usuário — id igual ao id do usuário no Supabase Auth (auth.users.id).
+// Criado pelo webhook da Hotmart (Compra Aprovada) ou por outro fluxo de
+// provisionamento; a senha em si vive inteiramente no Supabase Auth.
+// =========================================================================
+model User {
+  id                String    @id
+  name              String
+  email             String    @unique
+  accessExpiresAt   DateTime?
+  accessRevokedAt   DateTime?
+  checkinWeekday    Int? // 0 (domingo) a 6 (sábado) — definido na Etapa 6, editável nas Configurações
+  notifyEmail       Boolean   @default(true)
+  notifyPush        Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  diagnostics         Diagnostic[]
+  plans               Plan[]
+  hotmartTransactions HotmartTransaction[]
+  pushSubscriptions   PushSubscription[]
+
+  @@map("users")
+}
+
+enum Intention {
+  SAIR
+  COMPLEMENTAR
+  NAO_SEI
+
+  @@map("intention")
+}
+
+enum DiagnosticStatus {
+  EM_ANDAMENTO
+  CONCLUIDO
+
+  @@map("diagnostic_status")
+}
+
+// =========================================================================
+// Diagnóstico — Bloco 0 (Intenção) + Blocos 1-7. As respostas em si ficam
+// em `answers` (JSON), pois a redação/estrutura das perguntas pode evoluir
+// sem exigir migração de schema; o formato esperado está documentado em
+// Diagnostico_Perguntas_Finais.md.
+// =========================================================================
+model Diagnostic {
+  id               String           @id @default(uuid())
+  userId           String
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  intention        Intention
+  answers          Json // Blocos 1-7
+  incrementAnswers Json? // incremento de diagnóstico (10-12 perguntas, caso raro — após 3 rodadas sem aprovação)
+  status           DiagnosticStatus @default(EM_ANDAMENTO)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  rounds GenerationRound[]
+
+  @@map("diagnostics")
+}
+
+// =========================================================================
+// Rodada de geração — cada rodada produz exatamente 5 Possibility.
+// roundNumber 1 = geração inicial; 2-4 = até 3 rodadas de ajuste;
+// 5 = regeneração após incremento de diagnóstico (caso raro).
+// =========================================================================
+model GenerationRound {
+  id           String   @id @default(uuid())
+  diagnosticId String
+  diagnostic   Diagnostic @relation(fields: [diagnosticId], references: [id], onDelete: Cascade)
+  roundNumber  Int
+  feedbackText String? @db.Text // feedback do professor sobre o conjunto anterior (null na rodada 1)
+  createdAt    DateTime @default(now())
+
+  possibilities Possibility[]
+
+  @@unique([diagnosticId, roundNumber])
+  @@map("generation_rounds")
+}
+
+enum PossibilityRole {
+  ONDE_JA_E_FORTE
+  PARA_ONDE_QUER_IR
+  O_QUE_PODE_MOBILIZAR
+  COMO_QUER_TRABALHAR_E_CRESCER
+  NAO_CONSIDERADA
+
+  @@map("possibility_role")
+}
+
+enum PossibilityStatus {
+  PENDENTE
+  APROVADA
+  REJEITADA
+
+  @@map("possibility_status")
+}
+
+model Possibility {
+  id                 String             @id @default(uuid())
+  roundId            String
+  round              GenerationRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  papel              PossibilityRole
+  titulo             String
+  subtitulo          String
+  naPratica          String             @db.Text
+  porQueApareceu     String             @db.Text
+  quemPagaria        String             @db.Text
+  jaPossuiVsAprender String             @db.Text
+  familiaValor       String // uso interno (teste de diversidade), não exibido ao usuário
+  status             PossibilityStatus  @default(PENDENTE)
+  createdAt          DateTime           @default(now())
+
+  plan Plan?
+
+  @@map("possibilities")
+}
+
+enum PlanStatus {
+  ATIVO
+  PAUSADO
+  CONGELADO
+
+  @@map("plan_status")
+}
+
+enum Profundidade {
+  EXPLORACAO
+  TESTE_REAL
+  MERGULHO
+
+  @@map("profundidade")
+}
+
+// =========================================================================
+// Plano — nasce da aprovação de uma Possibility (Etapa 5) + questionário de
+// adequação (Etapa 6). `relatorio` é gerado uma única vez e nunca reescrito;
+// a recalibração (só por tempo) mexe em PlanWeek, nunca aqui.
+// =========================================================================
+model Plan {
+  id                   String        @id @default(uuid())
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  possibilityId        String        @unique
+  possibility          Possibility   @relation(fields: [possibilityId], references: [id])
+  status               PlanStatus    @default(ATIVO)
+  tempoDisponivelHoras Float // horas/semana declaradas na Etapa 6
+  investimentoFaixa    String
+  profundidade         Profundidade
+  acompanhamento       String?
+  diaCheckin           Int // 0-6, herdado do User na criação, pode divergir depois se o usuário mudar globalmente
+  relatorio            Json // relatório completo fixo (Etapa 7) — nunca reescrito
+  duracaoSemanas       Int // calculado pela fórmula tempo x profundidade
+  activatedAt          DateTime      @default(now())
+  pausedAt             DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  weeks          PlanWeek[]
+  journalEntries JournalEntry[]
+
+  @@map("plans")
+}
+
+enum WeekStatus {
+  PENDENTE
+  CONCLUIDA
+  ATRASADA
+
+  @@map("week_status")
+}
+
+model PlanWeek {
+  id            String     @id @default(uuid())
+  planId        String
+  plan          Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  weekNumber    Int
+  meta          String     @db.Text
+  tasks         Json // lista de tarefas da semana
+  scheduledDate DateTime // ajustada pela recalibração por tempo
+  status        WeekStatus @default(PENDENTE)
+  completedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  checkin      Checkin?
+  journalEntry JournalEntry?
+
+  @@unique([planId, weekNumber])
+  @@map("plan_weeks")
+}
+
+enum ObstacleCategory {
+  FALTA_DE_TEMPO
+  FALTA_DE_INVESTIMENTO
+  DIFICULDADE_TECNICA
+  FALTA_DE_MOTIVACAO
+  INSEGURANCA_OU_MEDO
+  IMPREVISTO_PESSOAL_OU_EXTERNO
+  NAO_HOUVE_OBSTACULO
+
+  @@map("obstacle_category")
+}
+
+model Checkin {
+  id               String            @id @default(uuid())
+  planWeekId       String            @unique
+  planWeek         PlanWeek          @relation(fields: [planWeekId], references: [id], onDelete: Cascade)
+  doneItems        String            @db.Text
+  notDoneItems     String            @db.Text
+  obstacleCategory ObstacleCategory
+  freeText         String?           @db.Text
+  createdAt        DateTime          @default(now())
+
+  guidance ExecutionGuidance?
+
+  @@map("checkins")
+}
+
+// =========================================================================
+// Camada de Orientação de Execução — baseTipText vem da biblioteca fixa
+// (Biblioteca_Orientacao_Execucao.md, selecionada pela obstacleCategory do
+// check-in); personalizedText é a reescrita restrita por IA (Haiku).
+// =========================================================================
+model ExecutionGuidance {
+  id               String   @id @default(uuid())
+  checkinId        String   @unique
+  checkin          Checkin  @relation(fields: [checkinId], references: [id], onDelete: Cascade)
+  baseTipText      String   @db.Text
+  personalizedText String   @db.Text
+  createdAt        DateTime @default(now())
+
+  @@map("execution_guidance")
+}
+
+model JournalEntry {
+  id         String    @id @default(uuid())
+  planId     String
+  plan       Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planWeekId String?   @unique
+  planWeek   PlanWeek? @relation(fields: [planWeekId], references: [id])
+  text       String    @db.Text
+  createdAt  DateTime  @default(now())
+
+  @@map("journal_entries")
+}
+
+// =========================================================================
+// Transações da Hotmart — transactionId único garante idempotência
+// (a Hotmart pode reenviar o mesmo evento até 5x).
+// =========================================================================
+model HotmartTransaction {
+  id            String   @id @default(uuid())
+  transactionId String   @unique
+  eventType     String // PURCHASE_APPROVED | PURCHASE_CANCELED | PURCHASE_REFUNDED | PURCHASE_CHARGEBACK | ...
+  payload       Json
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  processedAt   DateTime @default(now())
+
+  @@map("hotmart_transactions")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@map("push_subscriptions")
+}
