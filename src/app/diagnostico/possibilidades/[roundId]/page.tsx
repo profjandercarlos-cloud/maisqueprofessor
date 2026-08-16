@@ -1,7 +1,7 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { PossibilityCards } from "./possibility-cards";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
@@ -11,11 +11,7 @@ export default async function PossibilitiesReviewPage({
 }: PageProps<"/diagnostico/possibilidades/[roundId]">) {
   const { roundId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const round = await db.generationRound.findUnique({
     where: { id: roundId },

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireUser } from "@/lib/auth/require-active-access";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { updateSettings } from "./actions";
 import { DeleteAccountForm } from "./delete-account-form";
@@ -20,11 +20,7 @@ export default async function ConfiguracoesPage({
   const deleteError = typeof query.deleteError === "string" ? query.deleteError : undefined;
   const saved = query.saved === "1";
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireUser();
 
   const dbUser = await db.user.findUnique({ where: { id: user.id } });
   if (!dbUser) redirect("/login");

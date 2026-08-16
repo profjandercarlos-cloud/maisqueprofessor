@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
 import { deepGet } from "@/lib/diagnostico/deep-set";
 import { getPrevSlug, getStepBySlug, getStepIndex, TOTAL_STEPS } from "@/lib/diagnostico/steps";
@@ -18,11 +18,7 @@ export default async function DiagnosticStepPage({
   const step = getStepBySlug(slug);
   if (!step) notFound();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) notFound();
+  const user = await requireActiveAccess();
 
   const diagnostic = await getOrCreateActiveDiagnostic(user.id);
 

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { PROFUNDIDADE_CONFIG } from "@/lib/plano/formula";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { submitAdequacao } from "./actions";
@@ -30,11 +30,7 @@ export default async function AdequacaoPage({
   const query = await searchParams;
   const error = typeof query.error === "string" ? query.error : undefined;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const possibility = await db.possibility.findUnique({
     where: { id: possibilityId },

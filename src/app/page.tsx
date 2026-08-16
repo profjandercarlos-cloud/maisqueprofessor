@@ -1,14 +1,11 @@
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
 
 export default async function Home() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await requireActiveAccess();
 
   const diagnostic = user
     ? await db.diagnostic.findFirst({

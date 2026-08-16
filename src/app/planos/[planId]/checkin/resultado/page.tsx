@@ -1,7 +1,7 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 
 export default async function CheckinResultadoPage({
   params,
@@ -14,11 +14,7 @@ export default async function CheckinResultadoPage({
   const query = await searchParams;
   const weekNumber = Number(query.week);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const plan = await db.plan.findUnique({ where: { id: planId } });
   if (!plan || plan.userId !== user.id) notFound();

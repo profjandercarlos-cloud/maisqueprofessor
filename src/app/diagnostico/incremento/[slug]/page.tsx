@@ -1,6 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { db } from "@/lib/db";
 import { deepGet } from "@/lib/diagnostico/deep-set";
 import { StepFields } from "@/app/diagnostico/[slug]/step-fields";
@@ -23,11 +23,7 @@ export default async function IncrementStepPage({
   const step = getIncrementStepBySlug(slug);
   if (!step) notFound();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const diagnostic = await db.diagnostic.findFirst({
     where: { userId: user.id, status: "CONCLUIDO" },

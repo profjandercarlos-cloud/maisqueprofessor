@@ -1,7 +1,7 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 
 type Relatorio = {
   quem_aparece: string;
@@ -28,11 +28,7 @@ export default async function PlanPage({
 }) {
   const { planId } = await params;
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const plan = await db.plan.findUnique({
     where: { id: planId },
