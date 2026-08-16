@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/api",
   "/conta-excluida",
   "/acesso-expirado",
+  "/bem-vindo",
 ];
 
 // A checagem de acesso revogado/expirado NÃO roda aqui de propósito — este
