@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { db } from "@/lib/db";
 
 // Rotas de API (webhooks, etc.) ficam de fora do redirecionamento de login —
 // cada uma valida sua própria autenticação (ex.: hottok da Hotmart), e um
@@ -11,7 +12,12 @@ const PUBLIC_PATHS = [
   "/auth",
   "/api",
   "/conta-excluida",
+  "/acesso-expirado",
 ];
+
+// Continuam acessíveis mesmo com acesso expirado/revogado — a pessoa precisa
+// conseguir ver o status e sair da conta mesmo sem acesso ativo.
+const ACCESS_EXEMPT_PATHS = ["/configuracoes"];
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -48,6 +54,21 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);
     return NextResponse.redirect(url);
+  }
+
+  if (user && !isPublicPath) {
+    const isExempt = ACCESS_EXEMPT_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
+    if (!isExempt) {
+      const dbUser = await db.user.findUnique({
+        where: { id: user.id },
+        select: { accessRevokedAt: true },
+      });
+      if (dbUser?.accessRevokedAt) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/acesso-expirado";
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return supabaseResponse;
