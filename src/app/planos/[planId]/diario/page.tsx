@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
+import { formatDate } from "@/lib/format-date";
 
 export default async function DiarioPage({
   params,
@@ -37,7 +38,7 @@ export default async function DiarioPage({
             <div key={entry.id} className="relative">
               <span className="absolute top-1.5 -left-[26px] h-2.5 w-2.5 rounded-full bg-gold" />
               <p className="mb-1 font-mono text-[11px] tracking-wide text-ink-muted uppercase">
-                {entry.createdAt.toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                {formatDate(entry.createdAt, { day: "2-digit", month: "long", year: "numeric" })}
               </p>
               <p className="text-[14.5px] leading-[1.6] text-ink">{entry.text}</p>
             </div>

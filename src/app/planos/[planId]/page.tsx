@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
+import { formatDate } from "@/lib/format-date";
 
 type Relatorio = {
   quem_aparece: string;
@@ -108,7 +109,7 @@ export default async function PlanPage({
                   Semana {week.weekNumber} {done ? "· concluída" : ""}
                 </span>
                 <span className="text-[12px] text-ink-muted">
-                  {week.scheduledDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })}
+                  {formatDate(week.scheduledDate, { day: "2-digit", month: "short" })}
                 </span>
               </div>
               <p className="mb-2 text-[15px] font-medium text-ink">{week.meta}</p>

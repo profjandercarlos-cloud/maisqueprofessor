@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-active-access";
+import { formatDate } from "@/lib/format-date";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { updateSettings } from "./actions";
 import { DeleteAccountForm } from "./delete-account-form";
@@ -108,7 +109,7 @@ export default async function ConfiguracoesPage({
         <p className={fieldLabel}>Status de acesso</p>
         <p className="text-[14.5px] text-ink">
           {accessStatus === "ativo" && dbUser.accessExpiresAt
-            ? `Ativo até ${dbUser.accessExpiresAt.toLocaleDateString("pt-BR")}`
+            ? `Ativo até ${formatDate(dbUser.accessExpiresAt)}`
             : accessStatus === "expirado"
               ? "Seu acesso expirou. Renove sua compra para continuar."
               : "Seu acesso foi revogado."}

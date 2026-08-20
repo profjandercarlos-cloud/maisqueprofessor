@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { formatDateTime } from "@/lib/format-date";
 import { reprocessTransaction } from "../actions";
 
 export default async function AdminHotmartPage({
@@ -64,7 +65,7 @@ export default async function AdminHotmartPage({
                   {tx.user ? `→ ${tx.user.email}` : "sem usuário vinculado"}
                 </span>
                 <span className="font-mono text-[11px] text-ink-muted">
-                  {tx.processedAt.toLocaleString("pt-BR")}
+                  {formatDateTime(tx.processedAt)}
                 </span>
               </summary>
               <div className="border-t border-line px-4 py-3">

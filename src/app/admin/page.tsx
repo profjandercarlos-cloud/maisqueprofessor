@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { formatDateTime } from "@/lib/format-date";
 import { grantAccessManually, reprocessTransaction } from "./actions";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -146,7 +147,7 @@ export default async function AdminDashboardPage({
                   <div>
                     <p className="text-[14px] font-medium text-ink">{email}</p>
                     <p className="font-mono text-[11px] text-ink-muted">
-                      {tx.eventType} · {tx.processedAt.toLocaleString("pt-BR")}
+                      {tx.eventType} · {formatDateTime(tx.processedAt)}
                     </p>
                   </div>
                   <form action={reprocessTransaction.bind(null, "/admin", tx.id)}>
@@ -223,7 +224,7 @@ export default async function AdminDashboardPage({
                 <tr key={tx.id} className="border-b border-line last:border-0">
                   <td className="px-4 py-2.5 text-ink">{tx.eventType}</td>
                   <td className="px-4 py-2.5 text-ink-muted">{tx.user?.email ?? "—"}</td>
-                  <td className="px-4 py-2.5 text-ink-muted">{tx.processedAt.toLocaleString("pt-BR")}</td>
+                  <td className="px-4 py-2.5 text-ink-muted">{formatDateTime(tx.processedAt)}</td>
                 </tr>
               ))}
             </tbody>

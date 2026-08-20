@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { formatDate, formatDateTime } from "@/lib/format-date";
 import { grantAccessManually, revokeAccessManually, toggleAdmin } from "../../actions";
 
 const fieldLabel = "text-[12.5px] text-ink-muted";
@@ -64,12 +65,12 @@ export default async function AdminUserDetailPage({
           <div>
             <p className={fieldLabel}>Acesso até</p>
             <p className={fieldValue}>
-              {user.accessExpiresAt ? user.accessExpiresAt.toLocaleDateString("pt-BR") : "—"}
+              {user.accessExpiresAt ? formatDate(user.accessExpiresAt) : "—"}
             </p>
           </div>
           <div>
             <p className={fieldLabel}>Cadastro</p>
-            <p className={fieldValue}>{user.createdAt.toLocaleDateString("pt-BR")}</p>
+            <p className={fieldValue}>{formatDate(user.createdAt)}</p>
           </div>
         </div>
 
@@ -118,7 +119,7 @@ export default async function AdminUserDetailPage({
             {user.diagnostics.map((d) => (
               <div key={d.id} className="flex items-center justify-between rounded-lg border border-line bg-paper px-4 py-2.5 text-[13.5px]">
                 <span className="text-ink">{d.intention} · {d.status}</span>
-                <span className="text-ink-muted">{d.createdAt.toLocaleDateString("pt-BR")}</span>
+                <span className="text-ink-muted">{formatDate(d.createdAt)}</span>
               </div>
             ))}
           </div>
@@ -136,7 +137,7 @@ export default async function AdminUserDetailPage({
             {user.plans.map((p) => (
               <div key={p.id} className="flex items-center justify-between rounded-lg border border-line bg-paper px-4 py-2.5 text-[13.5px]">
                 <span className="text-ink">{p.possibility.titulo} · {p.status}</span>
-                <span className="text-ink-muted">{p.createdAt.toLocaleDateString("pt-BR")}</span>
+                <span className="text-ink-muted">{formatDate(p.createdAt)}</span>
               </div>
             ))}
           </div>
@@ -154,7 +155,7 @@ export default async function AdminUserDetailPage({
             {user.hotmartTransactions.map((tx) => (
               <div key={tx.id} className="flex items-center justify-between rounded-lg border border-line bg-paper px-4 py-2.5 text-[13.5px]">
                 <span className="text-ink">{tx.eventType}</span>
-                <span className="text-ink-muted">{tx.processedAt.toLocaleString("pt-BR")}</span>
+                <span className="text-ink-muted">{formatDateTime(tx.processedAt)}</span>
               </div>
             ))}
           </div>

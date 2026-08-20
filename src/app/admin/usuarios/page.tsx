@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { formatDate } from "@/lib/format-date";
 
 function statusOf(user: { accessRevokedAt: Date | null; accessExpiresAt: Date | null }) {
   if (user.accessRevokedAt) return { label: "Revogado", tone: "revoked" as const };
@@ -92,10 +93,10 @@ export default async function AdminUsersPage({
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-ink-muted">
-                    {user.accessExpiresAt ? user.accessExpiresAt.toLocaleDateString("pt-BR") : "—"}
+                    {user.accessExpiresAt ? formatDate(user.accessExpiresAt) : "—"}
                   </td>
                   <td className="px-4 py-2.5 text-ink-muted">
-                    {user.createdAt.toLocaleDateString("pt-BR")}
+                    {formatDate(user.createdAt)}
                   </td>
                 </tr>
               );
