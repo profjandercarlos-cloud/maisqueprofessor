@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   sendAccessExpiringReminder,
   sendCheckinReminder,
@@ -22,6 +23,17 @@ export async function GET(request: NextRequest) {
 
   const now = new Date();
   const results = { accessExpiring: 0, accessBlocked: 0, checkinReminders: 0, escalations: 0 };
+
+  // 0) "Heartbeat" — o projeto Supabase está no plano gratuito, que pausa o
+  // banco após 7 dias sem atividade. As queries abaixo já mexem no Postgres
+  // todo dia, mas essa chamada específica passa pela própria API do
+  // Supabase (não só pelo Postgres via pooler), removendo qualquer dúvida
+  // sobre o que conta como "atividade" para o detector de inatividade deles.
+  try {
+    await createAdminClient().auth.admin.listUsers({ page: 1, perPage: 1 });
+  } catch (err) {
+    console.error("Heartbeat do Supabase falhou (não crítico)", err);
+  }
 
   // 1) Bloqueia acesso vencido (rotina diária exigida pela especificação).
   const expired = await db.user.updateMany({
