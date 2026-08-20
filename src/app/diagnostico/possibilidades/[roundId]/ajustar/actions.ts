@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
@@ -13,11 +13,7 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
     redirect(`/diagnostico/possibilidades/${roundId}/ajustar?error=${encodeURIComponent("Conte o que não fez sentido no conjunto.")}`);
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const round = await db.generationRound.findUnique({
     where: { id: roundId },

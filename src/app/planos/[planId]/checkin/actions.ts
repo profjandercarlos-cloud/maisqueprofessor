@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { ObstacleCategory, Prisma } from "@/generated/prisma/client";
 import { selectBaseTip } from "@/lib/orientacao/biblioteca";
 import { personalizeGuidance } from "@/lib/ai-engine/personalize-guidance";
@@ -12,11 +12,7 @@ function fail(planId: string, message: string): never {
 }
 
 export async function submitCheckin(planId: string, formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const plan = await db.plan.findUnique({
     where: { id: planId },

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { Prisma, Profundidade } from "@/generated/prisma/client";
 import { calcularDuracaoSemanas, PROFUNDIDADE_CONFIG } from "@/lib/plano/formula";
 import { generateReportAndPlan } from "@/lib/ai-engine/generate-report-plan";
@@ -13,11 +13,7 @@ function fail(possibilityId: string, message: string): never {
 }
 
 export async function submitAdequacao(possibilityId: string, formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const possibility = await db.possibility.findUnique({
     where: { id: possibilityId },

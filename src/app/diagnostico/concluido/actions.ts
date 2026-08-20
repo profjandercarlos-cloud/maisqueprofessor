@@ -2,15 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
 
 export async function generateForActiveDiagnostic() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const diagnostic = await db.diagnostic.findFirst({
     where: { userId: user.id, status: "CONCLUIDO" },

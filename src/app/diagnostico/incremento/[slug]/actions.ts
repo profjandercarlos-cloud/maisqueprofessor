@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { deepGet, deepSet } from "@/lib/diagnostico/deep-set";
 import {
   INCREMENT_STEPS,
@@ -16,11 +16,7 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
   const step = getIncrementStepBySlug(slug);
   if (!step || step.type !== "textarea") redirect("/diagnostico/incremento/incremento-1");
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const diagnostic = await db.diagnostic.findFirst({
     where: { userId: user.id, status: "CONCLUIDO" },

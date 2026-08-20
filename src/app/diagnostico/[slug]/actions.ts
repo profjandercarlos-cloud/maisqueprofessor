@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { createClient } from "@/lib/supabase/server";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { Intention, Prisma } from "@/generated/prisma/client";
 import { getStepBySlug, getNextSlug } from "@/lib/diagnostico/steps";
 import { getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
@@ -16,11 +16,7 @@ export async function saveStep(slug: string, formData: FormData) {
   const step = getStepBySlug(slug);
   if (!step) redirect("/diagnostico/intencao");
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const user = await requireActiveAccess();
 
   const diagnostic = await getOrCreateActiveDiagnostic(user.id);
   const currentAnswers = diagnostic.answers as Record<string, unknown>;
