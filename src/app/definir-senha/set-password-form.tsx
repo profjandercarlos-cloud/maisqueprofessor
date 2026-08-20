@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { PasswordInput } from "@/components/password-input";
 import { setNewPassword } from "./actions";
 
 const fieldLabel = "mb-1.5 block font-mono text-[11px] tracking-wide text-ink-muted uppercase";
@@ -16,10 +17,9 @@ export function SetPasswordForm() {
         <label htmlFor="password" className={fieldLabel}>
           Nova senha
         </label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           required
           minLength={8}
           autoComplete="new-password"
@@ -30,10 +30,9 @@ export function SetPasswordForm() {
         <label htmlFor="confirmPassword" className={fieldLabel}>
           Confirmar senha
         </label>
-        <input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           required
           minLength={8}
           autoComplete="new-password"

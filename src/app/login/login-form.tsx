@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { PasswordInput } from "@/components/password-input";
 import { signIn } from "./actions";
 
 const fieldLabel = "mb-1.5 block font-mono text-[11px] tracking-wide text-ink-muted uppercase";
@@ -30,10 +31,9 @@ export function LoginForm({ next }: { next?: string }) {
         <label htmlFor="password" className={fieldLabel}>
           Senha
         </label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           required
           autoComplete="current-password"
           className={fieldInput}
