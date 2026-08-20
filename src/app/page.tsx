@@ -7,19 +7,11 @@ import { LogoutButton } from "./logout-button";
 export default async function Home() {
   const user = await requireActiveAccess();
 
-  const diagnostic = user
-    ? await db.diagnostic.findFirst({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-      })
-    : null;
-
-  const activePlan = user
-    ? await db.plan.findFirst({
-        where: { userId: user.id, status: "ATIVO" },
-        include: { possibility: true },
-      })
-    : null;
+  const [diagnostic, activePlan, dbUser] = await Promise.all([
+    db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
+    db.plan.findFirst({ where: { userId: user.id, status: "ATIVO" }, include: { possibility: true } }),
+    db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true } }),
+  ]);
 
   const diagnosticCta = !diagnostic
     ? { label: "Começar diagnóstico", href: `/diagnostico/${DIAGNOSTIC_STEPS[0].slug}` }
@@ -74,6 +66,11 @@ export default async function Home() {
         <a href="/configuracoes" className="hover:underline">
           Configurações →
         </a>
+        {dbUser?.isAdmin ? (
+          <a href="/admin" className="hover:underline">
+            Administração →
+          </a>
+        ) : null}
       </div>
     </div>
   );

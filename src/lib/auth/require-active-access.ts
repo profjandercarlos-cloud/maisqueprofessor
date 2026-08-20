@@ -31,3 +31,18 @@ export async function requireActiveAccess(): Promise<User> {
   }
   return user;
 }
+
+// Área /admin — independe de accessExpiresAt/accessRevokedAt (a Hotmart não
+// tem nada a ver com o papel de administrador). Quem não for admin nem
+// percebe que a rota existe: cai direto na Home.
+export async function requireAdmin(): Promise<User> {
+  const user = await requireUser();
+  const dbUser = await db.user.findUnique({
+    where: { id: user.id },
+    select: { isAdmin: true },
+  });
+  if (!dbUser?.isAdmin) {
+    redirect("/");
+  }
+  return user;
+}

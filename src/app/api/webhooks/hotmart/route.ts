@@ -1,21 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
-import { processApprovedPurchase, processRevocation } from "@/lib/hotmart/process-event";
-
-// ATENÇÃO: o formato exato do payload e de onde vem o hottok (header
-// `X-Hotmart-Hottok` vs. campo `hottok` no corpo) varia entre versões da API
-// da Hotmart. Isto foi implementado seguindo o formato documentado
-// publicamente (webhook v2) — precisa ser confirmado contra um evento real
-// (ou uma venda de teste) antes de ir para produção. Ver Etapa 10 do checklist.
-const APPROVED_EVENTS = new Set(["PURCHASE_APPROVED", "PURCHASE_COMPLETE"]);
-const REVOKE_EVENTS = new Set([
-  "PURCHASE_CANCELED",
-  "PURCHASE_CANCELLED",
-  "PURCHASE_REFUNDED",
-  "PURCHASE_CHARGEBACK",
-  "PURCHASE_PROTEST",
-]);
+import { applyHotmartEvent, parseHotmartPayload } from "@/lib/hotmart/process-event";
 
 function isHottokValid(request: NextRequest, payload: Record<string, unknown>): boolean {
   const expected = process.env.HOTMART_HOTTOK;
@@ -39,15 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "hottok inválido" }, { status: 401 });
   }
 
-  const event = String(payload.event ?? "");
-  const data = (payload.data ?? {}) as Record<string, unknown>;
-  const purchase = (data.purchase ?? {}) as Record<string, unknown>;
-  const buyer = (data.buyer ?? {}) as Record<string, unknown>;
-
-  const transactionId =
-    (typeof purchase.transaction === "string" && purchase.transaction) ||
-    (typeof payload.id === "string" && payload.id) ||
-    undefined;
+  const { event, transactionId, email, name } = parseHotmartPayload(payload);
 
   if (!transactionId) {
     return NextResponse.json({ error: "transação ausente no payload" }, { status: 400 });
@@ -75,17 +53,10 @@ export async function POST(request: NextRequest) {
     throw err;
   }
 
-  const email = typeof buyer.email === "string" ? buyer.email.trim().toLowerCase() : undefined;
-  const name = typeof buyer.name === "string" ? buyer.name : email;
-
   let userId: string | undefined;
 
   try {
-    if (APPROVED_EVENTS.has(event) && email) {
-      userId = await processApprovedPurchase(email, name ?? email);
-    } else if (REVOKE_EVENTS.has(event) && email) {
-      userId = await processRevocation(email);
-    }
+    userId = await applyHotmartEvent(event, email, name);
   } catch (err) {
     console.error("Erro ao processar evento da Hotmart", event, err);
     // A transação já foi gravada (idempotência preservada); o erro de
