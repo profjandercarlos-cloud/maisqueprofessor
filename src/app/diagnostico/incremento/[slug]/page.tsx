@@ -13,6 +13,10 @@ import {
 } from "@/lib/diagnostico/increment-steps";
 import { saveIncrementStep } from "./actions";
 
+// Ver nota em diagnostico/concluido/page.tsx — a última pergunta deste
+// fluxo também dispara geração de possibilidades.
+export const maxDuration = 60;
+
 export default async function IncrementStepPage({
   params,
   searchParams,

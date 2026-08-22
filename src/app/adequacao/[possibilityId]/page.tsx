@@ -6,6 +6,10 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { submitAdequacao } from "./actions";
 
+// Ver nota em diagnostico/concluido/page.tsx — sem isto a Vercel mata a
+// função aos 10s, e o plano de 12 semanas leva bem mais que isso pra gerar.
+export const maxDuration = 60;
+
 const optionCardClass =
   "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[15px] text-ink transition-colors has-[:checked]:border-petrol has-[:checked]:bg-gold-soft";
 

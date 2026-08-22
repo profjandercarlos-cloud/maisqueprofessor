@@ -2,6 +2,12 @@ import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
 import { generateForActiveDiagnostic } from "./actions";
 
+// Sem isto, a Vercel mata a função depois de 10s (padrão do plano Hobby) —
+// e a geração das 5 possibilidades leva de 15s a mais de 1 minuto. 60 é o
+// teto permitido no Hobby; se continuar estourando, só resolve de vez com
+// upgrade pra Pro (até 300s).
+export const maxDuration = 60;
+
 export default function DiagnosticoConcluidoPage() {
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
