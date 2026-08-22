@@ -63,16 +63,12 @@ export default async function DiagnosticStepPage({
         {error ? <p className="text-sm text-role-3">{error}</p> : null}
 
         <div className="flex items-center justify-between gap-4 pt-2">
-          {prevSlug ? (
-            <a
-              href={`/diagnostico/${prevSlug}`}
-              className="text-sm font-medium text-ink-muted hover:text-ink"
-            >
-              ← Voltar
-            </a>
-          ) : (
-            <span />
-          )}
+          <a
+            href={prevSlug ? `/diagnostico/${prevSlug}` : "/"}
+            className="text-sm font-medium text-ink-muted hover:text-ink"
+          >
+            ← Voltar
+          </a>
           <button
             type="submit"
             className="rounded-lg bg-petrol px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"

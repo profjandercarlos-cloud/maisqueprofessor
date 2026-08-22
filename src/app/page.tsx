@@ -10,7 +10,7 @@ export default async function Home() {
   const [diagnostic, activePlan, dbUser] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
     db.plan.findFirst({ where: { userId: user.id, status: "ATIVO" }, include: { possibility: true } }),
-    db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true } }),
+    db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true, name: true } }),
   ]);
 
   const diagnosticCta = !diagnostic
@@ -29,10 +29,10 @@ export default async function Home() {
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-            Autenticação confirmada
+            {diagnostic ? "De volta" : "Bem-vindo(a) ao Mais Que Professor"}
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
-            Olá, <em className="font-medium text-gold not-italic italic">{user?.email}</em>.
+            Olá, <em className="font-medium text-gold not-italic italic">{dbUser?.name ?? user.email}</em>.
           </h1>
         </div>
         <LogoutButton />
