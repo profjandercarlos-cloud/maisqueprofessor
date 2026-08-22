@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { SubmitButton } from "@/components/submit-button";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { db } from "@/lib/db";
 import { deepGet } from "@/lib/diagnostico/deep-set";
@@ -68,12 +69,14 @@ export default async function IncrementStepPage({
           ) : (
             <span />
           )}
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText={
+              index === TOTAL_INCREMENT_STEPS - 1 ? "Gerando... até 1 minuto, não recarregue" : "Salvando..."
+            }
             className="rounded-lg bg-petrol px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
           >
             {index === TOTAL_INCREMENT_STEPS - 1 ? "Gerar novo conjunto →" : "Continuar"}
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </div>

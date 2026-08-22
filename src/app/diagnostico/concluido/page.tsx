@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app-header";
+import { SubmitButton } from "@/components/submit-button";
 import { generateForActiveDiagnostic } from "./actions";
 
 export default function DiagnosticoConcluidoPage() {
@@ -16,12 +17,12 @@ export default function DiagnosticoConcluidoPage() {
           Agora vamos gerar suas cinco possibilidades a partir do que você respondeu.
         </p>
         <form action={generateForActiveDiagnostic}>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Gerando suas possibilidades... isso pode levar até 1 minuto, não recarregue a página"
             className="rounded-lg bg-petrol px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
           >
             Gerar minhas 5 possibilidades →
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </div>

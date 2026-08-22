@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
@@ -122,12 +123,12 @@ export default async function AdequacaoPage({
 
         {error ? <p className="text-sm text-role-3">{error}</p> : null}
 
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Gerando seu plano... isso pode levar até 1 minuto, não recarregue a página"
           className="rounded-lg bg-petrol px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
         >
           Gerar meu relatório e plano →
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

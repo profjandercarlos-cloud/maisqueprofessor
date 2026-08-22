@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { submitAdjustment } from "./actions";
@@ -47,12 +48,12 @@ export default async function AjustarConjuntoPage({
           >
             ← Voltar
           </a>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Gerando... até 1 minuto, não recarregue"
             className="rounded-lg bg-petrol px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
           >
             Gerar novo conjunto →
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </div>

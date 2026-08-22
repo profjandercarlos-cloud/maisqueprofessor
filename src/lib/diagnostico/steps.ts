@@ -80,11 +80,14 @@ const CAPACIDADES: StepOption[] = [
   { value: "incluir", label: "Incluir pessoas e tornar experiências acessíveis" },
 ];
 
+// Só 2 campos, de propósito — 4 campos separados (contexto, dificuldade,
+// ação, resultado) deixava a pergunta pesada e a pessoa se perdia dividindo
+// uma situação em partes demais. O que importa pra IA é evidência de
+// comportamento (o que a pessoa fez) e evidência de efeito (o que mudou) —
+// contexto e dificuldade cabem dentro da própria narrativa do primeiro campo.
 const SITUATION_FIELDS = [
-  { key: "contexto", label: "Qual era o contexto?" },
-  { key: "dificuldade", label: "O que estava difícil?" },
-  { key: "acao", label: "O que você fez pessoalmente?" },
-  { key: "resultado", label: "O que mudou depois?" },
+  { key: "acao", label: "O que aconteceu, e o que você fez diante disso?" },
+  { key: "resultado", label: "O que mudou como resultado?" },
 ];
 
 export const DIAGNOSTIC_STEPS: DiagnosticStep[] = [
@@ -131,8 +134,9 @@ export const DIAGNOSTIC_STEPS: DiagnosticStep[] = [
     slug: "bloco2-situacao-1",
     block: 2,
     type: "situation",
-    question: "Situação 1 — conte uma situação concreta que mostra como você age",
-    helper: "Duas situações concretas mostram melhor como você age do que uma descrição geral.",
+    question: "Situação 1 — conte uma situação real que mostra como você age",
+    helper:
+      "Não é pra descrever como você é em geral — é pra contar algo que realmente aconteceu, por menor que pareça. Isso é o que dá à IA evidência de verdade pra trabalhar, em vez de suposição.",
     fields: SITUATION_FIELDS,
     path: ["bloco2", "situacao1"],
   },
@@ -140,7 +144,8 @@ export const DIAGNOSTIC_STEPS: DiagnosticStep[] = [
     slug: "bloco2-situacao-2",
     block: 2,
     type: "situation",
-    question: "Situação 2 — conte outra situação concreta, diferente da anterior",
+    question: "Situação 2 — conte outra situação real, diferente da anterior",
+    helper: "Pode ser bem menor que a primeira — o que importa é ser outra situação de verdade, não uma repetição da ideia geral.",
     fields: SITUATION_FIELDS,
     path: ["bloco2", "situacao2"],
   },
