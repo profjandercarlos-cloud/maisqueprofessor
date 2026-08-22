@@ -1,17 +1,33 @@
 import { AppHeader } from "@/components/app-header";
+import { PlanMural } from "@/components/plan-mural";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireActiveAccess();
+  const query = await searchParams;
+  const expandedTaskId = typeof query.parcial === "string" ? query.parcial : undefined;
 
   const [diagnostic, activePlan, dbUser] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
     db.plan.findFirst({ where: { userId: user.id, status: "ATIVO" }, include: { possibility: true } }),
     db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true, name: true } }),
   ]);
+
+  let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
+  let poolTasks: Awaited<ReturnType<typeof loadPoolTasks>> = [];
+  if (activePlan) {
+    [currentWeek, poolTasks] = await Promise.all([
+      loadCurrentWeek(activePlan.id),
+      loadPoolTasks(activePlan.id),
+    ]);
+  }
 
   const diagnosticCta = !diagnostic
     ? { label: "Começar diagnóstico", href: `/diagnostico/${DIAGNOSTIC_STEPS[0].slug}` }
@@ -38,18 +54,40 @@ export default async function Home() {
         <LogoutButton />
       </div>
 
-      {activePlan ? (
-        <a
-          href={`/planos/${activePlan.id}`}
-          className="mb-4 block rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)] hover:border-petrol"
-        >
+      {activePlan && currentWeek ? (
+        <>
+          <a
+            href={`/planos/${activePlan.id}`}
+            className="mb-3 inline-block text-[13px] font-semibold text-petrol hover:underline"
+          >
+            {activePlan.possibility.titulo} →
+          </a>
+          <PlanMural
+            planId={activePlan.id}
+            week={currentWeek}
+            weekTasks={currentWeek.tasks}
+            poolTasks={poolTasks}
+            horasDisponiveis={activePlan.tempoDisponivelHoras}
+            expandedTaskId={expandedTaskId}
+            duracaoSemanas={activePlan.duracaoSemanas}
+          />
+        </>
+      ) : activePlan ? (
+        <div className="mb-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
           <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
-            Plano ativo
+            Plano concluído
           </span>
-          <span className="block font-serif text-lg font-medium text-ink">
-            {activePlan.possibility.titulo}
-          </span>
-        </a>
+          <p className="mb-2 font-serif text-lg font-medium text-ink">{activePlan.possibility.titulo}</p>
+          <p className="text-[13.5px] text-ink-muted">
+            Todas as semanas foram concluídas — bom trabalho. Veja o plano completo ou comece outro.
+          </p>
+          <a
+            href={`/planos/${activePlan.id}`}
+            className="mt-3 inline-block text-[13px] font-semibold text-petrol hover:underline"
+          >
+            Ver plano completo →
+          </a>
+        </div>
       ) : (
         <a
           href={diagnosticCta.href}
@@ -74,4 +112,19 @@ export default async function Home() {
       </div>
     </div>
   );
+}
+
+function loadCurrentWeek(planId: string) {
+  return db.planWeek.findFirst({
+    where: { planId, status: "PENDENTE", checkin: null },
+    orderBy: { weekNumber: "asc" },
+    include: { tasks: { orderBy: { sequencia: "asc" } } },
+  });
+}
+
+function loadPoolTasks(planId: string) {
+  return db.planTask.findMany({
+    where: { planId, planWeekId: null },
+    orderBy: { createdAt: "asc" },
+  });
 }

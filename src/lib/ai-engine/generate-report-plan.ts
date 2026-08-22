@@ -1,10 +1,16 @@
 import { z } from "zod";
 import { anthropic, GENERATION_MODEL } from "./client";
 import { REPORT_PLAN_SYSTEM_PROMPT } from "./report-plan-prompt";
+import { PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
+
+const taskSchema = z.object({
+  texto: z.string().min(1),
+  horas: z.number().positive(),
+});
 
 const weekSchema = z.object({
   meta: z.string().min(1),
-  tarefas: z.array(z.string().min(1)).min(1),
+  tarefas: z.array(taskSchema).min(1),
   dificuldades_antecipadas: z.string().min(1),
 });
 
@@ -39,9 +45,7 @@ export async function generateReportAndPlan(params: {
     quemPagaria: string;
     jaPossuiVsAprender: string;
   };
-  duracaoSemanas: number;
-  minTarefas: number;
-  maxTarefas: number;
+  horasTotais: number;
   horasPorSemana: number;
 }): Promise<ReportAndPlan> {
   const userMessage = `${params.diagnosticInput}
@@ -54,13 +58,16 @@ Quem pagaria: ${params.possibility.quemPagaria}
 Já possui vs. a aprender: ${params.possibility.jaPossuiVsAprender}
 
 PARÂMETROS DO PLANO (já calculados, não decida isso)
-Duração exata do plano: ${params.duracaoSemanas} semanas
-Tarefas por semana permitidas: entre ${params.minTarefas} e ${params.maxTarefas}
+Duração: sempre ${PLAN_DURATION_SEMANAS} semanas
+Total de horas que o plano inteiro deve somar: ${params.horasTotais} horas
 Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} horas`;
 
+  // Antes o plano podia ter só 2 semanas (Exploração); agora são sempre 12,
+  // cada tarefa como objeto {texto, horas} — a resposta ficou bem maior, e
+  // 8000 tokens cortava o JSON no meio em planos com mais tarefas.
   const message = await anthropic.messages.create({
     model: GENERATION_MODEL,
-    max_tokens: 8000,
+    max_tokens: 16000,
     system: REPORT_PLAN_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userMessage }],
   });
@@ -72,9 +79,9 @@ Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} hor
 
   const parsed = responseSchema.parse(extractJson(textBlock.text));
 
-  if (parsed.semanas.length !== params.duracaoSemanas) {
+  if (parsed.semanas.length !== PLAN_DURATION_SEMANAS) {
     throw new Error(
-      `O modelo retornou ${parsed.semanas.length} semanas, esperado ${params.duracaoSemanas}.`,
+      `O modelo retornou ${parsed.semanas.length} semanas, esperado ${PLAN_DURATION_SEMANAS}.`,
     );
   }
 

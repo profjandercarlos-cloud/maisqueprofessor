@@ -12,8 +12,6 @@ type Relatorio = {
   ponto_de_atencao: string;
 };
 
-type WeekTasks = { tarefas: string[]; dificuldadesAntecipadas: string };
-
 const REPORT_SECTIONS: { key: keyof Relatorio; label: string }[] = [
   { key: "quem_aparece", label: "Quem aparece por trás do professor" },
   { key: "padroes_que_se_repetem", label: "Os padrões que se repetem" },
@@ -35,7 +33,10 @@ export default async function PlanPage({
     where: { id: planId },
     include: {
       possibility: true,
-      weeks: { orderBy: { weekNumber: "asc" }, include: { checkin: true } },
+      weeks: {
+        orderBy: { weekNumber: "asc" },
+        include: { checkin: true, tasks: { orderBy: { sequencia: "asc" } } },
+      },
     },
   });
   if (!plan || plan.userId !== user.id) notFound();
@@ -96,7 +97,6 @@ export default async function PlanPage({
 
       <div className="flex flex-col gap-3">
         {plan.weeks.map((week) => {
-          const tasks = week.tasks as unknown as WeekTasks;
           const done = week.status === "CONCLUIDA";
           return (
             <article
@@ -114,13 +114,15 @@ export default async function PlanPage({
               </div>
               <p className="mb-2 text-[15px] font-medium text-ink">{week.meta}</p>
               <ul className="mb-2 flex list-inside list-disc flex-col gap-1 text-[13.5px] text-ink">
-                {tasks.tarefas.map((t, i) => (
-                  <li key={i}>{t}</li>
+                {week.tasks.map((t) => (
+                  <li key={t.id}>{t.texto}</li>
                 ))}
               </ul>
-              <p className="text-[12.5px] text-ink-muted">
-                <strong>Costuma travar em:</strong> {tasks.dificuldadesAntecipadas}
-              </p>
+              {week.dificuldadesAntecipadas ? (
+                <p className="text-[12.5px] text-ink-muted">
+                  <strong>Costuma travar em:</strong> {week.dificuldadesAntecipadas}
+                </p>
+              ) : null}
             </article>
           );
         })}

@@ -1,51 +1,15 @@
-// Fórmula Tempo × Profundidade — Proposta_Tempo_Profundidade.md (aprovada).
-// duração (semanas) = orçamento de horas ÷ horas disponíveis por semana,
-// arredondado e limitado ao piso/teto da profundidade escolhida.
+// Fórmula de dimensionamento do plano — Análise "Execução Dinâmica do Plano"
+// (decisão final). Duração é sempre fixa; o que varia por pessoa é o volume
+// de trabalho que cabe nela, não o prazo — isso é o que dá credibilidade
+// (compromisso de "3 meses pra mudar de vida") e ainda respeita o tempo real
+// de cada um.
 
-export type Profundidade = "EXPLORACAO" | "TESTE_REAL" | "MERGULHO";
+export const PLAN_DURATION_SEMANAS = 12;
+export const PLAN_MAX_HORAS = 120; // teto: 12 semanas × 10h/semana
 
-type ProfundidadeConfig = {
-  orcamentoHoras: number;
-  minSemanas: number;
-  maxSemanas: number;
-  minTarefas: number;
-  maxTarefas: number;
-  label: string;
-  descricao: string;
-};
-
-export const PROFUNDIDADE_CONFIG: Record<Profundidade, ProfundidadeConfig> = {
-  EXPLORACAO: {
-    orcamentoHoras: 8,
-    minSemanas: 2,
-    maxSemanas: 4,
-    minTarefas: 1,
-    maxTarefas: 2,
-    label: "Exploração",
-    descricao: "Só quero entender se faz sentido",
-  },
-  TESTE_REAL: {
-    orcamentoHoras: 30,
-    minSemanas: 4,
-    maxSemanas: 8,
-    minTarefas: 2,
-    maxTarefas: 3,
-    label: "Teste real",
-    descricao: "Quero um primeiro teste pequeno, mas de verdade",
-  },
-  MERGULHO: {
-    orcamentoHoras: 70,
-    minSemanas: 6,
-    maxSemanas: 12,
-    minTarefas: 3,
-    maxTarefas: 4,
-    label: "Mergulho",
-    descricao: "Quero ir com tudo desde já",
-  },
-};
-
-export function calcularDuracaoSemanas(profundidade: Profundidade, horasPorSemana: number): number {
-  const config = PROFUNDIDADE_CONFIG[profundidade];
-  const bruto = Math.round(config.orcamentoHoras / Math.max(horasPorSemana, 0.5));
-  return Math.min(Math.max(bruto, config.minSemanas), config.maxSemanas);
+// Horas totais que a IA deve mirar ao gerar o plano — sempre 12 semanas ×
+// horas/semana declaradas, travado no teto. Quem tem mais tempo que o teto
+// não ganha um plano maior: adianta tarefas dentro das mesmas 12 semanas.
+export function calcularHorasTotais(horasPorSemana: number): number {
+  return Math.min(PLAN_DURATION_SEMANAS * Math.max(horasPorSemana, 0.5), PLAN_MAX_HORAS);
 }

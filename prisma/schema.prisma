@@ -16,17 +16,17 @@ datasource db {
 // provisionamento; a senha em si vive inteiramente no Supabase Auth.
 // =========================================================================
 model User {
-  id                String    @id
-  name              String
-  email             String    @unique
-  isAdmin           Boolean   @default(false)
-  accessExpiresAt   DateTime?
-  accessRevokedAt   DateTime?
-  checkinWeekday    Int? // 0 (domingo) a 6 (sábado) — definido na Etapa 6, editável nas Configurações
-  notifyEmail       Boolean   @default(true)
-  notifyPush        Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id              String    @id
+  name            String
+  email           String    @unique
+  isAdmin         Boolean   @default(false)
+  accessExpiresAt DateTime?
+  accessRevokedAt DateTime?
+  checkinWeekday  Int? // 0 (domingo) a 6 (sábado) — definido na Etapa 6, editável nas Configurações
+  notifyEmail     Boolean   @default(true)
+  notifyPush      Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   diagnostics         Diagnostic[]
   plans               Plan[]
@@ -79,12 +79,12 @@ model Diagnostic {
 // 5 = regeneração após incremento de diagnóstico (caso raro).
 // =========================================================================
 model GenerationRound {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   diagnosticId String
   diagnostic   Diagnostic @relation(fields: [diagnosticId], references: [id], onDelete: Cascade)
   roundNumber  Int
-  feedbackText String? @db.Text // feedback do professor sobre o conjunto anterior (null na rodada 1)
-  createdAt    DateTime @default(now())
+  feedbackText String?    @db.Text // feedback do professor sobre o conjunto anterior (null na rodada 1)
+  createdAt    DateTime   @default(now())
 
   possibilities Possibility[]
 
@@ -111,19 +111,19 @@ enum PossibilityStatus {
 }
 
 model Possibility {
-  id                 String             @id @default(uuid())
+  id                 String            @id @default(uuid())
   roundId            String
-  round              GenerationRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  round              GenerationRound   @relation(fields: [roundId], references: [id], onDelete: Cascade)
   papel              PossibilityRole
   titulo             String
   subtitulo          String
-  naPratica          String             @db.Text
-  porQueApareceu     String             @db.Text
-  quemPagaria        String             @db.Text
-  jaPossuiVsAprender String             @db.Text
+  naPratica          String            @db.Text
+  porQueApareceu     String            @db.Text
+  quemPagaria        String            @db.Text
+  jaPossuiVsAprender String            @db.Text
   familiaValor       String // uso interno (teste de diversidade), não exibido ao usuário
-  status             PossibilityStatus  @default(PENDENTE)
-  createdAt          DateTime           @default(now())
+  status             PossibilityStatus @default(PENDENTE)
+  createdAt          DateTime          @default(now())
 
   plan Plan?
 
@@ -138,39 +138,37 @@ enum PlanStatus {
   @@map("plan_status")
 }
 
-enum Profundidade {
-  EXPLORACAO
-  TESTE_REAL
-  MERGULHO
-
-  @@map("profundidade")
-}
-
 // =========================================================================
 // Plano — nasce da aprovação de uma Possibility (Etapa 5) + questionário de
 // adequação (Etapa 6). `relatorio` é gerado uma única vez e nunca reescrito;
 // a recalibração (só por tempo) mexe em PlanWeek, nunca aqui.
+//
+// Duração é sempre PLAN_DURATION_SEMANAS (12, ver src/lib/plano/formula.ts)
+// — não existe mais escolha de "profundidade": o volume real de trabalho
+// nasce de tempoDisponivelHoras × 12, até o teto PLAN_MAX_HORAS. Quem tem
+// mais tempo que o teto adianta tarefas dentro das mesmas 12 semanas, não
+// ganha um plano maior.
 // =========================================================================
 model Plan {
-  id                   String        @id @default(uuid())
+  id                   String      @id @default(uuid())
   userId               String
-  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  possibilityId        String        @unique
-  possibility          Possibility   @relation(fields: [possibilityId], references: [id])
-  status               PlanStatus    @default(ATIVO)
+  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  possibilityId        String      @unique
+  possibility          Possibility @relation(fields: [possibilityId], references: [id])
+  status               PlanStatus  @default(ATIVO)
   tempoDisponivelHoras Float // horas/semana declaradas na Etapa 6
   investimentoFaixa    String
-  profundidade         Profundidade
   acompanhamento       String?
   diaCheckin           Int // 0-6, herdado do User na criação, pode divergir depois se o usuário mudar globalmente
   relatorio            Json // relatório completo fixo (Etapa 7) — nunca reescrito
-  duracaoSemanas       Int // calculado pela fórmula tempo x profundidade
-  activatedAt          DateTime      @default(now())
+  duracaoSemanas       Int // sempre PLAN_DURATION_SEMANAS na criação — semanas extras (pendências) não incrementam este número
+  activatedAt          DateTime    @default(now())
   pausedAt             DateTime?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
 
   weeks          PlanWeek[]
+  tasks          PlanTask[]
   journalEntries JournalEntry[]
 
   @@map("plans")
@@ -185,23 +183,65 @@ enum WeekStatus {
 }
 
 model PlanWeek {
-  id            String     @id @default(uuid())
-  planId        String
-  plan          Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
-  weekNumber    Int
-  meta          String     @db.Text
-  tasks         Json // lista de tarefas da semana
-  scheduledDate DateTime // ajustada pela recalibração por tempo
-  status        WeekStatus @default(PENDENTE)
-  completedAt   DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id                      String     @id @default(uuid())
+  planId                  String
+  plan                    Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  weekNumber              Int
+  meta                    String     @db.Text
+  dificuldadesAntecipadas String?    @db.Text // null nas semanas extras (criadas só pra receber pendências, sem conteúdo novo da IA)
+  scheduledDate           DateTime // ajustada pela recalibração por tempo
+  status                  WeekStatus @default(PENDENTE)
+  completedAt             DateTime?
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
 
+  tasks        PlanTask[]
   checkin      Checkin?
   journalEntry JournalEntry?
 
   @@unique([planId, weekNumber])
   @@map("plan_weeks")
+}
+
+enum TaskStatus {
+  PENDENTE
+  COMPLETO
+  PARCIAL
+
+  @@map("task_status")
+}
+
+enum TaskOrigin {
+  PLANO // gerada pela IA na criação do plano
+  PROPRIA // criada pela própria pessoa
+  PENDENCIA // sobra de uma tarefa marcada como parcial
+
+  @@map("task_origin")
+}
+
+// =========================================================================
+// Tarefa individual do plano — substitui o antigo PlanWeek.tasks (JSON).
+// planWeekId null = está no "pool" (pendência ou tarefa própria ainda não
+// puxada pra nenhuma semana). Mover uma tarefa entre semanas, ou pro pool
+// e de volta, é sempre uma ação manual da pessoa — nenhum algoritmo
+// reorganiza isso sozinho (ver Análise "Execução Dinâmica do Plano").
+// =========================================================================
+model PlanTask {
+  id             String     @id @default(uuid())
+  planId         String
+  plan           Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planWeekId     String?
+  planWeek       PlanWeek?  @relation(fields: [planWeekId], references: [id])
+  texto          String     @db.Text
+  horasEstimadas Float
+  status         TaskStatus @default(PENDENTE)
+  origin         TaskOrigin @default(PLANO)
+  notaParcial    String?    @db.Text // só preenchido quando status = PARCIAL — o que ainda falta
+  sequencia      Int // ordem original gerada pela IA, usada pra ordenar dentro da semana
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@map("plan_tasks")
 }
 
 enum ObstacleCategory {
@@ -216,15 +256,17 @@ enum ObstacleCategory {
   @@map("obstacle_category")
 }
 
+// doneItems/notDoneItems (texto livre) foram substituídos pelo checklist por
+// item em PlanTask — o texto livre só existe mais no próprio item, quando
+// marcado parcial (PlanTask.notaParcial). O check-in continua sendo o
+// ritual de fechar a semana: categoriza o obstáculo e dispara a orientação.
 model Checkin {
-  id               String            @id @default(uuid())
-  planWeekId       String            @unique
-  planWeek         PlanWeek          @relation(fields: [planWeekId], references: [id], onDelete: Cascade)
-  doneItems        String            @db.Text
-  notDoneItems     String            @db.Text
+  id               String           @id @default(uuid())
+  planWeekId       String           @unique
+  planWeek         PlanWeek         @relation(fields: [planWeekId], references: [id], onDelete: Cascade)
   obstacleCategory ObstacleCategory
-  freeText         String?           @db.Text
-  createdAt        DateTime          @default(now())
+  freeText         String?          @db.Text
+  createdAt        DateTime         @default(now())
 
   guidance ExecutionGuidance?
 

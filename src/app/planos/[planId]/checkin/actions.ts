@@ -17,7 +17,10 @@ export async function submitCheckin(planId: string, formData: FormData) {
   const plan = await db.plan.findUnique({
     where: { id: planId },
     include: {
-      weeks: { orderBy: { weekNumber: "asc" }, include: { checkin: true } },
+      weeks: {
+        orderBy: { weekNumber: "asc" },
+        include: { checkin: true, tasks: { orderBy: { sequencia: "asc" } } },
+      },
     },
   });
   if (!plan || plan.userId !== user.id) redirect("/");
@@ -25,14 +28,10 @@ export async function submitCheckin(planId: string, formData: FormData) {
   const currentWeek = plan.weeks.find((w) => w.status === "PENDENTE" && !w.checkin);
   if (!currentWeek) redirect(`/planos/${planId}`);
 
-  const doneItems = String(formData.get("doneItems") ?? "").trim();
-  const notDoneItems = String(formData.get("notDoneItems") ?? "").trim();
   const obstacleCategory = String(formData.get("obstacleCategory") ?? "") as ObstacleCategory;
   const freeText = String(formData.get("freeText") ?? "").trim();
   const diaryText = String(formData.get("diaryText") ?? "").trim();
 
-  if (!doneItems) fail(planId, "Conte o que foi feito, mesmo que pouco.");
-  if (!notDoneItems) fail(planId, "Conte o que não foi feito (pode ser \"nada\").");
   const validCategories = [
     "FALTA_DE_TEMPO",
     "FALTA_DE_INVESTIMENTO",
@@ -60,9 +59,18 @@ export async function submitCheckin(planId: string, formData: FormData) {
     select: { freeText: true },
   });
 
+  // O contexto pra IA de orientação agora vem do que a pessoa marcou no
+  // checklist da semana (o que ficou parcial, com a nota do que faltou),
+  // não mais de um resumo em texto livre — que deixou de existir.
+  const partialNotes = currentWeek.tasks
+    .filter((t) => t.status === "PARCIAL" && t.notaParcial)
+    .map((t) => `${t.texto}: ${t.notaParcial}`)
+    .join("\n");
+  const currentWeekContext = [freeText, partialNotes].filter(Boolean).join("\n");
+
   const personalizedText = await personalizeGuidance({
     baseTipText,
-    currentWeekContext: freeText,
+    currentWeekContext,
     previousWeeksContext: previousCheckins
       .map((c) => c.freeText)
       .filter((t): t is string => Boolean(t)),
@@ -76,8 +84,6 @@ export async function submitCheckin(planId: string, formData: FormData) {
     const checkin = await tx.checkin.create({
       data: {
         planWeekId: currentWeek.id,
-        doneItems,
-        notDoneItems,
         obstacleCategory,
         freeText: freeText || null,
       },

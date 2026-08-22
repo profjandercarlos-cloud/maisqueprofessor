@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { PROFUNDIDADE_CONFIG } from "@/lib/plano/formula";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { submitAdequacao } from "./actions";
 
@@ -84,24 +83,6 @@ export default async function AdequacaoPage({
                 <span>{opt.label}</span>
               </label>
             ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="mb-2 text-[15px] font-medium text-ink">Qual a profundidade desejada do primeiro teste?</p>
-          <div className="flex flex-col gap-2.5">
-            {(Object.keys(PROFUNDIDADE_CONFIG) as (keyof typeof PROFUNDIDADE_CONFIG)[]).map((key) => {
-              const config = PROFUNDIDADE_CONFIG[key];
-              return (
-                <label key={key} className={optionCardClass}>
-                  <input type="radio" name="profundidade" value={key} required className="mt-1 accent-petrol" />
-                  <span>
-                    <span className="block font-medium">{config.label}</span>
-                    <span className="block text-[13px] text-ink-muted">{config.descricao}</span>
-                  </span>
-                </label>
-              );
-            })}
           </div>
         </div>
 

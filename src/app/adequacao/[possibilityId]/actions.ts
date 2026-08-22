@@ -3,8 +3,8 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import type { Prisma, Profundidade } from "@/generated/prisma/client";
-import { calcularDuracaoSemanas, PROFUNDIDADE_CONFIG } from "@/lib/plano/formula";
+import type { Prisma } from "@/generated/prisma/client";
+import { calcularHorasTotais, PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
 import { generateReportAndPlan } from "@/lib/ai-engine/generate-report-plan";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 
@@ -30,7 +30,6 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
 
   const tempoDisponivelHoras = Number(formData.get("tempoDisponivelHoras"));
   const investimentoFaixa = String(formData.get("investimentoFaixa") ?? "");
-  const profundidade = String(formData.get("profundidade") ?? "") as Profundidade;
   const acompanhamento = String(formData.get("acompanhamento") ?? "");
   const diaCheckin = Number(formData.get("diaCheckin"));
 
@@ -38,14 +37,12 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
     fail(possibilityId, "Informe quantas horas por semana você tem disponível.");
   }
   if (!investimentoFaixa) fail(possibilityId, "Selecione uma faixa de investimento.");
-  if (!PROFUNDIDADE_CONFIG[profundidade]) fail(possibilityId, "Selecione a profundidade desejada.");
   if (!acompanhamento) fail(possibilityId, "Selecione o nível de acompanhamento.");
   if (Number.isNaN(diaCheckin) || diaCheckin < 0 || diaCheckin > 6) {
     fail(possibilityId, "Selecione o dia do check-in.");
   }
 
-  const config = PROFUNDIDADE_CONFIG[profundidade];
-  const duracaoSemanas = calcularDuracaoSemanas(profundidade, tempoDisponivelHoras);
+  const horasTotais = calcularHorasTotais(tempoDisponivelHoras);
 
   const generated = await generateReportAndPlan({
     diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
@@ -56,9 +53,7 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
       quemPagaria: possibility.quemPagaria,
       jaPossuiVsAprender: possibility.jaPossuiVsAprender,
     },
-    duracaoSemanas,
-    minTarefas: config.minTarefas,
-    maxTarefas: config.maxTarefas,
+    horasTotais,
     horasPorSemana: tempoDisponivelHoras,
   });
 
@@ -76,10 +71,9 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
       possibilityId: possibility.id,
       tempoDisponivelHoras,
       investimentoFaixa,
-      profundidade,
       acompanhamento,
       diaCheckin,
-      duracaoSemanas,
+      duracaoSemanas: PLAN_DURATION_SEMANAS,
       relatorio: generated.relatorio as Prisma.InputJsonValue,
       weeks: {
         create: generated.semanas.map((semana, index) => {
@@ -88,16 +82,30 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
           return {
             weekNumber: index + 1,
             meta: semana.meta,
-            tasks: {
-              tarefas: semana.tarefas,
-              dificuldadesAntecipadas: semana.dificuldades_antecipadas,
-            } as Prisma.InputJsonValue,
+            dificuldadesAntecipadas: semana.dificuldades_antecipadas,
             scheduledDate,
           };
         }),
       },
     },
+    include: { weeks: { orderBy: { weekNumber: "asc" } } },
   });
+
+  // PlanTask não pode ser criado aninhado 3 níveis abaixo de Plan (o create
+  // aninhado só preenche a FK do pai imediato — planWeekId — não a de Plan)
+  // então as tarefas são inseridas à parte, já com os dois IDs resolvidos.
+  let sequencia = 0;
+  const taskRows = generated.semanas.flatMap((semana, index) => {
+    const week = plan.weeks[index];
+    return semana.tarefas.map((tarefa) => ({
+      planId: plan.id,
+      planWeekId: week.id,
+      texto: tarefa.texto,
+      horasEstimadas: tarefa.horas,
+      sequencia: sequencia++,
+    }));
+  });
+  await db.planTask.createMany({ data: taskRows });
 
   await db.user.update({ where: { id: user.id }, data: { checkinWeekday: diaCheckin } });
   await db.possibility.update({ where: { id: possibility.id }, data: { status: "APROVADA" } });

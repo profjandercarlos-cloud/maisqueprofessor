@@ -29,7 +29,10 @@ export default async function CheckinPage({
     where: { id: planId },
     include: {
       possibility: true,
-      weeks: { orderBy: { weekNumber: "asc" }, include: { checkin: true } },
+      weeks: {
+        orderBy: { weekNumber: "asc" },
+        include: { checkin: true, tasks: { orderBy: { sequencia: "asc" } } },
+      },
     },
   });
   if (!plan || plan.userId !== user.id) notFound();
@@ -37,46 +40,39 @@ export default async function CheckinPage({
   const currentWeek = plan.weeks.find((w) => w.status === "PENDENTE" && !w.checkin);
   if (!currentWeek) redirect(`/planos/${planId}`);
 
-  const tasks = currentWeek.tasks as unknown as { tarefas: string[] };
   const action = submitCheckin.bind(null, planId);
+  const STATUS_LABEL: Record<string, string> = {
+    COMPLETO: "Completo",
+    PARCIAL: "Parcial",
+    PENDENTE: "Não iniciado",
+  };
 
   return (
     <div className="mx-auto w-full max-w-[640px] flex-1 px-5 pb-20">
       <AppHeader progressLabel={`CHECK-IN — SEMANA ${currentWeek.weekNumber}`} />
 
       <h1 className="mb-1.5 font-serif text-2xl font-medium tracking-tight text-petrol">
-        Como foi essa semana?
+        Fechar essa semana
       </h1>
       <p className="mb-2 text-[14.5px] text-ink-muted">
         Meta da semana: <strong className="text-ink">{currentWeek.meta}</strong>
       </p>
-      <ul className="mb-7 list-inside list-disc text-[13.5px] text-ink-muted">
-        {tasks.tarefas.map((t, i) => (
-          <li key={i}>{t}</li>
+      <p className="mb-4 text-[13px] text-ink-muted">
+        O que ainda estiver marcado como "não iniciado" ou "parcial" continua disponível — parcial
+        já virou pendência no seu pool, puxe quando quiser.
+      </p>
+      <ul className="mb-7 flex flex-col gap-1.5 text-[13.5px] text-ink">
+        {currentWeek.tasks.map((t) => (
+          <li key={t.id} className="flex items-center justify-between gap-3">
+            <span>{t.texto}</span>
+            <span className="shrink-0 font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
+              {STATUS_LABEL[t.status]}
+            </span>
+          </li>
         ))}
       </ul>
 
       <form action={action} className="flex flex-col gap-6">
-        <div>
-          <label htmlFor="doneItems" className={fieldLabel}>
-            O que foi feito
-          </label>
-          <textarea id="doneItems" name="doneItems" required className={`${textareaClass} min-h-[80px]`} />
-        </div>
-
-        <div>
-          <label htmlFor="notDoneItems" className={fieldLabel}>
-            O que não foi feito
-          </label>
-          <textarea
-            id="notDoneItems"
-            name="notDoneItems"
-            required
-            placeholder='Pode escrever "nada" se você cumpriu tudo.'
-            className={`${textareaClass} min-h-[80px]`}
-          />
-        </div>
-
         <div>
           <p className={fieldLabel}>O que mais pesou nesta semana?</p>
           <div className="flex flex-col gap-2">

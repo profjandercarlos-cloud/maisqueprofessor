@@ -17,8 +17,8 @@ export const REPORT_PLAN_SYSTEM_PROMPT = `Você é o motor que produz o relatór
 
 - O diagnóstico completo do professor (mesmo formato usado no motor de geração)
 - O conteúdo completo da possibilidade que ele aprovou (título, na prática, por que apareceu, quem pagaria, já possui vs. a aprender)
-- O número exato de semanas do plano (já calculado por fórmula, você não decide isso)
-- A faixa de quantidade de tarefas por semana permitida (você decide quantas tarefas cada semana tem, dentro dessa faixa)
+- O total de horas que o plano inteiro deve somar (já calculado: 12 semanas × horas/semana da pessoa, até um teto — você não decide isso)
+- As horas/semana disponíveis declaradas pela pessoa
 
 ## Sua tarefa
 
@@ -32,12 +32,16 @@ export const REPORT_PLAN_SYSTEM_PROMPT = `Você é o motor que produz o relatór
 
 ### 2. Plano de execução por semanas
 
-Gere exatamente o número de semanas informado. Cada semana precisa ter:
+Gere SEMPRE exatamente 12 semanas — esse número nunca muda. O que muda de pessoa pra pessoa é a profundidade real do plano dentro dessas 12 semanas: quanto mais horas/semana ela tiver, mais completo e ambicioso deve ser o conjunto de tarefas, não só "mais tarefas pequenas" — um plano com mais horas deve produzir algo mais concreto e acabado (ex.: não só "criar uma página simples", mas "criar a página, gravar um vídeo de apresentação, e conversar com 8 pessoas" quando há tempo pra isso).
+
+Cada tarefa que você gerar precisa ter sua própria estimativa de horas (\`horas\`), realista e específica pra aquela ação — nunca um número genérico repetido. A SOMA de todas as horas de todas as tarefas, em todas as 12 semanas, deve ficar próxima do total de horas informado (uma variação de até ~15% pra mais ou pra menos é aceitável, mas não estoure muito além disso).
+
+Cada semana precisa ter:
 - **meta**: uma frase clara do que aquela semana busca alcançar
-- **tarefas**: lista de tarefas concretas (dentro da faixa de quantidade informada), cada uma uma ação específica, não um objetivo vago
+- **tarefas**: lista de tarefas concretas, cada uma com \`texto\` (uma ação específica, não um objetivo vago) e \`horas\` (estimativa de tempo pra completar essa tarefa específica)
 - **dificuldades_antecipadas**: 1 frase sobre o que costuma travar as pessoas nessa etapa específica, para a pessoa já saber o que esperar
 
-O plano deve ter progressão real: comece pelo teste mais simples e barato possível, e só aumente a complexidade/o compromisso nas semanas seguintes, na medida em que a etapa anterior valide que faz sentido continuar.
+O plano deve ter progressão real: comece pelo teste mais simples e barato possível, e só aumente a complexidade/o compromisso nas semanas seguintes, na medida em que a etapa anterior valide que faz sentido continuar. As tarefas têm uma sequência lógica — a ordem em que aparecem importa, porque a pessoa pode adiantar ou adiar tarefas dentro do próprio ritmo dela, mas a lógica de dependência entre elas precisa fazer sentido nessa ordem.
 
 ## Formato de saída (JSON)
 
@@ -54,7 +58,7 @@ Retorne exclusivamente um JSON válido, sem texto fora dele:
   "semanas": [
     {
       "meta": "string",
-      "tarefas": ["string", "string"],
+      "tarefas": [{ "texto": "string", "horas": 3 }],
       "dificuldades_antecipadas": "string"
     }
   ]
