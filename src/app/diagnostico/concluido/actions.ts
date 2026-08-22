@@ -16,9 +16,20 @@ export async function generateForActiveDiagnostic() {
 
   const roundsCount = await db.generationRound.count({ where: { diagnosticId: diagnostic.id } });
 
-  const generated = await generatePossibilities({
-    diagnosticInput: formatDiagnosticInput(diagnostic),
-  });
+  let generated;
+  try {
+    generated = await generatePossibilities({
+      diagnosticInput: formatDiagnosticInput(diagnostic),
+    });
+  } catch (err) {
+    // Loga o erro real (aparece nos Runtime Logs da Vercel) em vez de deixar
+    // a pessoa cair numa tela de erro genérica sem nenhuma pista do que
+    // aconteceu.
+    console.error("Erro ao gerar as 5 possibilidades", err);
+    redirect(
+      `/diagnostico/concluido?error=${encodeURIComponent("Não foi possível gerar suas possibilidades agora. Tente de novo em instantes.")}`,
+    );
+  }
 
   const round = await db.generationRound.create({
     data: {

@@ -44,18 +44,24 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
 
   const horasTotais = calcularHorasTotais(tempoDisponivelHoras);
 
-  const generated = await generateReportAndPlan({
-    diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
-    possibility: {
-      titulo: possibility.titulo,
-      naPratica: possibility.naPratica,
-      porQueApareceu: possibility.porQueApareceu,
-      quemPagaria: possibility.quemPagaria,
-      jaPossuiVsAprender: possibility.jaPossuiVsAprender,
-    },
-    horasTotais,
-    horasPorSemana: tempoDisponivelHoras,
-  });
+  let generated;
+  try {
+    generated = await generateReportAndPlan({
+      diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
+      possibility: {
+        titulo: possibility.titulo,
+        naPratica: possibility.naPratica,
+        porQueApareceu: possibility.porQueApareceu,
+        quemPagaria: possibility.quemPagaria,
+        jaPossuiVsAprender: possibility.jaPossuiVsAprender,
+      },
+      horasTotais,
+      horasPorSemana: tempoDisponivelHoras,
+    });
+  } catch (err) {
+    console.error("Erro ao gerar relatório e plano", err);
+    fail(possibilityId, "Não foi possível gerar seu plano agora. Tente de novo em instantes.");
+  }
 
   // Só 1 plano ativo por vez (Etapa 9) — pausa qualquer outro antes de ativar este.
   await db.plan.updateMany({

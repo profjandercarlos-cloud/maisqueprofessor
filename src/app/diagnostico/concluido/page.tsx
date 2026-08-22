@@ -8,7 +8,14 @@ import { generateForActiveDiagnostic } from "./actions";
 // upgrade pra Pro (até 300s).
 export const maxDuration = 60;
 
-export default function DiagnosticoConcluidoPage() {
+export default async function DiagnosticoConcluidoPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const query = await searchParams;
+  const error = typeof query.error === "string" ? query.error : undefined;
+
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="DIAGNÓSTICO CONCLUÍDO" />
@@ -22,6 +29,9 @@ export default function DiagnosticoConcluidoPage() {
         <p className="mb-7 max-w-[46ch] text-[15.5px] text-ink-muted">
           Agora vamos gerar suas cinco possibilidades a partir do que você respondeu.
         </p>
+        {error ? (
+          <p className="mb-5 max-w-[46ch] text-[14px] text-role-3">{error}</p>
+        ) : null}
         <form action={generateForActiveDiagnostic}>
           <SubmitButton
             pendingText="Gerando suas possibilidades... isso pode levar até 1 minuto, não recarregue a página"

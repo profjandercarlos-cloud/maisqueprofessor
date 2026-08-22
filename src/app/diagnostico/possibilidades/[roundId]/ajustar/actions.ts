@@ -26,17 +26,28 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
     redirect(`/diagnostico/possibilidades/${roundId}`);
   }
 
+  const rejectedTitles = round.diagnostic.rounds.flatMap((r) => r.possibilities.map((p) => p.titulo));
+
+  let generated;
+  try {
+    generated = await generatePossibilities({
+      diagnosticInput: formatDiagnosticInput(round.diagnostic),
+      feedback,
+      rejectedTitles,
+    });
+  } catch (err) {
+    // Só marca o conjunto anterior como rejeitado depois que a geração do
+    // novo conjunto realmente funcionar — se falhar aqui, a pessoa não pode
+    // ficar sem nenhum conjunto de possibilidades.
+    console.error("Erro ao gerar novo conjunto de possibilidades", err);
+    redirect(
+      `/diagnostico/possibilidades/${roundId}/ajustar?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
+    );
+  }
+
   await db.possibility.updateMany({
     where: { roundId: round.id },
     data: { status: "REJEITADA" },
-  });
-
-  const rejectedTitles = round.diagnostic.rounds.flatMap((r) => r.possibilities.map((p) => p.titulo));
-
-  const generated = await generatePossibilities({
-    diagnosticInput: formatDiagnosticInput(round.diagnostic),
-    feedback,
-    rejectedTitles,
   });
 
   const newRound = await db.generationRound.create({

@@ -60,7 +60,15 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
   const rejectedTitles = diagnostic.rounds.flatMap((r) => r.possibilities.map((p) => p.titulo));
   const roundsCount = diagnostic.rounds.length;
 
-  const generated = await generatePossibilities({ diagnosticInput, rejectedTitles });
+  let generated;
+  try {
+    generated = await generatePossibilities({ diagnosticInput, rejectedTitles });
+  } catch (err) {
+    console.error("Erro ao gerar possibilidades (incremento)", err);
+    redirect(
+      `/diagnostico/incremento/${slug}?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
+    );
+  }
 
   const newRound = await db.generationRound.create({
     data: {
