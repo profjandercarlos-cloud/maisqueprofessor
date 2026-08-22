@@ -76,9 +76,13 @@ function extractJson(text: string): unknown {
 export async function generatePossibilities(
   context: GenerationContext,
 ): Promise<GeneratedPossibility[]> {
+  // 5 possibilidades × 8 campos de texto cada é bastante conteúdo — 8000
+  // tokens ocasionalmente cortava a resposta no meio do JSON (confirmado em
+  // teste real: SyntaxError de array incompleto). Mesmo ajuste já aplicado
+  // em generate-report-plan.ts pelo mesmo motivo.
   const message = await anthropic.messages.create({
     model: GENERATION_MODEL,
-    max_tokens: 8000,
+    max_tokens: 16000,
     system: GENERATION_SYSTEM_PROMPT,
     messages: [{ role: "user", content: buildUserMessage(context) }],
   });
