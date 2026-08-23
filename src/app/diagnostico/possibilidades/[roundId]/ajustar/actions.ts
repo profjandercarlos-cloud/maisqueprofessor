@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
@@ -31,7 +32,7 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
 
   let generated;
   try {
-    generated = await generatePossibilities({
+    generated = await generatePossibilitiesOpenAI({
       diagnosticInput: formatDiagnosticInput(round.diagnostic),
       feedback,
       rejectedTitles,

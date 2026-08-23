@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { ObstacleCategory, Prisma } from "@/generated/prisma/client";
 import { selectBaseTip } from "@/lib/orientacao/biblioteca";
-import { personalizeGuidance } from "@/lib/ai-engine/personalize-guidance";
+import { personalizeGuidanceOpenAI } from "@/lib/ai-engine/personalize-guidance-openai";
+import { logDebugError } from "@/lib/debug-error-log";
 
 function fail(planId: string, message: string): never {
   redirect(`/planos/${planId}/checkin?error=${encodeURIComponent(message)}`);
@@ -68,13 +69,21 @@ export async function submitCheckin(planId: string, formData: FormData) {
     .join("\n");
   const currentWeekContext = [freeText, partialNotes].filter(Boolean).join("\n");
 
-  const personalizedText = await personalizeGuidance({
-    baseTipText,
-    currentWeekContext,
-    previousWeeksContext: previousCheckins
-      .map((c) => c.freeText)
-      .filter((t): t is string => Boolean(t)),
-  });
+  // Check-in é o ritual central da semana — se a reescrita de tom falhar,
+  // usa a dica-base sem personalização em vez de travar a submissão inteira.
+  let personalizedText = baseTipText;
+  try {
+    personalizedText = await personalizeGuidanceOpenAI({
+      baseTipText,
+      currentWeekContext,
+      previousWeeksContext: previousCheckins
+        .map((c) => c.freeText)
+        .filter((t): t is string => Boolean(t)),
+    });
+  } catch (err) {
+    console.error("Erro ao personalizar orientação do check-in", err);
+    await logDebugError("checkin:personalizeGuidance", err);
+  }
 
   const now = new Date();
   const deltaMs = now.getTime() - currentWeek.scheduledDate.getTime();

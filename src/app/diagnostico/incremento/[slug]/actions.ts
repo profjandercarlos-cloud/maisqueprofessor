@@ -9,7 +9,8 @@ import {
   getIncrementNextSlug,
   getIncrementStepBySlug,
 } from "@/lib/diagnostico/increment-steps";
-import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -63,7 +64,7 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
 
   let generated;
   try {
-    generated = await generatePossibilities({ diagnosticInput, rejectedTitles });
+    generated = await generatePossibilitiesOpenAI({ diagnosticInput, rejectedTitles });
   } catch (err) {
     console.error("Erro ao gerar possibilidades (incremento)", err);
     await logDebugError("incremento:generatePossibilities", err);

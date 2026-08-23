@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { Prisma } from "@/generated/prisma/client";
 import { calcularHorasTotais, PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
-import { generateReportAndPlan } from "@/lib/ai-engine/generate-report-plan";
+import { generateReportAndPlanOpenAI } from "@/lib/ai-engine/generate-report-plan-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 
@@ -47,7 +47,7 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
 
   let generated;
   try {
-    generated = await generateReportAndPlan({
+    generated = await generateReportAndPlanOpenAI({
       diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
       possibility: {
         titulo: possibility.titulo,
