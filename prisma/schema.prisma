@@ -328,3 +328,19 @@ model PushSubscription {
 
   @@map("push_subscriptions")
 }
+
+// =========================================================================
+// TEMPORÁRIO — debug do erro nas chamadas de IA em produção. A Vercel no
+// plano Hobby só guarda Runtime Logs por 1h, curto demais pra investigar
+// com calma. Grava o erro real aqui pra consulta direta, sem depender de
+// janela de tempo nenhuma. Remover depois que a causa for resolvida.
+// =========================================================================
+model DebugErrorLog {
+  id        String   @id @default(uuid())
+  context   String
+  message   String   @db.Text
+  stack     String?  @db.Text
+  createdAt DateTime @default(now())
+
+  @@map("debug_error_logs")
+}

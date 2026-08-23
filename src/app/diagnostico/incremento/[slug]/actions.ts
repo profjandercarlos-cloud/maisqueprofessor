@@ -10,6 +10,7 @@ import {
   getIncrementStepBySlug,
 } from "@/lib/diagnostico/increment-steps";
 import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { logDebugError } from "@/lib/debug-error-log";
 import type { Prisma } from "@/generated/prisma/client";
 
 export async function saveIncrementStep(slug: string, formData: FormData) {
@@ -65,6 +66,7 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
     generated = await generatePossibilities({ diagnosticInput, rejectedTitles });
   } catch (err) {
     console.error("Erro ao gerar possibilidades (incremento)", err);
+    await logDebugError("incremento:generatePossibilities", err);
     redirect(
       `/diagnostico/incremento/${slug}?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
     );

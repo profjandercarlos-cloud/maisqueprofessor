@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { logDebugError } from "@/lib/debug-error-log";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
 
@@ -40,6 +41,7 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
     // novo conjunto realmente funcionar — se falhar aqui, a pessoa não pode
     // ficar sem nenhum conjunto de possibilidades.
     console.error("Erro ao gerar novo conjunto de possibilidades", err);
+    await logDebugError("ajustar:generatePossibilities", err);
     redirect(
       `/diagnostico/possibilidades/${roundId}/ajustar?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
     );

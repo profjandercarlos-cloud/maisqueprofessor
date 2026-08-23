@@ -6,6 +6,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { Prisma } from "@/generated/prisma/client";
 import { calcularHorasTotais, PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
 import { generateReportAndPlan } from "@/lib/ai-engine/generate-report-plan";
+import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 
 function fail(possibilityId: string, message: string): never {
@@ -60,6 +61,7 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
     });
   } catch (err) {
     console.error("Erro ao gerar relatório e plano", err);
+    await logDebugError("adequacao:generateReportAndPlan", err);
     fail(possibilityId, "Não foi possível gerar seu plano agora. Tente de novo em instantes.");
   }
 

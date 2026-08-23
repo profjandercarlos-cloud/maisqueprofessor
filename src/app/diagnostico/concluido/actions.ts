@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { logDebugError } from "@/lib/debug-error-log";
 
 export async function generateForActiveDiagnostic() {
   const user = await requireActiveAccess();
@@ -26,6 +27,7 @@ export async function generateForActiveDiagnostic() {
     // a pessoa cair numa tela de erro genérica sem nenhuma pista do que
     // aconteceu.
     console.error("Erro ao gerar as 5 possibilidades", err);
+    await logDebugError("diagnostico/concluido:generatePossibilities", err);
     redirect(
       `/diagnostico/concluido?error=${encodeURIComponent("Não foi possível gerar suas possibilidades agora. Tente de novo em instantes.")}`,
     );
