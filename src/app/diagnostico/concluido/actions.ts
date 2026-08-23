@@ -3,7 +3,8 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { generatePossibilities, formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 
 export async function generateForActiveDiagnostic() {
@@ -19,7 +20,11 @@ export async function generateForActiveDiagnostic() {
 
   let generated;
   try {
-    generated = await generatePossibilities({
+    // TESTE — trocado de generatePossibilities (Anthropic) pra
+    // generatePossibilitiesOpenAI: a versão Anthropic estava estourando o
+    // limite de 60s da Vercel Hobby de forma inconsistente (15s a 90s);
+    // gpt-5.6-terra ficou estável em ~30s em testes repetidos.
+    generated = await generatePossibilitiesOpenAI({
       diagnosticInput: formatDiagnosticInput(diagnostic),
     });
   } catch (err) {

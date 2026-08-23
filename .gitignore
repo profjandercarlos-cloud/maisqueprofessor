@@ -34,6 +34,12 @@ yarn-error.log*
 .env*
 !.env.example
 
+# nenhum documento do Office pertence a este repositório (público) — por
+# precaução, nunca vai pro git mesmo se acabar salvo aqui por engano
+*.docx
+*.doc
+~$*
+
 # vercel
 .vercel
 
