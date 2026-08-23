@@ -1,14 +1,28 @@
-// TESTE — versão do motor das 5 possibilidades usando a OpenAI em vez da
-// Anthropic, pra comparar velocidade/confiabilidade em produção (a versão
-// Anthropic está estourando o limite de 60s da Vercel Hobby). Mesmo prompt,
-// mesma regra de negócio — só troca o modelo e usa saída estruturada da
-// OpenAI (json_schema strict), que garante JSON válido por construção, sem
-// o risco de corte no meio que a extração de texto da Anthropic tem.
+// Motor das 5 possibilidades — migrado de Anthropic pra OpenAI (a versão
+// Anthropic estourava o limite de 60s da Vercel Hobby de forma
+// inconsistente). Usa saída estruturada da OpenAI (json_schema strict), que
+// garante JSON válido por construção, sem risco de corte no meio.
 import { z } from "zod";
 import type { PossibilityRole } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { GENERATION_SYSTEM_PROMPT } from "./system-prompt";
-import type { GenerationContext, GeneratedPossibility } from "./generate-possibilities";
+
+export type GenerationContext = {
+  diagnosticInput: string;
+  feedback?: string;
+  rejectedTitles?: string[];
+};
+
+export type GeneratedPossibility = {
+  papel: PossibilityRole;
+  titulo: string;
+  subtitulo: string;
+  naPratica: string;
+  porQueApareceu: string;
+  quemPagaria: string;
+  jaPossuiVsAprender: string;
+  familiaValor: string;
+};
 
 const ROLE_MAP: Record<string, PossibilityRole> = {
   onde_ja_e_forte: "ONDE_JA_E_FORTE",

@@ -9,7 +9,7 @@ import {
   getIncrementNextSlug,
   getIncrementStepBySlug,
 } from "@/lib/diagnostico/increment-steps";
-import { formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import type { Prisma } from "@/generated/prisma/client";

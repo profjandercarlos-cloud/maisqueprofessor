@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { formatDiagnosticInput } from "@/lib/ai-engine/generate-possibilities";
+import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 
