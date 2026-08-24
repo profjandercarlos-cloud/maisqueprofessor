@@ -32,6 +32,7 @@ model User {
   plans               Plan[]
   hotmartTransactions HotmartTransaction[]
   pushSubscriptions   PushSubscription[]
+  agendaEntries       AgendaEntry[]
 
   @@map("users")
 }
@@ -299,6 +300,33 @@ model JournalEntry {
   createdAt  DateTime  @default(now())
 
   @@map("journal_entries")
+}
+
+// =========================================================================
+// Agenda pessoal — independente de Plan (a pessoa pode anotar qualquer
+// coisa, não só tarefas do plano). Cada entrada pertence a uma "série"
+// (seriesId): entradas criadas junto (replicar pra outros dias / pras
+// próximas semanas) compartilham o mesmo seriesId, o que permite excluir
+// só uma semana ou a partir dela em diante. Uma entrada avulsa (sem
+// réplica) ainda ganha um seriesId próprio, só pra manter a mesma lógica
+// de exclusão em todo lugar.
+// =========================================================================
+model AgendaEntry {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  seriesId     String
+  label        String
+  color        String // token de uma paleta fixa curta (ver src/lib/agenda/colors.ts)
+  weekday      Int // 0 (domingo) a 6 (sábado) — mesma convenção de WEEKDAY_LABELS
+  startMinutes Int // minutos desde 00:00, múltiplo de 30
+  endMinutes   Int
+  weekStart    DateTime // segunda-feira (00:00) da semana desta entrada
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, seriesId, weekStart, weekday])
+  @@index([userId, weekStart])
+  @@map("agenda_entries")
 }
 
 // =========================================================================
