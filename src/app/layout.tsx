@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, Space_Mono } from "next/font/google";
 import "./globals.css";
+import { AppNavLinks } from "@/components/app-nav-links";
+import { getNavContext } from "@/lib/auth/require-active-access";
 
 const fraunces = Fraunces({
   variable: "--font-fraunces",
@@ -34,7 +36,9 @@ export const viewport: Viewport = {
 
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const navContext = await getNavContext();
+
   return (
     <html
       lang="pt-BR"
@@ -44,7 +48,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-full flex flex-col bg-paper font-sans text-ink">{children}</body>
+      <body className="min-h-full flex flex-col bg-paper font-sans text-ink">
+        {navContext ? <AppNavLinks isAdmin={navContext.isAdmin} variant="sidebar" /> : null}
+        {children}
+      </body>
     </html>
   );
 }

@@ -104,7 +104,7 @@ export default async function Home({
         </a>
       )}
 
-      <AppNavLinks isAdmin={!!dbUser?.isAdmin} />
+      <AppNavLinks isAdmin={!!dbUser?.isAdmin} variant="mobile" />
     </div>
   );
 }

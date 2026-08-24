@@ -41,25 +41,23 @@ const ADMIN_ITEM = { href: "/admin", label: "Administração", Icon: Administrac
 // No computador sobra espaço nas laterais da coluna central (max-w do
 // conteúdo) — a partir de xl (1280px) isso é grande o suficiente pra fixar
 // o menu no canto superior esquerdo sem sobrepor o conteúdo. Abaixo disso
-// (tablet e celular) mantém a lista horizontal simples no rodapé.
-export function AppNavLinks({ isAdmin }: { isAdmin: boolean }) {
+// (tablet e celular) usa a lista horizontal simples no rodapé.
+//
+// A sidebar é renderizada uma única vez pelo layout raiz (variant
+// "sidebar"), em toda página logada. A Home renderiza só a lista horizontal
+// (variant "mobile") pra não duplicar a sidebar nela — nenhuma outra página
+// tinha a lista horizontal antes, então elas não pedem essa variante.
+export function AppNavLinks({
+  isAdmin,
+  variant,
+}: {
+  isAdmin: boolean;
+  variant: "sidebar" | "mobile";
+}) {
   const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
-  return (
-    <>
-      <nav className="hidden xl:fixed xl:top-28 xl:left-10 xl:flex xl:w-44 xl:flex-col xl:gap-1">
-        {items.map(({ href, label, Icon }) => (
-          <a
-            key={href}
-            href={href}
-            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
-          >
-            <Icon />
-            {label}
-          </a>
-        ))}
-      </nav>
-
+  if (variant === "mobile") {
+    return (
       <div className="flex gap-5 text-[13.5px] font-semibold text-petrol xl:hidden">
         {items.map(({ href, label }) => (
           <a key={href} href={href} className="hover:underline">
@@ -67,6 +65,21 @@ export function AppNavLinks({ isAdmin }: { isAdmin: boolean }) {
           </a>
         ))}
       </div>
-    </>
+    );
+  }
+
+  return (
+    <nav className="hidden xl:fixed xl:top-28 xl:left-10 xl:flex xl:w-44 xl:flex-col xl:gap-1">
+      {items.map(({ href, label, Icon }) => (
+        <a
+          key={href}
+          href={href}
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
+        >
+          <Icon />
+          {label}
+        </a>
+      ))}
+    </nav>
   );
 }

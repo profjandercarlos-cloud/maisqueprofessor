@@ -46,3 +46,16 @@ export async function requireAdmin(): Promise<User> {
   }
   return user;
 }
+
+// Usada só pelo layout raiz, pra decidir se mostra a navegação lateral fixa
+// em toda tela logada — nunca redireciona (o layout raiz também renderiza
+// páginas públicas como /login), só devolve null sem sessão.
+export async function getNavContext(): Promise<{ isAdmin: boolean } | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const dbUser = await db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true } });
+  return { isAdmin: dbUser?.isAdmin ?? false };
+}
