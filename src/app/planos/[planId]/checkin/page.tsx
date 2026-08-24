@@ -41,11 +41,6 @@ export default async function CheckinPage({
   if (!currentWeek) redirect(`/planos/${planId}`);
 
   const action = submitCheckin.bind(null, planId);
-  const STATUS_LABEL: Record<string, string> = {
-    COMPLETO: "Completo",
-    PARCIAL: "Parcial",
-    PENDENTE: "Não iniciado",
-  };
 
   return (
     <div className="mx-auto w-full max-w-[640px] flex-1 px-5 pb-20">
@@ -54,23 +49,9 @@ export default async function CheckinPage({
       <h1 className="mb-1.5 font-serif text-2xl font-medium tracking-tight text-petrol">
         Fechar essa semana
       </h1>
-      <p className="mb-2 text-[14.5px] text-ink-muted">
+      <p className="mb-6 text-[14.5px] text-ink-muted">
         Meta da semana: <strong className="text-ink">{currentWeek.meta}</strong>
       </p>
-      <p className="mb-4 text-[13px] text-ink-muted">
-        O que ainda estiver marcado como "não iniciado" ou "parcial" continua disponível — parcial
-        já virou pendência no seu pool, puxe quando quiser.
-      </p>
-      <ul className="mb-7 flex flex-col gap-1.5 text-[13.5px] text-ink">
-        {currentWeek.tasks.map((t) => (
-          <li key={t.id} className="flex items-center justify-between gap-3">
-            <span>{t.texto}</span>
-            <span className="shrink-0 font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
-              {STATUS_LABEL[t.status]}
-            </span>
-          </li>
-        ))}
-      </ul>
 
       <form action={action} className="flex flex-col gap-6">
         <div>

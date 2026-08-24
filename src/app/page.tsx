@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
+import type { PlanTask } from "@/generated/prisma/client";
 
 export default async function Home({
   searchParams,
@@ -22,11 +23,16 @@ export default async function Home({
 
   let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
   let poolTasks: Awaited<ReturnType<typeof loadPoolTasks>> = [];
+  let nextWeekTasks: PlanTask[] | null = null;
   if (activePlan) {
     [currentWeek, poolTasks] = await Promise.all([
       loadCurrentWeek(activePlan.id),
       loadPoolTasks(activePlan.id),
     ]);
+    if (currentWeek) {
+      const nextWeek = await loadNextWeek(activePlan.id, currentWeek.weekNumber + 1);
+      nextWeekTasks = nextWeek ? nextWeek.tasks : null;
+    }
   }
 
   const diagnosticCta = !diagnostic
@@ -67,6 +73,7 @@ export default async function Home({
             week={currentWeek}
             weekTasks={currentWeek.tasks}
             poolTasks={poolTasks}
+            nextWeekTasks={nextWeekTasks}
             horasDisponiveis={activePlan.tempoDisponivelHoras}
             expandedTaskId={expandedTaskId}
             duracaoSemanas={activePlan.duracaoSemanas}
@@ -126,5 +133,12 @@ function loadPoolTasks(planId: string) {
   return db.planTask.findMany({
     where: { planId, planWeekId: null },
     orderBy: { createdAt: "asc" },
+  });
+}
+
+function loadNextWeek(planId: string, weekNumber: number) {
+  return db.planWeek.findFirst({
+    where: { planId, weekNumber },
+    include: { tasks: { orderBy: { sequencia: "asc" } } },
   });
 }
