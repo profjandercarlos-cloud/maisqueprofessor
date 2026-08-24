@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
+import { AppNavLinks } from "@/components/app-nav-links";
 import type { PlanTask } from "@/generated/prisma/client";
 
 export default async function Home({
@@ -103,19 +104,7 @@ export default async function Home({
         </a>
       )}
 
-      <div className="flex gap-5 text-[13.5px] font-semibold text-petrol">
-        <a href="/planos" className="hover:underline">
-          Meus planos →
-        </a>
-        <a href="/configuracoes" className="hover:underline">
-          Configurações →
-        </a>
-        {dbUser?.isAdmin ? (
-          <a href="/admin" className="hover:underline">
-            Administração →
-          </a>
-        ) : null}
-      </div>
+      <AppNavLinks isAdmin={!!dbUser?.isAdmin} />
     </div>
   );
 }
