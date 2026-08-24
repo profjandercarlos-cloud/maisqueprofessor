@@ -118,11 +118,16 @@ export default async function ConfiguracoesPage({
 
       <div className="mb-10 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
         <p className={fieldLabel}>Seus dados</p>
+        <p className="mb-3 text-[13px] text-ink-muted">
+          Pela LGPD, você pode pedir uma cópia de tudo que guardamos sobre você. Este botão gera um
+          PDF com seu diagnóstico, as possibilidades geradas, o relatório e o plano de execução,
+          incluindo o progresso semana a semana e os check-ins registrados.
+        </p>
         <a
           href="/api/conta/exportar"
           className="text-[13.5px] font-semibold text-petrol hover:underline"
         >
-          Exportar meus dados (JSON) →
+          Exportar meus dados (PDF) →
         </a>
       </div>
 
