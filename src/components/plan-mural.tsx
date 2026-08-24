@@ -45,7 +45,7 @@ export function PlanMural({
   week,
   weekTasks,
   poolTasks,
-  nextWeekTasks,
+  upcomingPlanTasks,
   horasDisponiveis,
   expandedTaskId,
   duracaoSemanas,
@@ -54,7 +54,7 @@ export function PlanMural({
   week: PlanWeek;
   weekTasks: PlanTask[];
   poolTasks: PlanTask[];
-  nextWeekTasks: PlanTask[] | null;
+  upcomingPlanTasks: PlanTask[];
   horasDisponiveis: number;
   expandedTaskId?: string;
   duracaoSemanas: number;
@@ -70,8 +70,9 @@ export function PlanMural({
   weekEnd.setDate(weekEnd.getDate() + 6);
 
   const pendencias = poolTasks.filter((t) => t.origin !== "PLANO");
-  const proximasDoPlano = [...poolTasks.filter((t) => t.origin === "PLANO"), ...(nextWeekTasks ?? [])];
-  const adiantouSemanaSeguinte = nextWeekTasks !== null && nextWeekTasks.length === 0;
+  const proximasDoPlano = [...poolTasks.filter((t) => t.origin === "PLANO"), ...upcomingPlanTasks];
+  const temSemanasFuturas = week.weekNumber < duracaoSemanas;
+  const adiantouSemanaSeguinte = temSemanasFuturas && proximasDoPlano.length === 0;
 
   return (
     <div className="mb-10 rounded-[var(--radius-app)] border border-petrol bg-paper-raised p-5 shadow-[var(--shadow)]">

@@ -23,15 +23,14 @@ export default async function Home({
 
   let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
   let poolTasks: Awaited<ReturnType<typeof loadPoolTasks>> = [];
-  let nextWeekTasks: PlanTask[] | null = null;
+  let upcomingPlanTasks: PlanTask[] = [];
   if (activePlan) {
     [currentWeek, poolTasks] = await Promise.all([
       loadCurrentWeek(activePlan.id),
       loadPoolTasks(activePlan.id),
     ]);
     if (currentWeek) {
-      const nextWeek = await loadNextWeek(activePlan.id, currentWeek.weekNumber + 1);
-      nextWeekTasks = nextWeek ? nextWeek.tasks : null;
+      upcomingPlanTasks = await loadUpcomingPlanTasks(activePlan.id, currentWeek.weekNumber);
     }
   }
 
@@ -73,7 +72,7 @@ export default async function Home({
             week={currentWeek}
             weekTasks={currentWeek.tasks}
             poolTasks={poolTasks}
-            nextWeekTasks={nextWeekTasks}
+            upcomingPlanTasks={upcomingPlanTasks}
             horasDisponiveis={activePlan.tempoDisponivelHoras}
             expandedTaskId={expandedTaskId}
             duracaoSemanas={activePlan.duracaoSemanas}
@@ -136,9 +135,9 @@ function loadPoolTasks(planId: string) {
   });
 }
 
-function loadNextWeek(planId: string, weekNumber: number) {
-  return db.planWeek.findFirst({
-    where: { planId, weekNumber },
-    include: { tasks: { orderBy: { sequencia: "asc" } } },
+function loadUpcomingPlanTasks(planId: string, afterWeekNumber: number) {
+  return db.planTask.findMany({
+    where: { planId, origin: "PLANO", planWeek: { weekNumber: { gt: afterWeekNumber } } },
+    orderBy: [{ planWeek: { weekNumber: "asc" } }, { sequencia: "asc" }],
   });
 }
