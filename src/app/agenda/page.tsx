@@ -8,8 +8,7 @@ import {
   GRID_START_MINUTES,
   GRID_END_MINUTES,
   SLOT_MINUTES,
-  HIGHLIGHT_START_MINUTES,
-  HIGHLIGHT_END_MINUTES,
+  DEFAULT_SCROLL_MINUTES,
   WEEK_DISPLAY_ORDER,
   getMondayOfWeek,
   addWeeks,
@@ -26,8 +25,10 @@ import {
 
 const TIME_LABEL_COL = "56px";
 const HEADER_ROW = "34px";
-const SLOT_ROW = "20px";
+const SLOT_ROW_PX = 20;
+const SLOT_ROW = `${SLOT_ROW_PX}px`;
 const TOTAL_SLOTS = (GRID_END_MINUTES - GRID_START_MINUTES) / SLOT_MINUTES;
+const SCROLL_CONTAINER_MAX_HEIGHT = "560px";
 
 export default async function AgendaPage({
   searchParams,
@@ -63,8 +64,7 @@ export default async function AgendaPage({
   const editingEntry = editingId ? weekEntries.find((e) => e.id === editingId) : undefined;
 
   const slots = Array.from({ length: TOTAL_SLOTS }, (_, i) => GRID_START_MINUTES + i * SLOT_MINUTES);
-  const highlightRowStart = gridRow(HIGHLIGHT_START_MINUTES);
-  const highlightRowEnd = gridRow(HIGHLIGHT_END_MINUTES);
+  const defaultScrollTop = ((DEFAULT_SCROLL_MINUTES - GRID_START_MINUTES) / SLOT_MINUTES) * SLOT_ROW_PX;
 
   return (
     <div className="mx-auto w-full max-w-[900px] flex-1 px-5 pb-20">
@@ -95,171 +95,7 @@ export default async function AgendaPage({
         {formatDate(prevWeekEnd, { day: "2-digit", month: "short" })}
       </p>
 
-      <div className="mb-6 overflow-x-auto rounded-[var(--radius-app)] border border-line bg-paper-raised p-3">
-        <div
-          className="relative grid min-w-[720px]"
-          style={{
-            gridTemplateColumns: `${TIME_LABEL_COL} repeat(7, 1fr)`,
-            gridTemplateRows: `${HEADER_ROW} repeat(${TOTAL_SLOTS}, ${SLOT_ROW})`,
-          }}
-        >
-          {/* faixa de destaque 07h-19h */}
-          <div
-            className="rounded-md bg-gold-soft"
-            style={{ gridColumn: "2 / 9", gridRow: `${highlightRowStart} / ${highlightRowEnd}` }}
-          />
-
-          {/* cabeçalho */}
-          <div style={{ gridColumn: 1, gridRow: 1 }} />
-          {WEEK_DISPLAY_ORDER.map((weekday, i) => (
-            <div
-              key={weekday}
-              className="flex items-center justify-center border-b border-line text-[11px] font-semibold text-petrol uppercase"
-              style={{ gridColumn: i + 2, gridRow: 1 }}
-            >
-              {WEEKDAY_LABELS[weekday].slice(0, 3)}
-            </div>
-          ))}
-
-          {/* rótulos de hora */}
-          {slots.map((minutes, i) => (
-            <div
-              key={minutes}
-              className="pr-2 text-right font-mono text-[9.5px] text-ink-muted"
-              style={{ gridColumn: 1, gridRow: i + 2 }}
-            >
-              {minutes % 60 === 0 ? formatMinutes(minutes) : ""}
-            </div>
-          ))}
-
-          {/* linhas de hora cheia (visual) */}
-          {slots.map((minutes, i) =>
-            minutes % 60 === 0 ? (
-              <div
-                key={`line-${minutes}`}
-                className="border-t border-line/60"
-                style={{ gridColumn: "1 / 9", gridRow: i + 2 }}
-              />
-            ) : null,
-          )}
-
-          {/* compromissos */}
-          {weekEntries.map((entry) => {
-            const colIndex = WEEK_DISPLAY_ORDER.indexOf(entry.weekday) + 2;
-            const hex = AGENDA_COLOR_MAP[entry.color] ?? AGENDA_COLOR_MAP[DEFAULT_AGENDA_COLOR];
-            return (
-              <a
-                key={entry.id}
-                href={`/agenda?editar=${entry.id}#editar`}
-                className="z-10 m-[1px] overflow-hidden rounded-md px-1.5 py-0.5 text-[10.5px] leading-tight font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-                style={{
-                  gridColumn: colIndex,
-                  gridRow: `${gridRow(entry.startMinutes)} / ${gridRow(entry.endMinutes)}`,
-                  background: hex,
-                }}
-              >
-                {entry.label}
-              </a>
-            );
-          })}
-        </div>
-      </div>
-
-      {editingEntry ? (
-        <div id="editar" className="mb-6 rounded-[var(--radius-app)] border border-petrol bg-paper-raised p-4">
-          <p className="mb-1 text-[13.5px] font-semibold text-ink">
-            {editingEntry.label} · {WEEKDAY_LABELS[editingEntry.weekday]}{" "}
-            {formatMinutes(editingEntry.startMinutes)}–{formatMinutes(editingEntry.endMinutes)}
-          </p>
-
-          <div className="mb-4 flex flex-wrap gap-2">
-            {hasFutureSet.has(editingEntry.seriesId) ? (
-              <>
-                <form action={deleteAgendaEntryThisWeek.bind(null, editingEntry.id)}>
-                  <button
-                    type="submit"
-                    className="rounded-full border border-line px-3 py-1 text-[12px] font-semibold text-ink-muted hover:border-petrol hover:text-petrol"
-                  >
-                    Excluir só esta semana
-                  </button>
-                </form>
-                <form action={deleteAgendaEntrySeriesFromHere.bind(null, editingEntry.id)}>
-                  <button
-                    type="submit"
-                    className="rounded-full border border-role-3 px-3 py-1 text-[12px] font-semibold text-role-3"
-                  >
-                    Excluir esta semana e as seguintes
-                  </button>
-                </form>
-              </>
-            ) : (
-              <form action={deleteAgendaEntryThisWeek.bind(null, editingEntry.id)}>
-                <button
-                  type="submit"
-                  className="rounded-full border border-role-3 px-3 py-1 text-[12px] font-semibold text-role-3"
-                >
-                  Excluir
-                </button>
-              </form>
-            )}
-            <a
-              href="/agenda"
-              className="rounded-full px-3 py-1 text-[12px] font-medium text-ink-muted hover:text-ink"
-            >
-              Cancelar
-            </a>
-          </div>
-
-          <p className="mb-2 text-[12.5px] font-semibold text-ink">Duplicar pra outro dia</p>
-          <form
-            action={duplicateAgendaEntryToDay.bind(null, editingEntry.id)}
-            className="flex flex-wrap items-end gap-2"
-          >
-            <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
-              Dia
-              <select
-                name="weekday"
-                defaultValue={editingEntry.weekday}
-                className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
-              >
-                {WEEK_DISPLAY_ORDER.map((wd) => (
-                  <option key={wd} value={wd}>
-                    {WEEKDAY_LABELS[wd]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
-              Início
-              <input
-                type="time"
-                name="startTime"
-                step={1800}
-                defaultValue={formatMinutes(editingEntry.startMinutes)}
-                className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
-              Fim
-              <input
-                type="time"
-                name="endTime"
-                step={1800}
-                defaultValue={formatMinutes(editingEntry.endMinutes)}
-                className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
-              />
-            </label>
-            <button
-              type="submit"
-              className="rounded-lg border border-petrol px-3.5 py-2 text-[13px] font-semibold text-petrol hover:bg-gold-soft"
-            >
-              Duplicar
-            </button>
-          </form>
-        </div>
-      ) : null}
-
-      <details className="rounded-[var(--radius-app)] border border-line bg-paper-raised p-4">
+      <details className="mb-4 rounded-[var(--radius-app)] border border-line bg-paper-raised p-4">
         <summary className="cursor-pointer text-[14px] font-semibold text-petrol">
           + Novo compromisso
         </summary>
@@ -355,6 +191,175 @@ export default async function AgendaPage({
           </button>
         </form>
       </details>
+
+      <div className="mb-6 overflow-x-auto rounded-[var(--radius-app)] border border-line bg-paper-raised p-3">
+        <div
+          id="agenda-grid-scroll"
+          className="overflow-y-auto"
+          style={{ maxHeight: SCROLL_CONTAINER_MAX_HEIGHT }}
+        >
+        <div
+          className="relative grid min-w-[720px]"
+          style={{
+            gridTemplateColumns: `${TIME_LABEL_COL} repeat(7, 1fr)`,
+            gridTemplateRows: `${HEADER_ROW} repeat(${TOTAL_SLOTS}, ${SLOT_ROW})`,
+          }}
+        >
+          {/* cabeçalho */}
+          <div style={{ gridColumn: 1, gridRow: 1 }} />
+          {WEEK_DISPLAY_ORDER.map((weekday, i) => (
+            <div
+              key={weekday}
+              className="flex items-center justify-center border-b border-line text-[11px] font-semibold text-petrol uppercase"
+              style={{ gridColumn: i + 2, gridRow: 1 }}
+            >
+              {WEEKDAY_LABELS[weekday].slice(0, 3)}
+            </div>
+          ))}
+
+          {/* rótulos de hora */}
+          {slots.map((minutes, i) => (
+            <div
+              key={minutes}
+              className="pr-2 text-right font-mono text-[9.5px] text-ink-muted"
+              style={{ gridColumn: 1, gridRow: i + 2 }}
+            >
+              {minutes % 60 === 0 ? formatMinutes(minutes) : ""}
+            </div>
+          ))}
+
+          {/* linhas de hora cheia (visual) */}
+          {slots.map((minutes, i) =>
+            minutes % 60 === 0 ? (
+              <div
+                key={`line-${minutes}`}
+                className="border-t border-line/60"
+                style={{ gridColumn: "1 / 9", gridRow: i + 2 }}
+              />
+            ) : null,
+          )}
+
+          {/* compromissos */}
+          {weekEntries.map((entry) => {
+            const colIndex = WEEK_DISPLAY_ORDER.indexOf(entry.weekday) + 2;
+            const hex = AGENDA_COLOR_MAP[entry.color] ?? AGENDA_COLOR_MAP[DEFAULT_AGENDA_COLOR];
+            return (
+              <a
+                key={entry.id}
+                href={`/agenda?editar=${entry.id}#editar`}
+                className="z-10 m-[1px] overflow-hidden rounded-md px-1.5 py-0.5 text-[10.5px] leading-tight font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                style={{
+                  gridColumn: colIndex,
+                  gridRow: `${gridRow(entry.startMinutes)} / ${gridRow(entry.endMinutes)}`,
+                  background: hex,
+                }}
+              >
+                {entry.label}
+              </a>
+            );
+          })}
+        </div>
+        </div>
+      </div>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `document.getElementById('agenda-grid-scroll').scrollTop = ${defaultScrollTop};`,
+        }}
+      />
+
+      {editingEntry ? (
+        <div id="editar" className="mb-6 rounded-[var(--radius-app)] border border-petrol bg-paper-raised p-4">
+          <p className="mb-1 text-[13.5px] font-semibold text-ink">
+            {editingEntry.label} · {WEEKDAY_LABELS[editingEntry.weekday]}{" "}
+            {formatMinutes(editingEntry.startMinutes)}–{formatMinutes(editingEntry.endMinutes)}
+          </p>
+
+          <div className="mb-4 flex flex-wrap gap-2">
+            {hasFutureSet.has(editingEntry.seriesId) ? (
+              <>
+                <form action={deleteAgendaEntryThisWeek.bind(null, editingEntry.id)}>
+                  <button
+                    type="submit"
+                    className="rounded-full border border-line px-3 py-1 text-[12px] font-semibold text-ink-muted hover:border-petrol hover:text-petrol"
+                  >
+                    Excluir só esta semana
+                  </button>
+                </form>
+                <form action={deleteAgendaEntrySeriesFromHere.bind(null, editingEntry.id)}>
+                  <button
+                    type="submit"
+                    className="rounded-full border border-role-3 px-3 py-1 text-[12px] font-semibold text-role-3"
+                  >
+                    Excluir esta semana e as seguintes
+                  </button>
+                </form>
+              </>
+            ) : (
+              <form action={deleteAgendaEntryThisWeek.bind(null, editingEntry.id)}>
+                <button
+                  type="submit"
+                  className="rounded-full border border-role-3 px-3 py-1 text-[12px] font-semibold text-role-3"
+                >
+                  Excluir
+                </button>
+              </form>
+            )}
+            <a
+              href="/agenda"
+              className="rounded-full px-3 py-1 text-[12px] font-medium text-ink-muted hover:text-ink"
+            >
+              Cancelar
+            </a>
+          </div>
+
+          <p className="mb-2 text-[12.5px] font-semibold text-ink">Duplicar pra outro dia</p>
+          <form
+            action={duplicateAgendaEntryToDay.bind(null, editingEntry.id)}
+            className="flex flex-wrap items-end gap-2"
+          >
+            <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
+              Dia
+              <select
+                name="weekday"
+                defaultValue={editingEntry.weekday}
+                className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
+              >
+                {WEEK_DISPLAY_ORDER.map((wd) => (
+                  <option key={wd} value={wd}>
+                    {WEEKDAY_LABELS[wd]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
+              Início
+              <input
+                type="time"
+                name="startTime"
+                step={1800}
+                defaultValue={formatMinutes(editingEntry.startMinutes)}
+                className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
+              Fim
+              <input
+                type="time"
+                name="endTime"
+                step={1800}
+                defaultValue={formatMinutes(editingEntry.endMinutes)}
+                className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
+              />
+            </label>
+            <button
+              type="submit"
+              className="rounded-lg border border-petrol px-3.5 py-2 text-[13px] font-semibold text-petrol hover:bg-gold-soft"
+            >
+              Duplicar
+            </button>
+          </form>
+        </div>
+      ) : null}
     </div>
   );
 }

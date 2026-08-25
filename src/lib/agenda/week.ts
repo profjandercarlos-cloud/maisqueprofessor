@@ -3,11 +3,13 @@
 // aritmética — só na exibição (formatDate já cuida disso).
 
 export const WEEKS_PER_EXTENSION = 52;
-export const GRID_START_MINUTES = 6 * 60; // 06:00
+export const GRID_START_MINUTES = 0; // 00:00
 export const GRID_END_MINUTES = 24 * 60; // 24:00
 export const SLOT_MINUTES = 30;
-export const HIGHLIGHT_START_MINUTES = 7 * 60; // 07:00
-export const HIGHLIGHT_END_MINUTES = 19 * 60; // 19:00
+// Sem destaque fixo na grade — a pessoa rola livremente por todo o dia. O
+// scroll só começa posicionado aqui (07:00) pra não abrir direto na
+// madrugada, mas nada impede ver/marcar antes das 6h ou depois das 19h.
+export const DEFAULT_SCROLL_MINUTES = 7 * 60;
 
 // Ordem de exibição da grade: segunda a domingo. O valor de `weekday`
 // continua 0 (domingo) a 6 (sábado), igual WEEKDAY_LABELS.
