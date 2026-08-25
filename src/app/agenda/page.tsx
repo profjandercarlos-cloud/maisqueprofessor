@@ -205,12 +205,15 @@ export default async function AgendaPage({
             gridTemplateRows: `${HEADER_ROW} repeat(${TOTAL_SLOTS}, ${SLOT_ROW})`,
           }}
         >
-          {/* cabeçalho */}
-          <div style={{ gridColumn: 1, gridRow: 1 }} />
+          {/* cabeçalho — fixo no topo ao rolar (sticky relativo ao container com scroll) */}
+          <div
+            className="sticky top-0 z-20 bg-paper-raised"
+            style={{ gridColumn: 1, gridRow: 1 }}
+          />
           {WEEK_DISPLAY_ORDER.map((weekday, i) => (
             <div
               key={weekday}
-              className="flex items-center justify-center border-b border-line text-[11px] font-semibold text-petrol uppercase"
+              className="sticky top-0 z-20 flex items-center justify-center border-b border-line bg-paper-raised text-[11px] font-semibold text-petrol uppercase"
               style={{ gridColumn: i + 2, gridRow: 1 }}
             >
               {WEEKDAY_LABELS[weekday].slice(0, 3)}
@@ -247,7 +250,7 @@ export default async function AgendaPage({
               <a
                 key={entry.id}
                 href={`/agenda?editar=${entry.id}#editar`}
-                className="z-10 m-[1px] overflow-hidden rounded-md px-1.5 py-0.5 text-[10.5px] leading-tight font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+                className="z-10 m-[1px] flex items-center justify-center overflow-hidden rounded-md px-1.5 py-0.5 text-center text-[10.5px] leading-tight font-medium text-white shadow-sm transition-opacity hover:opacity-90"
                 style={{
                   gridColumn: colIndex,
                   gridRow: `${gridRow(entry.startMinutes)} / ${gridRow(entry.endMinutes)}`,
