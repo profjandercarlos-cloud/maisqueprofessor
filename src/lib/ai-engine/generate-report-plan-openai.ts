@@ -18,6 +18,11 @@ const weekSchema = z.object({
   dificuldades_antecipadas: z.string().min(1),
 });
 
+const marcoSchema = z.object({
+  titulo: z.string().min(1),
+  descricao: z.string().min(1),
+});
+
 const responseSchema = z.object({
   relatorio: z.object({
     quem_aparece: z.string().min(1),
@@ -27,6 +32,9 @@ const responseSchema = z.object({
     ponto_de_atencao: z.string().min(1),
   }),
   semanas: z.array(weekSchema).min(1),
+  // Best effort — ver normalizeMarcos: uma contagem fora do pedido (3 a 5)
+  // não derruba a geração inteira, só ajusta o que sobra pra tela.
+  marcos: z.array(marcoSchema).max(8).default([]),
 });
 
 export type ReportAndPlan = z.infer<typeof responseSchema>;
@@ -76,8 +84,20 @@ const JSON_SCHEMA = {
         additionalProperties: false,
       },
     },
+    marcos: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          titulo: { type: "string" },
+          descricao: { type: "string" },
+        },
+        required: ["titulo", "descricao"],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ["relatorio", "semanas"],
+  required: ["relatorio", "semanas", "marcos"],
   additionalProperties: false,
 } as const;
 
@@ -136,7 +156,17 @@ Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} hor
 
   const parsed = responseSchema.parse(JSON.parse(content));
 
-  return normalizeWeekCount(parsed);
+  return normalizeMarcos(normalizeWeekCount(parsed));
+}
+
+// Marcos são um extra sobre o plano principal — nunca vale a pena falhar
+// uma chamada de ~40s por causa da contagem deles. Só limita o teto (5);
+// vir com menos de 3 (ou até 0) é aceito como está, a tela reage ao que
+// tiver.
+const MAX_MARCOS = 5;
+function normalizeMarcos(parsed: ReportAndPlan): ReportAndPlan {
+  if (parsed.marcos.length <= MAX_MARCOS) return parsed;
+  return { ...parsed, marcos: parsed.marcos.slice(0, MAX_MARCOS) };
 }
 
 // Em teste, o modelo às vezes devolve uma semana a mais (13 em vez de 12) —

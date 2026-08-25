@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
 import { AppNavLinks } from "@/components/app-nav-links";
+import { PlanEvolucao } from "@/components/plan-evolucao";
 import type { PlanTask } from "@/generated/prisma/client";
 
 export default async function Home({
@@ -25,10 +26,14 @@ export default async function Home({
   let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
   let poolTasks: Awaited<ReturnType<typeof loadPoolTasks>> = [];
   let upcomingPlanTasks: PlanTask[] = [];
+  let allTasks: Awaited<ReturnType<typeof loadAllTasks>> = [];
+  let milestones: Awaited<ReturnType<typeof loadMilestones>> = [];
   if (activePlan) {
-    [currentWeek, poolTasks] = await Promise.all([
+    [currentWeek, poolTasks, allTasks, milestones] = await Promise.all([
       loadCurrentWeek(activePlan.id),
       loadPoolTasks(activePlan.id),
+      loadAllTasks(activePlan.id),
+      loadMilestones(activePlan.id),
     ]);
     if (currentWeek) {
       upcomingPlanTasks = await loadUpcomingPlanTasks(activePlan.id, currentWeek.weekNumber);
@@ -68,6 +73,7 @@ export default async function Home({
           >
             {activePlan.possibility.titulo} →
           </a>
+          <PlanEvolucao tasks={allTasks} milestones={milestones} returnTo="/" />
           <PlanMural
             planId={activePlan.id}
             week={currentWeek}
@@ -80,21 +86,24 @@ export default async function Home({
           />
         </>
       ) : activePlan ? (
-        <div className="mb-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
-          <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
-            Plano concluído
-          </span>
-          <p className="mb-2 font-serif text-lg font-medium text-ink">{activePlan.possibility.titulo}</p>
-          <p className="text-[13.5px] text-ink-muted">
-            Todas as semanas foram concluídas — bom trabalho. Veja o plano completo ou comece outro.
-          </p>
-          <a
-            href={`/planos/${activePlan.id}`}
-            className="mt-3 inline-block text-[13px] font-semibold text-petrol hover:underline"
-          >
-            Ver plano completo →
-          </a>
-        </div>
+        <>
+          <div className="mb-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
+            <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
+              Plano concluído
+            </span>
+            <p className="mb-2 font-serif text-lg font-medium text-ink">{activePlan.possibility.titulo}</p>
+            <p className="text-[13.5px] text-ink-muted">
+              Todas as semanas foram concluídas — bom trabalho. Veja o plano completo ou comece outro.
+            </p>
+            <a
+              href={`/planos/${activePlan.id}`}
+              className="mt-3 inline-block text-[13px] font-semibold text-petrol hover:underline"
+            >
+              Ver plano completo →
+            </a>
+          </div>
+          <PlanEvolucao tasks={allTasks} milestones={milestones} returnTo="/" />
+        </>
       ) : (
         <a
           href={diagnosticCta.href}
@@ -129,4 +138,12 @@ function loadUpcomingPlanTasks(planId: string, afterWeekNumber: number) {
     where: { planId, origin: "PLANO", planWeek: { weekNumber: { gt: afterWeekNumber } } },
     orderBy: [{ planWeek: { weekNumber: "asc" } }, { sequencia: "asc" }],
   });
+}
+
+function loadAllTasks(planId: string) {
+  return db.planTask.findMany({ where: { planId }, select: { status: true } });
+}
+
+function loadMilestones(planId: string) {
+  return db.planMilestone.findMany({ where: { planId }, orderBy: { sequencia: "asc" } });
 }

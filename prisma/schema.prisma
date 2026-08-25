@@ -171,8 +171,35 @@ model Plan {
   weeks          PlanWeek[]
   tasks          PlanTask[]
   journalEntries JournalEntry[]
+  milestones     PlanMilestone[]
 
   @@map("plans")
+}
+
+// =========================================================================
+// Marcos de evolução — 3 a 5 conquistas reais geradas pela IA junto com o
+// plano (não são tarefas, são resultados que a pessoa vai reconhecer
+// quando acontecerem, ex.: "primeira empresa aceita conversar"). Best
+// effort: se a IA devolver menos de 3 ou nenhum, a seção some da tela em
+// vez de falhar a geração inteira — não vale gastar de novo uma chamada
+// de ~40s por causa de um extra.
+//
+// Marcado manualmente pela própria pessoa (achievedAt), igual a tudo mais
+// no plano — nenhuma automação decide isso por ela, e não fica preso a
+// nenhuma semana/tarefa específica pra sobreviver ao pool/pull da
+// execução dinâmica sem precisar de lógica de sincronização.
+// =========================================================================
+model PlanMilestone {
+  id         String    @id @default(uuid())
+  planId     String
+  plan       Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  sequencia  Int
+  titulo     String
+  descricao  String    @db.Text
+  achievedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@map("plan_milestones")
 }
 
 enum WeekStatus {

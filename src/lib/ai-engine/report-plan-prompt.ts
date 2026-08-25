@@ -43,6 +43,16 @@ Cada semana precisa ter:
 
 O plano deve ter progressão real: comece pelo teste mais simples e barato possível, e só aumente a complexidade/o compromisso nas semanas seguintes, na medida em que a etapa anterior valide que faz sentido continuar. As tarefas têm uma sequência lógica — a ordem em que aparecem importa, porque a pessoa pode adiantar ou adiar tarefas dentro do próprio ritmo dela, mas a lógica de dependência entre elas precisa fazer sentido nessa ordem.
 
+### 3. Marcos de evolução
+
+Além das tarefas semana a semana, identifique de 3 a 5 marcos — conquistas reais que a pessoa vai reconhecer quando acontecerem, não tarefas do checklist. Um marco é um resultado concreto do mundo real (ex.: "Primeira empresa aceita conversar sobre a proposta", "Primeira turma fechada com 5 pessoas", "Primeiro pagamento recebido"), não uma ação que a pessoa simplesmente executa e risca da lista.
+
+Os marcos devem estar em ordem de progressão (do mais cedo e mais fácil ao mais tarde e mais significativo) e distribuídos ao longo das 12 semanas — não todos no início nem todos amontoados no final. Eles não precisam (e não devem) corresponder 1 para 1 a uma tarefa específica — um marco pode ser o resultado acumulado de várias tarefas.
+
+Cada marco precisa ter:
+- **titulo**: curto (3-6 palavras), nomeando a conquista
+- **descricao**: 1 frase explicando o que precisa ter acontecido pra esse marco contar como alcançado
+
 ## Formato de saída (JSON)
 
 Retorne exclusivamente um JSON válido, sem texto fora dele:
@@ -61,6 +71,9 @@ Retorne exclusivamente um JSON válido, sem texto fora dele:
       "tarefas": [{ "texto": "string", "horas": 3 }],
       "dificuldades_antecipadas": "string"
     }
+  ],
+  "marcos": [
+    { "titulo": "string", "descricao": "string" }
   ]
 }
 

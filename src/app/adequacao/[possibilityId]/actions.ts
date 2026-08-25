@@ -95,6 +95,13 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
           };
         }),
       },
+      milestones: {
+        create: generated.marcos.map((marco, index) => ({
+          sequencia: index,
+          titulo: marco.titulo,
+          descricao: marco.descricao,
+        })),
+      },
     },
     include: { weeks: { orderBy: { weekNumber: "asc" } } },
   });

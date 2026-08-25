@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { formatDate } from "@/lib/format-date";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
+import { PlanEvolucao } from "@/components/plan-evolucao";
 
 export default async function PlanPage({
   params,
@@ -22,6 +23,8 @@ export default async function PlanPage({
         orderBy: { weekNumber: "asc" },
         include: { checkin: true, tasks: { orderBy: { sequencia: "asc" } } },
       },
+      tasks: { select: { status: true } },
+      milestones: { orderBy: { sequencia: "asc" } },
     },
   });
   if (!plan || plan.userId !== user.id) notFound();
@@ -53,6 +56,8 @@ export default async function PlanPage({
           </div>
         ))}
       </div>
+
+      <PlanEvolucao tasks={plan.tasks} milestones={plan.milestones} returnTo={`/planos/${planId}`} />
 
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
