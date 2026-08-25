@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/app-header";
+import { PapelIcon, PAPEL_LABELS } from "@/components/papel-icon";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { activatePlan } from "./actions";
@@ -68,9 +69,13 @@ export default async function PlanosPage() {
                 </div>
                 <a
                   href={`/planos/${plan.id}`}
-                  className="mb-3 block font-serif text-[17px] font-medium text-ink hover:underline"
+                  className="mb-3 flex items-center gap-2 font-serif text-[17px] font-medium text-ink hover:underline"
                 >
-                  {plan.possibility.titulo}
+                  <PapelIcon
+                    papel={plan.possibility.papel}
+                    className="h-[17px] w-[17px] shrink-0 text-petrol"
+                  />
+                  <span title={PAPEL_LABELS[plan.possibility.papel]}>{plan.possibility.titulo}</span>
                 </a>
                 {!isActive ? (
                   <form action={activatePlan.bind(null, plan.id)}>
@@ -103,7 +108,12 @@ export default async function PlanosPage() {
                 href={`/adequacao/${p.id}`}
                 className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[14.5px] text-ink hover:border-petrol"
               >
-                <span>{p.titulo}</span>
+                <span className="flex min-w-0 items-center gap-2">
+                  <PapelIcon papel={p.papel} className="h-[16px] w-[16px] shrink-0 text-petrol" />
+                  <span className="truncate" title={PAPEL_LABELS[p.papel]}>
+                    {p.titulo}
+                  </span>
+                </span>
                 <span className="shrink-0 text-[13px] font-semibold text-petrol">Criar plano →</span>
               </a>
             ))}
