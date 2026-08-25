@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
 import { AppNavLinks } from "@/components/app-nav-links";
+import { PapelIcon } from "@/components/papel-icon";
 import type { PlanTask } from "@/generated/prisma/client";
 
 export default async function Home({
@@ -54,7 +55,7 @@ export default async function Home({
             {diagnostic ? "De volta" : "Bem-vindo(a) ao Mais Que Professor"}
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
-            Olá, <em className="font-medium text-gold not-italic italic">{dbUser?.name ?? user.email}</em>.
+            Olá, <em className="font-medium text-gold not-italic">{dbUser?.name ?? user.email}.</em>
           </h1>
         </div>
         <LogoutButton />
@@ -62,12 +63,18 @@ export default async function Home({
 
       {activePlan && currentWeek ? (
         <>
-          <a
-            href={`/planos/${activePlan.id}`}
-            className="mb-3 inline-block text-[13px] font-semibold text-petrol hover:underline"
-          >
-            {activePlan.possibility.titulo} →
-          </a>
+          <div className="mb-3 flex items-center gap-2">
+            <PapelIcon papel={activePlan.possibility.papel} className="h-[15px] w-[15px] shrink-0 text-petrol" />
+            <span className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+              Plano ativo
+            </span>
+            <a
+              href={`/planos/${activePlan.id}`}
+              className="text-[13px] font-semibold text-petrol hover:underline"
+            >
+              {activePlan.possibility.titulo} →
+            </a>
+          </div>
           <PlanMural
             planId={activePlan.id}
             week={currentWeek}
@@ -84,7 +91,10 @@ export default async function Home({
           <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
             Plano concluído
           </span>
-          <p className="mb-2 font-serif text-lg font-medium text-ink">{activePlan.possibility.titulo}</p>
+          <p className="mb-2 flex items-center gap-2 font-serif text-lg font-medium text-ink">
+            <PapelIcon papel={activePlan.possibility.papel} className="h-[16px] w-[16px] shrink-0 text-petrol" />
+            {activePlan.possibility.titulo}
+          </p>
           <p className="text-[13.5px] text-ink-muted">
             Todas as semanas foram concluídas — bom trabalho. Veja o plano completo ou comece outro.
           </p>

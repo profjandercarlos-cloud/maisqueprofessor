@@ -1,3 +1,12 @@
+function InicioIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
+      <path d="M2.5 8.5 L9 3 L15.5 8.5" />
+      <path d="M4 7.3 V15 H14 V7.3" />
+    </svg>
+  );
+}
+
 function PlanosIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
@@ -52,6 +61,7 @@ function AdministracaoIcon() {
 }
 
 const BASE_ITEMS = [
+  { href: "/", label: "Início", Icon: InicioIcon },
   { href: "/planos", label: "Meus planos", Icon: PlanosIcon },
   { href: "/agenda", label: "Agenda", Icon: AgendaIcon },
   { href: "/evolucao", label: "Evolução", Icon: EvolucaoIcon },
