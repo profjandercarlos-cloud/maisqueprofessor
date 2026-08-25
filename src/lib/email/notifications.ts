@@ -39,6 +39,22 @@ Mas pra não deixar o plano parado sem rumo, escolha um caminho:</p>
   });
 }
 
+export async function sendUntouchedWeekReminder(params: {
+  to: string;
+  name: string;
+  planId: string;
+  weekNumber: string | number;
+}) {
+  await getResend().emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: "Faltam 3 dias pro seu check-in — quer adiantar alguma coisa?",
+    html: `<p>Olá, ${params.name}.</p>
+<p>Faltam 3 dias pro check-in da semana ${params.weekNumber} do seu plano, e nenhuma tarefa foi marcada ainda. Não precisa ser tudo de uma vez — uma versão pequena de uma tarefa já ajuda a manter o ritmo.</p>
+<p><a href="${APP_URL}/">Ver minhas tarefas da semana</a></p>`,
+  });
+}
+
 export async function sendAccessExpiringReminder(params: {
   to: string;
   name: string;

@@ -5,6 +5,7 @@ import {
   sendAccessExpiringReminder,
   sendCheckinReminder,
   sendEscalationMessage,
+  sendUntouchedWeekReminder,
 } from "@/lib/email/notifications";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -22,7 +23,13 @@ export async function GET(request: NextRequest) {
   }
 
   const now = new Date();
-  const results = { accessExpiring: 0, accessBlocked: 0, checkinReminders: 0, escalations: 0 };
+  const results = {
+    accessExpiring: 0,
+    accessBlocked: 0,
+    checkinReminders: 0,
+    escalations: 0,
+    untouchedWeekReminders: 0,
+  };
 
   // 0) "Heartbeat" — o projeto Supabase está no plano gratuito, que pausa o
   // banco após 7 dias sem atividade. As queries abaixo já mexem no Postgres
@@ -61,7 +68,12 @@ export async function GET(request: NextRequest) {
     where: { status: "ATIVO", user: { accessRevokedAt: null } },
     include: {
       user: true,
-      weeks: { where: { status: "PENDENTE" }, orderBy: { weekNumber: "asc" }, take: 1 },
+      weeks: {
+        where: { status: "PENDENTE" },
+        orderBy: { weekNumber: "asc" },
+        take: 1,
+        include: { tasks: true },
+      },
     },
   });
 
@@ -90,6 +102,23 @@ export async function GET(request: NextRequest) {
         weekNumber: currentWeek.weekNumber,
       });
       results.checkinReminders++;
+    } else {
+      // Aviso antecipado — 3 dias antes do dia de check-in da pessoa
+      // (plan.diaCheckin, não a data específica da semana, que pode ter
+      // deslizado por recalibração), disparado só se ninguém mexeu em
+      // nenhuma tarefa ainda. Maior risco de abandono é a pessoa chegar no
+      // dia do check-in sem ter começado nada.
+      const daysUntilCheckin = (plan.diaCheckin - now.getDay() + 7) % 7;
+      const weekUntouched = currentWeek.tasks.every((t) => t.status === "PENDENTE");
+      if (daysUntilCheckin === 3 && weekUntouched) {
+        await sendUntouchedWeekReminder({
+          to: plan.user.email,
+          name: plan.user.name,
+          planId: plan.id,
+          weekNumber: currentWeek.weekNumber,
+        });
+        results.untouchedWeekReminders++;
+      }
     }
   }
 
