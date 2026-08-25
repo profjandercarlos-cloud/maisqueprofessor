@@ -168,12 +168,34 @@ model Plan {
   createdAt            DateTime    @default(now())
   updatedAt            DateTime    @updatedAt
 
-  weeks          PlanWeek[]
-  tasks          PlanTask[]
-  journalEntries JournalEntry[]
-  milestones     PlanMilestone[]
+  weeks                       PlanWeek[]
+  tasks                       PlanTask[]
+  journalEntries              JournalEntry[]
+  milestones                  PlanMilestone[]
+  antiProcrastinacaoRespostas AntiProcrastinacaoResposta[]
 
   @@map("plans")
+}
+
+// =========================================================================
+// Antiprocrastinação — os itens em si (título, explicação, fonte) são
+// conteúdo fixo no código (src/lib/anti-procrastinacao/itens.ts), curado
+// a partir de livros conhecidos sobre formação de hábitos — não gerado
+// por IA. Só a resposta de cada pessoa (a ação que ELA registra) mora no
+// banco, uma por item por plano. De propósito não fica ligado a nenhuma
+// tarefa/semana específica: são hábitos da pessoa, não do checklist.
+// =========================================================================
+model AntiProcrastinacaoResposta {
+  id        String   @id @default(uuid())
+  planId    String
+  plan      Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  itemKey   String
+  resposta  String   @db.Text
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([planId, itemKey])
+  @@map("anti_procrastinacao_respostas")
 }
 
 // =========================================================================

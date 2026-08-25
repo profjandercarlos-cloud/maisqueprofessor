@@ -38,6 +38,16 @@ function EvolucaoIcon() {
   );
 }
 
+function AntiProcrastinacaoIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
+      <circle cx="9" cy="9" r="6.5" />
+      <circle cx="9" cy="9" r="3.2" />
+      <circle cx="9" cy="9" r="0.6" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 function ConfiguracoesIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
@@ -65,6 +75,7 @@ const BASE_ITEMS = [
   { href: "/planos", label: "Meus planos", Icon: PlanosIcon },
   { href: "/agenda", label: "Agenda", Icon: AgendaIcon },
   { href: "/evolucao", label: "Evolução", Icon: EvolucaoIcon },
+  { href: "/anti-procrastinacao", label: "Antiprocrastinação", Icon: AntiProcrastinacaoIcon },
   { href: "/configuracoes", label: "Configurações", Icon: ConfiguracoesIcon },
 ];
 
@@ -101,7 +112,7 @@ export function AppNavLinks({
   }
 
   return (
-    <nav className="hidden xl:fixed xl:top-28 xl:left-10 xl:flex xl:w-44 xl:flex-col xl:gap-1">
+    <nav className="hidden xl:fixed xl:top-28 xl:left-10 xl:flex xl:w-52 xl:flex-col xl:gap-1">
       {items.map(({ href, label, Icon }) => (
         <a
           key={href}
