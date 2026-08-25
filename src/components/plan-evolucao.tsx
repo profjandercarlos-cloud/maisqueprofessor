@@ -1,6 +1,40 @@
 import { markMilestoneAchieved, unmarkMilestoneAchieved } from "@/app/planos/[planId]/milestones-actions";
-import { computeLevel, computeTaskCompletionPercent, LEVEL_LABELS, LEVEL_COLORS } from "@/lib/plano/evolucao";
+import {
+  computeLevel,
+  computeTaskCompletionPercent,
+  LEVEL_LABELS,
+  LEVEL_COLORS,
+  type Level,
+} from "@/lib/plano/evolucao";
 import type { PlanMilestone, PlanTask } from "@/generated/prisma/client";
+
+function Medal({ level }: { level: Level }) {
+  const earned = level !== "iniciando";
+  const color = LEVEL_COLORS[level];
+  return (
+    <svg viewBox="0 0 48 56" width="40" height="46" aria-hidden>
+      <path
+        d="M14 4 L24 22 L34 4"
+        fill="none"
+        stroke={earned ? color : "var(--line)"}
+        strokeWidth="5"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="24"
+        cy="34"
+        r="17"
+        fill={earned ? color : "var(--paper)"}
+        stroke={earned ? color : "var(--line)"}
+        strokeWidth="2"
+      />
+      <path
+        d="M24 25 L26.5 31 L33 31.5 L28 35.7 L29.5 42 L24 38.5 L18.5 42 L20 35.7 L15 31.5 L21.5 31 Z"
+        fill={earned ? "var(--paper)" : "var(--line)"}
+      />
+    </svg>
+  );
+}
 
 export function PlanEvolucao({
   tasks,
@@ -20,12 +54,15 @@ export function PlanEvolucao({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <span className="font-mono text-[11px] tracking-wide text-gold uppercase">Evolução</span>
         {milestones.length > 0 ? (
-          <span
-            className="rounded-full px-2.5 py-0.5 font-mono text-[10.5px] font-semibold tracking-wide uppercase"
-            style={{ color: LEVEL_COLORS[level], background: "var(--paper)" }}
-          >
-            Nível {LEVEL_LABELS[level]}
-          </span>
+          <div className="flex items-center gap-2.5">
+            <Medal level={level} />
+            <span
+              className="font-mono text-[12px] font-semibold tracking-wide uppercase"
+              style={{ color: LEVEL_COLORS[level] }}
+            >
+              Nível {LEVEL_LABELS[level]}
+            </span>
+          </div>
         ) : null}
       </div>
 
