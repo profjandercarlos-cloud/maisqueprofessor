@@ -8,8 +8,11 @@ const MAX_ADJUSTMENT_ROUNDS = 3;
 
 export default async function PossibilitiesReviewPage({
   params,
+  searchParams,
 }: PageProps<"/diagnostico/possibilidades/[roundId]">) {
   const { roundId } = await params;
+  const query = await searchParams;
+  const conflito = typeof query.conflito === "string" ? query.conflito : undefined;
 
   const user = await requireActiveAccess();
 
@@ -41,6 +44,19 @@ export default async function PossibilitiesReviewPage({
           mesma ideia. Abra e veja o que reconhece em você.
         </p>
       </div>
+
+      {conflito ? (
+        <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-role-3/40 bg-role-3/10 px-4 py-3.5 text-[13.5px] text-ink">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+            <circle cx="8" cy="8" r="7" stroke="var(--role-3)" strokeWidth="1.4" />
+            <path d="M8 7v4.5M8 4.8v.1" stroke="var(--role-3)" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          <span>
+            <strong className="font-semibold">Essa possibilidade não coube nas condições que você informou:</strong>{" "}
+            {conflito} Escolha outra possibilidade do conjunto abaixo.
+          </span>
+        </div>
+      ) : null}
 
       {!alreadyApproved ? (
         <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">

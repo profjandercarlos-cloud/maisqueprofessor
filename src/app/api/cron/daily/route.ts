@@ -110,6 +110,12 @@ export async function GET(request: NextRequest) {
       // dia do check-in sem ter começado nada.
       const daysUntilCheckin = (plan.diaCheckin - now.getDay() + 7) % 7;
       const weekUntouched = currentWeek.tasks.every((t) => t.status === "PENDENTE");
+      // Nível "Mínimo" de acompanhamento (adequação da execução) pediu
+      // explicitamente "nenhum lembrete adicional" além do check-in em si —
+      // esse aviso antecipado de 3 dias antes é o único que se enquadra
+      // como "adicional" (o de atraso e a escalada fazem parte do próprio
+      // ritual de check-in, então continuam valendo pra todos os níveis).
+      if (plan.acompanhamento === "MINIMO") continue;
       if (daysUntilCheckin === 3 && weekUntouched) {
         await sendUntouchedWeekReminder({
           to: plan.user.email,

@@ -3,6 +3,14 @@
 // teto de 60s da Vercel Hobby via Anthropic. Mesmo prompt, saída estruturada
 // (json_schema strict) em vez de extração de texto.
 import { z } from "zod";
+import type {
+  AcaoAceita,
+  DistribuicaoTempo,
+  EquilibrioAprenderExecutar,
+  EstagioInicial,
+  OrcamentoFaixa,
+  RegraSegurancaFinanceira,
+} from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { REPORT_PLAN_SYSTEM_PROMPT } from "./report-plan-prompt";
 import { PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
@@ -10,6 +18,7 @@ import { PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
 const taskSchema = z.object({
   texto: z.string().min(1),
   horas: z.number().positive(),
+  opcional: z.boolean().default(false),
 });
 
 const weekSchema = z.object({
@@ -18,10 +27,20 @@ const weekSchema = z.object({
   dificuldades_antecipadas: z.string().min(1),
 });
 
+const MARCO_TIPO_VALUES = ["entrega_controlavel", "sinal_externo"] as const;
+
 const marcoSchema = z.object({
   titulo: z.string().min(1),
   descricao: z.string().min(1),
+  tipo: z.enum(MARCO_TIPO_VALUES).default("entrega_controlavel"),
 });
+
+const CLASSIFICACAO_ENCAIXE_VALUES = [
+  "cabe_agora",
+  "cabe_com_adaptacao",
+  "construcao_medio_prazo",
+  "conflito_explicito",
+] as const;
 
 const responseSchema = z.object({
   relatorio: z.object({
@@ -30,6 +49,8 @@ const responseSchema = z.object({
     por_que_esse_caminho: z.string().min(1),
     ja_possui_vs_aprender: z.string().min(1),
     ponto_de_atencao: z.string().min(1),
+    classificacao_encaixe: z.enum(CLASSIFICACAO_ENCAIXE_VALUES),
+    explicacao_encaixe: z.string().min(1),
   }),
   semanas: z.array(weekSchema).min(1),
   // Best effort — ver normalizeMarcos: uma contagem fora do pedido (3 a 5)
@@ -50,6 +71,8 @@ const JSON_SCHEMA = {
         por_que_esse_caminho: { type: "string" },
         ja_possui_vs_aprender: { type: "string" },
         ponto_de_atencao: { type: "string" },
+        classificacao_encaixe: { type: "string", enum: CLASSIFICACAO_ENCAIXE_VALUES },
+        explicacao_encaixe: { type: "string" },
       },
       required: [
         "quem_aparece",
@@ -57,6 +80,8 @@ const JSON_SCHEMA = {
         "por_que_esse_caminho",
         "ja_possui_vs_aprender",
         "ponto_de_atencao",
+        "classificacao_encaixe",
+        "explicacao_encaixe",
       ],
       additionalProperties: false,
     },
@@ -73,8 +98,9 @@ const JSON_SCHEMA = {
               properties: {
                 texto: { type: "string" },
                 horas: { type: "number" },
+                opcional: { type: "boolean" },
               },
-              required: ["texto", "horas"],
+              required: ["texto", "horas", "opcional"],
               additionalProperties: false,
             },
           },
@@ -91,8 +117,9 @@ const JSON_SCHEMA = {
         properties: {
           titulo: { type: "string" },
           descricao: { type: "string" },
+          tipo: { type: "string", enum: MARCO_TIPO_VALUES },
         },
-        required: ["titulo", "descricao"],
+        required: ["titulo", "descricao", "tipo"],
         additionalProperties: false,
       },
     },
@@ -100,6 +127,56 @@ const JSON_SCHEMA = {
   required: ["relatorio", "semanas", "marcos"],
   additionalProperties: false,
 } as const;
+
+const ESTAGIO_LABELS: Record<EstagioInicial, string> = {
+  NUNCA_FIZ: "Nunca fez nada relacionado, precisa começar do início.",
+  PESQUISEI_NAO_EXECUTEI: "Já pesquisou ou estudou um pouco, mas ainda não executou.",
+  FIZ_ISOLADO: "Já fez algo parecido de forma isolada ou informal.",
+  TENHO_CASO_PORTFOLIO: "Já tem um caso, amostra, portfólio ou resultado que pode organizar.",
+  ATUO_PARCIALMENTE: "Já atua parcialmente nisso e quer transformar em atividade profissional mais estruturada.",
+};
+
+const DISTRIBUICAO_LABELS: Record<DistribuicaoTempo, string> = {
+  BLOCO_UNICO: "Um bloco maior em um único dia.",
+  BLOCOS_MEDIOS: "Dois ou três blocos médios durante a semana.",
+  SESSOES_CURTAS: "Sessões curtas distribuídas em vários dias.",
+  AGENDA_VARIAVEL: "Agenda variável — precisa de tarefas que possam ser reorganizadas.",
+};
+
+const ORCAMENTO_LABELS: Record<OrcamentoFaixa, string> = {
+  SEM_INVESTIMENTO: "Prefere não investir nada por enquanto.",
+  ATE_300: "Até R$300 no total, para as 12 semanas.",
+  DE_300_A_1000: "Entre R$300 e R$1.000 no total, para as 12 semanas.",
+  ACIMA_DE_1000: "Acima de R$1.000 no total, para as 12 semanas.",
+};
+
+const REGRA_FINANCEIRA_LABELS: Record<RegraSegurancaFinanceira, string> = {
+  MANTER_RENDA_INTEGRAL: "Precisa manter integralmente a renda e os compromissos atuais.",
+  SEM_COMPROMISSO_ANTES_EVIDENCIA:
+    "Pode avançar, mas não quer assumir compromissos financeiros ou profissionais antes de ver evidências.",
+  TRANSICAO_GRADUAL: "Aceita uma transição gradual, desde que cada passo tenha critério claro.",
+  MARGEM_PARA_DEDICAR: "Tem margem para dedicar mais energia à mudança durante este período.",
+  NAO_SE_APLICA: "Regra financeira não se aplica à situação da pessoa.",
+};
+
+const EQUILIBRIO_LABELS: Record<EquilibrioAprenderExecutar, string> = {
+  FOCO_EXECUCAO: "Aprender só o necessário e testar rápido — cerca de 20% aprendizado, 80% execução.",
+  EQUILIBRADO: "Equilibrar preparação e prática — cerca de 40% aprendizado, 60% execução.",
+  FOCO_APRENDIZADO: "Construir uma base maior antes de se expor — até 60% aprendizado, 40% execução.",
+  SISTEMA_RECOMENDA: "Sem preferência — decida o equilíbrio a partir do estágio inicial da pessoa.",
+};
+
+const ACAO_LABELS: Record<AcaoAceita, string> = {
+  PESQUISAR: "Pesquisar vagas, compradores, organizações ou concorrentes",
+  CONVERSAR: "Conversar com profissionais, potenciais usuários ou possíveis clientes",
+  PRODUZIR_AMOSTRA: "Produzir uma amostra, estudo de caso ou portfólio",
+  PUBLICAR_CONTEUDO: "Publicar conteúdo ou uma amostra profissional",
+  ENVIAR_CANDIDATURAS: "Enviar currículos ou candidaturas",
+  PROPOSTA_COMERCIAL: "Apresentar proposta comercial com preço e escopo definidos",
+  PILOTO_REMUNERADO: "Realizar um piloto remunerado e de escopo limitado",
+  ATIVIDADE_PRESENCIAL: "Participar de atividade presencial ou visitar um local",
+  PREPARAR_PRIVADAMENTE: "Preparar-se de forma privada, sem contato externo por enquanto",
+};
 
 export async function generateReportAndPlanOpenAI(params: {
   diagnosticInput: string;
@@ -112,6 +189,14 @@ export async function generateReportAndPlanOpenAI(params: {
   };
   horasTotais: number;
   horasPorSemana: number;
+  horasNucleoSemana: number;
+  estagioInicial: EstagioInicial;
+  distribuicaoTempo: DistribuicaoTempo;
+  orcamentoFaixa: OrcamentoFaixa;
+  regraSegurancaFinanceira: RegraSegurancaFinanceira;
+  acoesAceitas: AcaoAceita[];
+  equilibrioAprenderExecutar: EquilibrioAprenderExecutar;
+  condicaoAdicionalExecucao?: string | null;
 }): Promise<ReportAndPlan> {
   const userMessage = `${params.diagnosticInput}
 
@@ -125,7 +210,17 @@ Já possui vs. a aprender: ${params.possibility.jaPossuiVsAprender}
 PARÂMETROS DO PLANO (já calculados, não decida isso)
 Duração: sempre ${PLAN_DURATION_SEMANAS} semanas
 Total de horas que o plano inteiro deve somar: ${params.horasTotais} horas
-Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} horas`;
+Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} horas
+Núcleo semanal (teto de tarefas obrigatórias por semana, individualmente): ${params.horasNucleoSemana} horas
+
+RESPOSTAS DE ADEQUAÇÃO DA EXECUÇÃO
+Estágio inicial: ${ESTAGIO_LABELS[params.estagioInicial]}
+Distribuição do tempo na semana: ${DISTRIBUICAO_LABELS[params.distribuicaoTempo]}
+Orçamento disponível: ${ORCAMENTO_LABELS[params.orcamentoFaixa]}
+Regra de segurança financeira: ${REGRA_FINANCEIRA_LABELS[params.regraSegurancaFinanceira]}
+Ações que a pessoa aceita realizar: ${params.acoesAceitas.map((a) => ACAO_LABELS[a]).join("; ")}
+Equilíbrio entre aprender e executar: ${EQUILIBRIO_LABELS[params.equilibrioAprenderExecutar]}
+Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "nenhuma"}`;
 
   // Uma única tentativa, de propósito: cada chamada já leva 30-45s, e a
   // Vercel mata a função aos 60s (teto do plano Hobby) — não sobra tempo
@@ -140,7 +235,7 @@ Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} hor
       { role: "system", content: REPORT_PLAN_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `${userMessage}\n\nLEMBRETE FINAL: o array "semanas" da sua resposta precisa ter exatamente ${PLAN_DURATION_SEMANAS} elementos — nem ${PLAN_DURATION_SEMANAS - 1}, nem ${PLAN_DURATION_SEMANAS + 1}. Confira essa contagem antes de responder.`,
+        content: `${userMessage}\n\nLEMBRETE FINAL: o array "semanas" da sua resposta precisa ter exatamente ${PLAN_DURATION_SEMANAS} elementos — nem ${PLAN_DURATION_SEMANAS - 1}, nem ${PLAN_DURATION_SEMANAS + 1}. Confira essa contagem antes de responder, e confira que nenhuma semana individualmente estourou o núcleo semanal informado acima.`,
       },
     ],
     response_format: {
@@ -156,7 +251,9 @@ Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} hor
 
   const parsed = responseSchema.parse(JSON.parse(content));
 
-  return normalizeMarcos(normalizeWeekCount(parsed));
+  const semanasNormalizadas = normalizeWeekCount(parsed);
+  const horasNormalizadas = normalizeWeekHours(semanasNormalizadas, params.horasNucleoSemana);
+  return normalizeMarcoTipos(normalizeMarcos(horasNormalizadas));
 }
 
 // Marcos são um extra sobre o plano principal — nunca vale a pena falhar
@@ -201,4 +298,47 @@ function normalizeWeekCount(parsed: ReportAndPlan): ReportAndPlan {
       { meta: lastWeek.meta, tarefas: mergedTasks, dificuldades_antecipadas: mergedDificuldades },
     ],
   };
+}
+
+// Rede de segurança determinística — o prompt já instrui a IA a nunca
+// ultrapassar o núcleo semanal, mas a saída estruturada garante formato e
+// tipos, não aritmética. Em vez de confiar cegamente no texto do prompt
+// (foi exatamente assim que o defeito da semana 12 escapou antes), o
+// código soma de novo as horas de cada semana e, se uma semana estourar o
+// núcleo, reclassifica as últimas tarefas obrigatórias como opcionais até
+// caber — nunca inventa conteúdo novo, só marca o excedente como
+// opcional, que é exatamente o que "opcional" já significa no resto do
+// sistema. Sempre mantém pelo menos 1 tarefa obrigatória por semana.
+const TOLERANCIA_HORAS = 0.05; // folga pra arredondamento de ponto flutuante
+function normalizeWeekHours(parsed: ReportAndPlan, horasNucleoSemana: number): ReportAndPlan {
+  const semanas = parsed.semanas.map((semana) => {
+    const tarefas = [...semana.tarefas];
+    let somaObrigatoria = tarefas.filter((t) => !t.opcional).reduce((sum, t) => sum + t.horas, 0);
+    if (somaObrigatoria <= horasNucleoSemana + TOLERANCIA_HORAS) return semana;
+
+    let obrigatoriasRestantes = tarefas.filter((t) => !t.opcional).length;
+    for (let i = tarefas.length - 1; i >= 0 && somaObrigatoria > horasNucleoSemana + TOLERANCIA_HORAS; i--) {
+      if (tarefas[i].opcional || obrigatoriasRestantes <= 1) continue;
+      somaObrigatoria -= tarefas[i].horas;
+      tarefas[i] = { ...tarefas[i], opcional: true };
+      obrigatoriasRestantes--;
+    }
+    return { ...semana, tarefas };
+  });
+
+  return { ...parsed, semanas };
+}
+
+// Mesma lógica de "nunca falhar a chamada por uma regra qualitativa que a
+// IA não seguiu à risca" das outras normalizações acima — se vier mais de
+// 1 marco "sinal_externo" (a regra do prompt pede no máximo 1), rebaixa os
+// excedentes pra "entrega_controlavel", mantendo só o primeiro como está.
+function normalizeMarcoTipos(parsed: ReportAndPlan): ReportAndPlan {
+  let externosVistos = 0;
+  const marcos = parsed.marcos.map((marco) => {
+    if (marco.tipo !== "sinal_externo") return marco;
+    externosVistos++;
+    return externosVistos > 1 ? { ...marco, tipo: "entrega_controlavel" as const } : marco;
+  });
+  return { ...parsed, marcos };
 }

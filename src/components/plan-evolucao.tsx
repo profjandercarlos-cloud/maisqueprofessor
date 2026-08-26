@@ -72,6 +72,14 @@ export function PlanEvolucao({
                     style={achieved ? { textDecoration: "line-through" } : undefined}
                   >
                     {milestone.titulo}
+                    {milestone.tipo === "SINAL_EXTERNO" ? (
+                      <span
+                        className="ml-2 align-middle font-mono text-[9.5px] font-normal tracking-wide text-ink-muted uppercase"
+                        title="Depende de resposta de terceiros — não alcançar não significa execução ruim"
+                      >
+                        depende de resposta externa
+                      </span>
+                    ) : null}
                   </p>
                   <p className="mt-0.5 text-[12px] text-ink-muted">{milestone.descricao}</p>
                 </div>

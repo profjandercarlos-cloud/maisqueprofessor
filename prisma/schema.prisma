@@ -41,6 +41,7 @@ enum Intention {
   SAIR
   COMPLEMENTAR
   NAO_SEI
+  JA_FORA_DA_SALA
 
   @@map("intention")
 }
@@ -52,22 +53,33 @@ enum DiagnosticStatus {
   @@map("diagnostic_status")
 }
 
+enum RotaProfissional {
+  CARREIRA
+  CRIACAO_VALOR
+  EXPLORACAO
+
+  @@map("rota_profissional")
+}
+
 // =========================================================================
-// Diagnóstico — Bloco 0 (Intenção) + Blocos 1-7. As respostas em si ficam
-// em `answers` (JSON), pois a redação/estrutura das perguntas pode evoluir
-// sem exigir migração de schema; o formato esperado está documentado em
-// Diagnostico_Perguntas_Finais.md.
+// Diagnóstico — Bloco 0 (Intenção) + Blocos A-D (comuns) + bloco condicional
+// pela rota profissional. As respostas em si ficam em `answers` (JSON), pois
+// a redação/estrutura das perguntas pode evoluir sem exigir migração de
+// schema; o formato esperado está documentado em
+// Questionario_Descoberta_Unificado_MaisQueProfessor.docx.
 // =========================================================================
 model Diagnostic {
-  id               String           @id @default(uuid())
-  userId           String
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  intention        Intention
-  answers          Json // Blocos 1-7
-  incrementAnswers Json? // incremento de diagnóstico (10-12 perguntas, caso raro — após 3 rodadas sem aprovação)
-  status           DiagnosticStatus @default(EM_ANDAMENTO)
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                 String            @id @default(uuid())
+  userId             String
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  intention          Intention
+  rotaProfissional   RotaProfissional? // respondida na 2ª pergunta (Bloco A) — nula até lá
+  answers            Json // Blocos A-D + bloco condicional da rota
+  incrementAnswers   Json? // incremento de diagnóstico (10-12 perguntas, caso raro — após 3 rodadas sem aprovação)
+  status             DiagnosticStatus  @default(EM_ANDAMENTO)
+  versaoQuestionario String            @default("descoberta_v1")
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
 
   rounds GenerationRound[]
 
@@ -126,9 +138,30 @@ model Possibility {
   status             PossibilityStatus @default(PENDENTE)
   createdAt          DateTime          @default(now())
 
-  plan Plan?
+  plan              Plan?
+  adequacaoResponse AdequacaoResponse?
 
   @@map("possibilities")
+}
+
+// =========================================================================
+// Respostas do questionário de adequação da execução — perguntado depois que
+// uma Possibility é aprovada, antes de gerar o Plan. Mesmo padrão de
+// autosave em JSON do Diagnostic (wizard, uma pergunta por tela). O formato
+// esperado está documentado em
+// Questionario_Adequacao_Execucao_MaisQueProfessor.docx.
+// =========================================================================
+model AdequacaoResponse {
+  id                 String           @id @default(uuid())
+  possibilityId      String           @unique
+  possibility        Possibility      @relation(fields: [possibilityId], references: [id], onDelete: Cascade)
+  answers            Json             @default("{}")
+  status             DiagnosticStatus @default(EM_ANDAMENTO)
+  versaoQuestionario String           @default("adequacao_v1")
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@map("adequacao_responses")
 }
 
 enum PlanStatus {
@@ -137,6 +170,75 @@ enum PlanStatus {
   CONGELADO
 
   @@map("plan_status")
+}
+
+enum NivelAcompanhamento {
+  MINIMO
+  MEDIO
+  ALTO
+
+  @@map("nivel_acompanhamento")
+}
+
+enum OrcamentoFaixa {
+  SEM_INVESTIMENTO
+  ATE_300
+  DE_300_A_1000
+  ACIMA_DE_1000
+
+  @@map("orcamento_faixa")
+}
+
+enum EstagioInicial {
+  NUNCA_FIZ
+  PESQUISEI_NAO_EXECUTEI
+  FIZ_ISOLADO
+  TENHO_CASO_PORTFOLIO
+  ATUO_PARCIALMENTE
+
+  @@map("estagio_inicial")
+}
+
+enum DistribuicaoTempo {
+  BLOCO_UNICO
+  BLOCOS_MEDIOS
+  SESSOES_CURTAS
+  AGENDA_VARIAVEL
+
+  @@map("distribuicao_tempo")
+}
+
+enum RegraSegurancaFinanceira {
+  MANTER_RENDA_INTEGRAL
+  SEM_COMPROMISSO_ANTES_EVIDENCIA
+  TRANSICAO_GRADUAL
+  MARGEM_PARA_DEDICAR
+  NAO_SE_APLICA
+
+  @@map("regra_seguranca_financeira")
+}
+
+enum EquilibrioAprenderExecutar {
+  FOCO_EXECUCAO
+  EQUILIBRADO
+  FOCO_APRENDIZADO
+  SISTEMA_RECOMENDA
+
+  @@map("equilibrio_aprender_executar")
+}
+
+enum AcaoAceita {
+  PESQUISAR
+  CONVERSAR
+  PRODUZIR_AMOSTRA
+  PUBLICAR_CONTEUDO
+  ENVIAR_CANDIDATURAS
+  PROPOSTA_COMERCIAL
+  PILOTO_REMUNERADO
+  ATIVIDADE_PRESENCIAL
+  PREPARAR_PRIVADAMENTE
+
+  @@map("acao_aceita")
 }
 
 // =========================================================================
@@ -151,22 +253,30 @@ enum PlanStatus {
 // ganha um plano maior.
 // =========================================================================
 model Plan {
-  id                   String      @id @default(uuid())
-  userId               String
-  user                 User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  possibilityId        String      @unique
-  possibility          Possibility @relation(fields: [possibilityId], references: [id])
-  status               PlanStatus  @default(ATIVO)
-  tempoDisponivelHoras Float // horas/semana declaradas na Etapa 6
-  investimentoFaixa    String
-  acompanhamento       String?
-  diaCheckin           Int // 0-6, herdado do User na criação, pode divergir depois se o usuário mudar globalmente
-  relatorio            Json // relatório completo fixo (Etapa 7) — nunca reescrito
-  duracaoSemanas       Int // sempre PLAN_DURATION_SEMANAS na criação — semanas extras (pendências) não incrementam este número
-  activatedAt          DateTime    @default(now())
-  pausedAt             DateTime?
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  id                         String                     @id @default(uuid())
+  userId                     String
+  user                       User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  possibilityId              String                     @unique
+  possibility                Possibility                @relation(fields: [possibilityId], references: [id])
+  status                     PlanStatus                 @default(ATIVO)
+  tempoDisponivelHoras       Float // horas/semana declaradas na adequação
+  horasNucleoSemana          Float // min(tempoDisponivelHoras, 10) — teto real de tarefas obrigatórias por semana
+  investimentoFaixa          OrcamentoFaixa
+  acompanhamento             NivelAcompanhamento?
+  diaCheckin                 Int // 0-6, herdado do User na criação, pode divergir depois se o usuário mudar globalmente
+  estagioInicial             EstagioInicial
+  distribuicaoTempo          DistribuicaoTempo
+  regraSegurancaFinanceira   RegraSegurancaFinanceira
+  acoesAceitas               AcaoAceita[]
+  equilibrioAprenderExecutar EquilibrioAprenderExecutar
+  condicaoAdicionalExecucao  String?                    @db.Text
+  classificacaoEncaixe       String? // veredito da IA: cabe_agora | cabe_com_adaptacao | construcao_medio_prazo | conflito_explicito
+  relatorio                  Json // relatório completo fixo (Etapa 7) — nunca reescrito
+  duracaoSemanas             Int // sempre PLAN_DURATION_SEMANAS na criação — semanas extras (pendências) não incrementam este número
+  activatedAt                DateTime                   @default(now())
+  pausedAt                   DateTime?
+  createdAt                  DateTime                   @default(now())
+  updatedAt                  DateTime                   @updatedAt
 
   weeks                       PlanWeek[]
   tasks                       PlanTask[]
@@ -211,15 +321,23 @@ model AntiProcrastinacaoResposta {
 // nenhuma semana/tarefa específica pra sobreviver ao pool/pull da
 // execução dinâmica sem precisar de lógica de sincronização.
 // =========================================================================
+enum MilestoneTipo {
+  ENTREGA_CONTROLAVEL // depende só da própria pessoa executar
+  SINAL_EXTERNO // depende de resposta de terceiros (ex.: retorno de mercado) — ausência não significa plano mal executado
+
+  @@map("milestone_tipo")
+}
+
 model PlanMilestone {
-  id         String    @id @default(uuid())
+  id         String        @id @default(uuid())
   planId     String
-  plan       Plan      @relation(fields: [planId], references: [id], onDelete: Cascade)
+  plan       Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
   sequencia  Int
   titulo     String
-  descricao  String    @db.Text
+  descricao  String        @db.Text
+  tipo       MilestoneTipo @default(ENTREGA_CONTROLAVEL)
   achievedAt DateTime?
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime      @default(now())
 
   @@map("plan_milestones")
 }
@@ -287,6 +405,7 @@ model PlanTask {
   status         TaskStatus @default(PENDENTE)
   origin         TaskOrigin @default(PLANO)
   notaParcial    String?    @db.Text // só preenchido quando status = PARCIAL — o que ainda falta
+  opcional       Boolean    @default(false) // tarefa além do núcleo semanal (horasNucleoSemana), só quando tempoDisponivelHoras > 10
   sequencia      Int // ordem original gerada pela IA, usada pra ordenar dentro da semana
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

@@ -3,8 +3,8 @@ import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { db } from "@/lib/db";
-import { deepGet } from "@/lib/diagnostico/deep-set";
-import { StepFields } from "@/app/diagnostico/[slug]/step-fields";
+import { deepGet } from "@/lib/wizard/deep-set";
+import { StepFields } from "@/components/wizard-step-fields";
 import {
   getIncrementPrevSlug,
   getIncrementStepBySlug,

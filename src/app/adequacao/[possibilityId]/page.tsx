@@ -1,38 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
-import { submitAdequacao } from "./actions";
+import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
+import { getResumeSlug } from "@/lib/adequacao/steps";
 
-// Ver nota em diagnostico/concluido/page.tsx — sem isto a Vercel mata a
-// função aos 10s, e o plano de 12 semanas leva bem mais que isso pra gerar.
-export const maxDuration = 60;
-
-const optionCardClass =
-  "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[15px] text-ink transition-colors has-[:checked]:border-petrol has-[:checked]:bg-gold-soft";
-
-const INVESTMENT_OPTIONS = [
-  { value: "SEM_INVESTIMENTO", label: "Prefiro não investir nada por enquanto" },
-  { value: "ATE_300", label: "Até R$300" },
-  { value: "DE_300_A_1000", label: "Entre R$300 e R$1.000" },
-  { value: "ACIMA_DE_1000", label: "Acima de R$1.000" },
-];
-
-const ACOMPANHAMENTO_OPTIONS = [
-  { value: "Mínimo — só o check-in semanal, nada além disso", label: "Mínimo — só o check-in semanal, nada além disso" },
-  { value: "Médio — check-in semanal + lembretes se eu atrasar", label: "Médio — check-in semanal + lembretes se eu atrasar" },
-  { value: "Alto — quero me sentir bem acompanhado toda semana", label: "Alto — quero me sentir bem acompanhado toda semana" },
-];
-
-export default async function AdequacaoPage({
+export default async function AdequacaoEntryPage({
   params,
-  searchParams,
 }: PageProps<"/adequacao/[possibilityId]">) {
   const { possibilityId } = await params;
-  const query = await searchParams;
-  const error = typeof query.error === "string" ? query.error : undefined;
 
   const user = await requireActiveAccess();
 
@@ -43,11 +19,17 @@ export default async function AdequacaoPage({
   if (!possibility || possibility.round.diagnostic.userId !== user.id) notFound();
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
-  const action = submitAdequacao.bind(null, possibilityId);
+  const response = await getOrCreateAdequacaoResponse(possibilityId);
+
+  if (response.status === "CONCLUIDO") {
+    redirect(`/adequacao/${possibilityId}/concluido`);
+  }
+
+  const resumeSlug = getResumeSlug(response.answers as Record<string, unknown>);
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="ETAPA 06 / 10" />
+      <AppHeader progressLabel="POSSIBILIDADE APROVADA" />
 
       <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
         Possibilidade aprovada
@@ -56,84 +38,15 @@ export default async function AdequacaoPage({
         {possibility.titulo}
       </h1>
       <p className="mb-8 max-w-[50ch] text-[14.5px] text-ink-muted">
-        Só mais algumas perguntas para calibrar o plano ao seu tempo e ao seu jeito de acompanhar.
+        Só mais algumas perguntas para calibrar o plano ao seu tempo, aos seus recursos e ao seu jeito de acompanhar.
       </p>
 
-      <form action={action} className="flex flex-col gap-8">
-        <div>
-          <label htmlFor="tempoDisponivelHoras" className="mb-2 block text-[15px] font-medium text-ink">
-            Quantas horas por semana você tem disponível para isso?
-          </label>
-          <input
-            id="tempoDisponivelHoras"
-            name="tempoDisponivelHoras"
-            type="number"
-            min={1}
-            max={40}
-            step={0.5}
-            required
-            defaultValue={4}
-            className="w-32 rounded-lg border border-line bg-paper px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-petrol"
-          />
-        </div>
-
-        <div>
-          <p className="mb-2 text-[15px] font-medium text-ink">
-            Quanto você tem disponível para investir, se precisar?
-          </p>
-          <div className="flex flex-col gap-2.5">
-            {INVESTMENT_OPTIONS.map((opt) => (
-              <label key={opt.value} className={optionCardClass}>
-                <input type="radio" name="investimentoFaixa" value={opt.value} required className="mt-1 accent-petrol" />
-                <span>{opt.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <p className="mb-2 text-[15px] font-medium text-ink">Que nível de acompanhamento você quer?</p>
-          <div className="flex flex-col gap-2.5">
-            {ACOMPANHAMENTO_OPTIONS.map((opt) => (
-              <label key={opt.value} className={optionCardClass}>
-                <input type="radio" name="acompanhamento" value={opt.value} required className="mt-1 accent-petrol" />
-                <span>{opt.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="diaCheckin" className="mb-2 block text-[15px] font-medium text-ink">
-            Em qual dia da semana você quer receber o check-in?
-          </label>
-          <select
-            id="diaCheckin"
-            name="diaCheckin"
-            required
-            defaultValue=""
-            className="w-full rounded-lg border border-line bg-paper px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-petrol"
-          >
-            <option value="" disabled>
-              Selecione um dia
-            </option>
-            {WEEKDAY_LABELS.map((label, index) => (
-              <option key={label} value={index}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
-
-        <SubmitButton
-          pendingText="Gerando seu plano... isso pode levar até 1 minuto, não recarregue a página"
-          className="rounded-lg bg-petrol px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
-        >
-          Gerar meu relatório e plano →
-        </SubmitButton>
-      </form>
+      <a
+        href={`/adequacao/${possibilityId}/${resumeSlug}`}
+        className="inline-block rounded-lg bg-petrol px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
+      >
+        Ajustar meu plano →
+      </a>
     </div>
   );
 }

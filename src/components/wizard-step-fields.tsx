@@ -1,4 +1,4 @@
-import type { DiagnosticStep } from "@/lib/diagnostico/steps";
+import type { WizardStep } from "@/lib/wizard/step-types";
 
 const textareaClass =
   "w-full rounded-lg border border-line bg-paper px-3.5 py-3 text-[15px] text-ink outline-none focus:border-petrol min-h-[120px] resize-y";
@@ -6,11 +6,44 @@ const textareaClass =
 const optionCardClass =
   "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[15px] text-ink transition-colors has-[:checked]:border-petrol has-[:checked]:bg-gold-soft";
 
-export function StepFields({ step, currentValue }: { step: DiagnosticStep; currentValue: unknown }) {
+const numberInputClass =
+  "w-32 rounded-lg border border-line bg-paper px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-petrol";
+
+function hasOtherOption(options: { value: string }[]) {
+  return options.some((o) => o.value === "outro");
+}
+
+function OtherDetailField({ currentValue }: { currentValue: unknown }) {
+  const value = typeof currentValue === "string" ? currentValue : "";
+  return (
+    <div className="mt-1">
+      <label htmlFor="outro_detalhe" className="mb-1.5 block text-[13.5px] font-medium text-ink-muted">
+        Se marcou &quot;Outro&quot;, descreva aqui
+      </label>
+      <textarea
+        id="outro_detalhe"
+        name="outro_detalhe"
+        defaultValue={value}
+        className={`${textareaClass} min-h-[70px]`}
+      />
+    </div>
+  );
+}
+
+export function StepFields({
+  step,
+  currentValue,
+  otherDetailValue,
+}: {
+  step: WizardStep;
+  currentValue: unknown;
+  otherDetailValue?: unknown;
+}) {
   switch (step.type) {
     case "intention":
     case "single-select": {
       const selected = typeof currentValue === "string" ? currentValue : undefined;
+      const showOther = step.type === "single-select" && step.allowOther && hasOtherOption(step.options);
       return (
         <div className="flex flex-col gap-2.5">
           {step.options.map((opt) => (
@@ -26,12 +59,14 @@ export function StepFields({ step, currentValue }: { step: DiagnosticStep; curre
               <span>{opt.label}</span>
             </label>
           ))}
+          {showOther ? <OtherDetailField currentValue={otherDetailValue} /> : null}
         </div>
       );
     }
 
     case "multi-select": {
       const selected = Array.isArray(currentValue) ? (currentValue as string[]) : [];
+      const showOther = step.allowOther && hasOtherOption(step.options);
       return (
         <div className="flex flex-col gap-2.5">
           {step.options.map((opt) => (
@@ -46,19 +81,51 @@ export function StepFields({ step, currentValue }: { step: DiagnosticStep; curre
               <span>{opt.label}</span>
             </label>
           ))}
+          {showOther ? <OtherDetailField currentValue={otherDetailValue} /> : null}
         </div>
       );
     }
 
     case "textarea": {
       const value = typeof currentValue === "string" ? currentValue : "";
+      const isSkipSentinel = value === "__SEM_RESPOSTA__";
       return (
-        <textarea
+        <div className="flex flex-col gap-3">
+          <textarea
+            name="value"
+            defaultValue={isSkipSentinel ? "" : value}
+            placeholder={step.placeholder}
+            required={!step.optional && !step.allowSkipWithCheckbox}
+            disabled={isSkipSentinel}
+            className={textareaClass}
+          />
+          {step.allowSkipWithCheckbox ? (
+            <label className="flex cursor-pointer items-center gap-2 text-[13.5px] text-ink-muted">
+              <input
+                type="checkbox"
+                name="skip"
+                defaultChecked={isSkipSentinel}
+                className="accent-petrol"
+              />
+              {step.allowSkipWithCheckbox}
+            </label>
+          ) : null}
+        </div>
+      );
+    }
+
+    case "number": {
+      const value = typeof currentValue === "number" ? currentValue : step.defaultValue;
+      return (
+        <input
           name="value"
+          type="number"
+          min={step.min}
+          max={step.max}
+          step={step.step}
+          required
           defaultValue={value}
-          placeholder={step.placeholder}
-          required={!step.optional}
-          className={textareaClass}
+          className={numberInputClass}
         />
       );
     }

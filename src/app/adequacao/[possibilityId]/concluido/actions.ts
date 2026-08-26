@@ -3,17 +3,34 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import type { Prisma } from "@/generated/prisma/client";
-import { calcularHorasTotais, PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
+import {
+  type AcaoAceita,
+  type DistribuicaoTempo,
+  type EquilibrioAprenderExecutar,
+  type EstagioInicial,
+  MilestoneTipo,
+  type NivelAcompanhamento,
+  type OrcamentoFaixa,
+  type Prisma,
+  type RegraSegurancaFinanceira,
+} from "@/generated/prisma/client";
+
+const MARCO_TIPO_MAP: Record<string, MilestoneTipo> = {
+  entrega_controlavel: MilestoneTipo.ENTREGA_CONTROLAVEL,
+  sinal_externo: MilestoneTipo.SINAL_EXTERNO,
+};
+import { calcularHorasNucleoSemana, calcularHorasTotais, PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
 import { generateReportAndPlanOpenAI } from "@/lib/ai-engine/generate-report-plan-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
+import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
+import { getResumeSlug } from "@/lib/adequacao/steps";
 
 function fail(possibilityId: string, message: string): never {
-  redirect(`/adequacao/${possibilityId}?error=${encodeURIComponent(message)}`);
+  redirect(`/adequacao/${possibilityId}/concluido?error=${encodeURIComponent(message)}`);
 }
 
-export async function submitAdequacao(possibilityId: string, formData: FormData) {
+export async function generatePlan(possibilityId: string) {
   const user = await requireActiveAccess();
 
   const possibility = await db.possibility.findUnique({
@@ -24,25 +41,30 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
   if (possibility.status === "REJEITADA") redirect("/");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
+  const response = await getOrCreateAdequacaoResponse(possibilityId);
+  const answers = response.answers as Record<string, unknown>;
+  const resumeSlug = getResumeSlug(answers);
+  if (resumeSlug !== "concluido") {
+    redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
+  }
+
   const existingPlanCount = await db.plan.count({ where: { userId: user.id } });
   if (existingPlanCount >= 5) {
     fail(possibilityId, "Você já tem 5 planos salvos — o máximo permitido. Remova um plano nas configurações antes de criar outro.");
   }
 
-  const tempoDisponivelHoras = Number(formData.get("tempoDisponivelHoras"));
-  const investimentoFaixa = String(formData.get("investimentoFaixa") ?? "");
-  const acompanhamento = String(formData.get("acompanhamento") ?? "");
-  const diaCheckin = Number(formData.get("diaCheckin"));
+  const tempoDisponivelHoras = Number(answers.horasSemanaisDisponiveis);
+  const estagioInicial = answers.estagioInicial as EstagioInicial;
+  const distribuicaoTempo = answers.distribuicaoTempo as DistribuicaoTempo;
+  const investimentoFaixa = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
+  const regraSegurancaFinanceira = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
+  const acoesAceitas = (answers.acoesAceitas as string[] | undefined) ?? [];
+  const equilibrioAprenderExecutar = answers.equilibrioAprenderExecutar as EquilibrioAprenderExecutar;
+  const acompanhamento = answers.nivelAcompanhamento as NivelAcompanhamento;
+  const diaCheckin = Number(answers.diaCheckin);
+  const condicaoAdicionalExecucao = typeof answers.condicaoAdicionalExecucao === "string" ? answers.condicaoAdicionalExecucao : null;
 
-  if (!tempoDisponivelHoras || tempoDisponivelHoras <= 0) {
-    fail(possibilityId, "Informe quantas horas por semana você tem disponível.");
-  }
-  if (!investimentoFaixa) fail(possibilityId, "Selecione uma faixa de investimento.");
-  if (!acompanhamento) fail(possibilityId, "Selecione o nível de acompanhamento.");
-  if (Number.isNaN(diaCheckin) || diaCheckin < 0 || diaCheckin > 6) {
-    fail(possibilityId, "Selecione o dia do check-in.");
-  }
-
+  const horasNucleoSemana = calcularHorasNucleoSemana(tempoDisponivelHoras);
   const horasTotais = calcularHorasTotais(tempoDisponivelHoras);
 
   let generated;
@@ -58,11 +80,32 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
       },
       horasTotais,
       horasPorSemana: tempoDisponivelHoras,
+      horasNucleoSemana,
+      estagioInicial,
+      distribuicaoTempo,
+      orcamentoFaixa: investimentoFaixa,
+      regraSegurancaFinanceira,
+      acoesAceitas: acoesAceitas as AcaoAceita[],
+      equilibrioAprenderExecutar,
+      condicaoAdicionalExecucao,
     });
   } catch (err) {
     console.error("Erro ao gerar relatório e plano", err);
     await logDebugError("adequacao:generateReportAndPlan", err);
     fail(possibilityId, "Não foi possível gerar seu plano agora. Tente de novo em instantes.");
+  }
+
+  await db.adequacaoResponse.update({ where: { id: response.id }, data: { status: "CONCLUIDO" } });
+
+  // Conflito explícito — alguma condição informada impede o teste que essa
+  // possibilidade exigiria. Não cria o Plan; desfaz a aprovação (volta pra
+  // PENDENTE, igual às outras 4 do conjunto) e devolve a pessoa pras 5
+  // possibilidades pra escolher outra, com o motivo explicado pela IA.
+  if (generated.relatorio.classificacao_encaixe === "conflito_explicito") {
+    await db.possibility.update({ where: { id: possibility.id }, data: { status: "PENDENTE" } });
+    redirect(
+      `/diagnostico/possibilidades/${possibility.roundId}?conflito=${encodeURIComponent(generated.relatorio.explicacao_encaixe)}`,
+    );
   }
 
   // Só 1 plano ativo por vez (Etapa 9) — pausa qualquer outro antes de ativar este.
@@ -78,9 +121,17 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
       userId: user.id,
       possibilityId: possibility.id,
       tempoDisponivelHoras,
+      horasNucleoSemana,
       investimentoFaixa,
       acompanhamento,
       diaCheckin,
+      estagioInicial,
+      distribuicaoTempo,
+      regraSegurancaFinanceira,
+      acoesAceitas: acoesAceitas as AcaoAceita[],
+      equilibrioAprenderExecutar,
+      condicaoAdicionalExecucao,
+      classificacaoEncaixe: generated.relatorio.classificacao_encaixe,
       duracaoSemanas: PLAN_DURATION_SEMANAS,
       relatorio: generated.relatorio as Prisma.InputJsonValue,
       weeks: {
@@ -100,6 +151,7 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
           sequencia: index,
           titulo: marco.titulo,
           descricao: marco.descricao,
+          tipo: MARCO_TIPO_MAP[marco.tipo],
         })),
       },
     },
@@ -117,6 +169,7 @@ export async function submitAdequacao(possibilityId: string, formData: FormData)
       planWeekId: week.id,
       texto: tarefa.texto,
       horasEstimadas: tarefa.horas,
+      opcional: tarefa.opcional,
       sequencia: sequencia++,
     }));
   });

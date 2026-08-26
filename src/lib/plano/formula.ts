@@ -6,10 +6,17 @@
 
 export const PLAN_DURATION_SEMANAS = 12;
 export const PLAN_MAX_HORAS = 120; // teto: 12 semanas × 10h/semana
+export const HORAS_NUCLEO_TETO_SEMANAL = 10;
+
+// Teto real de tarefas obrigatórias por semana. Quem declara mais que o
+// teto não ganha mais tarefas obrigatórias — o excedente vira atividade
+// opcional (ver PlanTask.opcional), claramente separada do núcleo.
+export function calcularHorasNucleoSemana(horasPorSemana: number): number {
+  return Math.min(Math.max(horasPorSemana, 0.5), HORAS_NUCLEO_TETO_SEMANAL);
+}
 
 // Horas totais que a IA deve mirar ao gerar o plano — sempre 12 semanas ×
-// horas/semana declaradas, travado no teto. Quem tem mais tempo que o teto
-// não ganha um plano maior: adianta tarefas dentro das mesmas 12 semanas.
+// núcleo semanal, já travado no teto (12 × 10 = 120) por construção.
 export function calcularHorasTotais(horasPorSemana: number): number {
-  return Math.min(PLAN_DURATION_SEMANAS * Math.max(horasPorSemana, 0.5), PLAN_MAX_HORAS);
+  return PLAN_DURATION_SEMANAS * calcularHorasNucleoSemana(horasPorSemana);
 }

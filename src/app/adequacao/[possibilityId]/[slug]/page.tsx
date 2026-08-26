@@ -1,45 +1,45 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StepFields } from "@/components/wizard-step-fields";
+import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
+import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
+import { getPrevSlug, getStepBySlug, getStepIndex, TOTAL_STEPS } from "@/lib/adequacao/steps";
 import { deepGet } from "@/lib/wizard/deep-set";
-import { otherDetailPath } from "@/lib/wizard/step-types";
-import { getPrevSlug, getStepBySlug, getStepIndex, getTotalSteps } from "@/lib/diagnostico/steps";
 import { saveStep } from "./actions";
 
-export default async function DiagnosticStepPage({
+export default async function AdequacaoStepPage({
   params,
   searchParams,
-}: PageProps<"/diagnostico/[slug]">) {
-  const { slug } = await params;
+}: PageProps<"/adequacao/[possibilityId]/[slug]">) {
+  const { possibilityId, slug } = await params;
   const query = await searchParams;
   const error = typeof query.error === "string" ? query.error : undefined;
 
-  const user = await requireActiveAccess();
-
-  const diagnostic = await getOrCreateActiveDiagnostic(user.id);
-  const rota = diagnostic.rotaProfissional;
-
-  const step = getStepBySlug(slug, rota);
+  const step = getStepBySlug(slug);
   if (!step) notFound();
 
-  const answers = diagnostic.answers as Record<string, unknown>;
-  const currentValue = step.type === "intention" ? diagnostic.intention : deepGet(answers, step.path);
-  const otherDetailValue =
-    (step.type === "single-select" || step.type === "multi-select") && step.allowOther
-      ? deepGet(answers, otherDetailPath(step.path))
-      : undefined;
+  const user = await requireActiveAccess();
 
-  const index = getStepIndex(slug, rota);
-  const totalSteps = getTotalSteps(rota);
-  const prevSlug = getPrevSlug(slug, rota);
-  const progressPct = Math.round(((index + 1) / totalSteps) * 100);
-  const action = saveStep.bind(null, slug);
+  const possibility = await db.possibility.findUnique({
+    where: { id: possibilityId },
+    include: { round: { include: { diagnostic: true } }, plan: true },
+  });
+  if (!possibility || possibility.round.diagnostic.userId !== user.id) notFound();
+  if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
+
+  const response = await getOrCreateAdequacaoResponse(possibilityId);
+  const answers = response.answers as Record<string, unknown>;
+  const currentValue = step.type === "intention" ? undefined : deepGet(answers, step.path);
+
+  const index = getStepIndex(slug);
+  const prevSlug = getPrevSlug(slug);
+  const progressPct = Math.round(((index + 1) / TOTAL_STEPS) * 100);
+  const action = saveStep.bind(null, possibilityId, slug);
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel={`PERGUNTA ${index + 1}/${totalSteps}`} />
+      <AppHeader progressLabel={`AJUSTE ${index + 1}/${TOTAL_STEPS}`} />
 
       <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-line">
         <div
@@ -63,13 +63,13 @@ export default async function DiagnosticStepPage({
           ) : null}
         </div>
 
-        <StepFields step={step} currentValue={currentValue} otherDetailValue={otherDetailValue} />
+        <StepFields step={step} currentValue={currentValue} />
 
         {error ? <p className="text-sm text-role-3">{error}</p> : null}
 
         <div className="flex items-center justify-between gap-4 pt-2">
           <a
-            href={prevSlug ? `/diagnostico/${prevSlug}` : "/"}
+            href={prevSlug ? `/adequacao/${possibilityId}/${prevSlug}` : `/adequacao/${possibilityId}`}
             className="text-sm font-medium text-ink-muted hover:text-ink"
           >
             ← Voltar

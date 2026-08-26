@@ -33,6 +33,19 @@ function OriginTag({ origin }: { origin: string }) {
   );
 }
 
+// Tarefa além do núcleo semanal (horasNucleoSemana) — só existe quando a
+// pessoa declarou mais horas/semana do que o teto de 10h na adequação.
+function OptionalTag() {
+  return (
+    <span
+      className="shrink-0 rounded-full px-2 py-0.5 font-mono text-[9.5px] tracking-wide uppercase"
+      style={{ color: "var(--gold)", background: "var(--paper)" }}
+    >
+      Opcional
+    </span>
+  );
+}
+
 function formatWeekRange(start: Date, end: Date) {
   const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear();
   const startLabel = formatDate(start, sameMonth ? { day: "2-digit" } : { day: "2-digit", month: "short" });
@@ -106,7 +119,10 @@ export function PlanMural({
                     {task.status === "PARCIAL" && task.notaParcial ? ` · faltou: ${task.notaParcial}` : ""}
                   </p>
                 </div>
-                {task.origin !== "PLANO" ? <OriginTag origin={task.origin} /> : null}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {task.opcional ? <OptionalTag /> : null}
+                  {task.origin !== "PLANO" ? <OriginTag origin={task.origin} /> : null}
+                </div>
               </div>
 
               {task.status === "PENDENTE" && !isExpanded ? (
@@ -263,7 +279,10 @@ export function PlanMural({
               <li key={task.id} className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="text-[13px] text-ink">{task.texto}</span>
-                  <span className="text-[11.5px] text-ink-muted">{task.horasEstimadas}h</span>
+                  <span className="flex items-center gap-2">
+                    {task.opcional ? <OptionalTag /> : null}
+                    <span className="text-[11.5px] text-ink-muted">{task.horasEstimadas}h</span>
+                  </span>
                 </div>
                 <form action={pullTaskToCurrentWeek.bind(null, returnTo, task.id)}>
                   <button

@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/app-header";
 import { PlanMural } from "@/components/plan-mural";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { DIAGNOSTIC_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
+import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
 import { AppNavLinks } from "@/components/app-nav-links";
 import { PapelIcon } from "@/components/papel-icon";
@@ -37,11 +37,11 @@ export default async function Home({
   }
 
   const diagnosticCta = !diagnostic
-    ? { label: "Começar diagnóstico", href: `/diagnostico/${DIAGNOSTIC_STEPS[0].slug}` }
+    ? { label: "Começar diagnóstico", href: `/diagnostico/${SHARED_STEPS[0].slug}` }
     : diagnostic.status === "EM_ANDAMENTO"
       ? {
           label: "Continuar diagnóstico",
-          href: `/diagnostico/${getResumeSlug(diagnostic.intention, diagnostic.answers as Record<string, unknown>)}`,
+          href: `/diagnostico/${getResumeSlug(diagnostic.intention, diagnostic.rotaProfissional, diagnostic.answers as Record<string, unknown>)}`,
         }
       : { label: "Ver diagnóstico concluído", href: "/diagnostico/concluido" };
 

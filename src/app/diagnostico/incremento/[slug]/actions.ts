@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { deepGet, deepSet } from "@/lib/diagnostico/deep-set";
+import { deepGet, deepSet } from "@/lib/wizard/deep-set";
 import {
   INCREMENT_STEPS,
   getIncrementNextSlug,
