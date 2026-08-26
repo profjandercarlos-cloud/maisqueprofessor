@@ -1,4 +1,5 @@
 import type { WizardStep } from "@/lib/wizard/step-types";
+import { CharCounterTextarea } from "@/components/char-counter-textarea";
 
 const textareaClass =
   "w-full rounded-lg border border-line bg-paper px-3.5 py-3 text-[15px] text-ink outline-none focus:border-petrol min-h-[120px] resize-y";
@@ -91,12 +92,14 @@ export function StepFields({
       const isSkipSentinel = value === "__SEM_RESPOSTA__";
       return (
         <div className="flex flex-col gap-3">
-          <textarea
+          <CharCounterTextarea
             name="value"
             defaultValue={isSkipSentinel ? "" : value}
             placeholder={step.placeholder}
             required={!step.optional && !step.allowSkipWithCheckbox}
             disabled={isSkipSentinel}
+            minChars={step.minChars}
+            maxChars={step.maxChars}
             className={textareaClass}
           />
           {step.allowSkipWithCheckbox ? (
@@ -142,11 +145,13 @@ export function StepFields({
               >
                 {field.label}
               </label>
-              <textarea
+              <CharCounterTextarea
                 id={field.key}
                 name={field.key}
                 defaultValue={values[field.key] ?? ""}
                 required
+                minChars={field.minChars}
+                maxChars={field.maxChars}
                 className={`${textareaClass} min-h-[80px]`}
               />
             </div>

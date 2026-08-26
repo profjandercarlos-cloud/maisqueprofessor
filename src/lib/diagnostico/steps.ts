@@ -245,6 +245,8 @@ export const SHARED_STEPS: WizardStep[] = [
     block: 3,
     type: "textarea",
     question: "O que você teria vontade de aprender se enxergasse uma aplicação profissional concreta?",
+    helper:
+      "Pense em algo específico — uma ferramenta, técnica, área de conhecimento ou habilidade — que você aceitaria estudar se soubesse exatamente para que trabalho ela serviria. Não precisa ser algo que você já sabe fazer.",
     minChars: 50,
     maxChars: 700,
     path: ["blocoC", "aprendizadoDesejado"],

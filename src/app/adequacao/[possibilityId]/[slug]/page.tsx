@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StepFields } from "@/components/wizard-step-fields";
+import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
@@ -74,12 +75,12 @@ export default async function AdequacaoStepPage({
           >
             ← Voltar
           </a>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Salvando..."
             className="rounded-lg bg-petrol px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
           >
             Continuar
-          </button>
+          </SubmitButton>
         </div>
       </form>
     </div>
