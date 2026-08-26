@@ -12,10 +12,6 @@ import { otherDetailPath } from "@/lib/wizard/step-types";
 const SKIP_SENTINEL = "__SEM_RESPOSTA__";
 const GENERIC_ACAO_ANSWERS = ["ajudei", "participei", "dei suporte", "ajudei a organizar", "dei apoio"];
 
-function failWith(slug: string, message: string): never {
-  redirect(`/diagnostico/${slug}?error=${encodeURIComponent(message)}`);
-}
-
 function normalize(text: string): string {
   return text
     .toLowerCase()
@@ -39,13 +35,21 @@ export async function saveStep(slug: string, formData: FormData) {
 
   let intention: Intention | undefined;
   let rotaProfissional: RotaProfissional | undefined;
-  let answers: Record<string, unknown> | undefined = currentAnswers;
+  let answers: Record<string, unknown> = currentAnswers;
+  // Sempre grava o que a pessoa digitou/selecionou nesta tentativa, mesmo
+  // quando a validação falha — só decide se avança pra próxima pergunta ou
+  // volta com erro no final, depois de já ter salvo. Sem isso, uma falha de
+  // validação (ex.: não bateu o mínimo de caracteres) apagava o que a
+  // pessoa tinha acabado de escrever, porque a tela seguinte recarregava a
+  // partir do banco (que nunca chegou a ser atualizado).
+  let errorMessage: string | null = null;
 
   switch (step.type) {
     case "intention": {
       const value = String(formData.get("value") ?? "");
       if (!["SAIR", "COMPLEMENTAR", "NAO_SEI", "JA_FORA_DA_SALA"].includes(value)) {
-        failWith(slug, "Selecione uma opção.");
+        errorMessage = "Selecione uma opção.";
+        break;
       }
       intention = value as Intention;
       break;
@@ -57,39 +61,40 @@ export async function saveStep(slug: string, formData: FormData) {
         break;
       }
       const value = String(formData.get("value") ?? "").trim();
-      if (!step.optional && !value) {
-        failWith(slug, "Este campo é obrigatório.");
-      }
-      if (value && step.minChars && value.length < step.minChars) {
-        failWith(slug, `Escreva pelo menos ${step.minChars} caracteres.`);
-      }
-      if (value && step.maxChars && value.length > step.maxChars) {
-        failWith(slug, `Escreva no máximo ${step.maxChars} caracteres.`);
-      }
       answers = deepSet(answers, step.path, value);
+      if (!step.optional && !value) {
+        errorMessage = "Este campo é obrigatório.";
+      } else if (value && step.minChars && value.length < step.minChars) {
+        errorMessage = `Escreva pelo menos ${step.minChars} caracteres.`;
+      } else if (value && step.maxChars && value.length > step.maxChars) {
+        errorMessage = `Escreva no máximo ${step.maxChars} caracteres.`;
+      }
       break;
     }
     case "number": {
       const value = Number(formData.get("value"));
       if (Number.isNaN(value) || value < step.min || value > step.max) {
-        failWith(slug, `Informe um valor entre ${step.min} e ${step.max}.`);
+        errorMessage = `Informe um valor entre ${step.min} e ${step.max}.`;
+        break;
       }
       answers = deepSet(answers, step.path, value);
       break;
     }
     case "single-select": {
       const value = String(formData.get("value") ?? "");
-      if (!value) {
-        failWith(slug, "Selecione uma opção.");
-      }
-      answers = deepSet(answers, step.path, value);
       if (step.allowOther) {
         const detail = String(formData.get("outro_detalhe") ?? "").trim();
         answers = deepSet(answers, otherDetailPath(step.path), detail);
       }
+      if (!value) {
+        errorMessage = "Selecione uma opção.";
+        break;
+      }
+      answers = deepSet(answers, step.path, value);
       if (slug === ROTA_PROFISSIONAL_SLUG) {
         if (!["CARREIRA", "CRIACAO_VALOR", "EXPLORACAO"].includes(value)) {
-          failWith(slug, "Selecione uma opção.");
+          errorMessage = "Selecione uma opção.";
+          break;
         }
         rotaProfissional = value as RotaProfissional;
       }
@@ -97,18 +102,17 @@ export async function saveStep(slug: string, formData: FormData) {
     }
     case "multi-select": {
       const values = formData.getAll("value").map(String);
-      const min = step.minSelect ?? 0;
-      const max = step.maxSelect ?? Infinity;
-      if (values.length < min) {
-        failWith(slug, `Selecione pelo menos ${min}.`);
-      }
-      if (values.length > max) {
-        failWith(slug, `Selecione no máximo ${max}.`);
-      }
       answers = deepSet(answers, step.path, values);
       if (step.allowOther) {
         const detail = String(formData.get("outro_detalhe") ?? "").trim();
         answers = deepSet(answers, otherDetailPath(step.path), detail);
+      }
+      const min = step.minSelect ?? 0;
+      const max = step.maxSelect ?? Infinity;
+      if (values.length < min) {
+        errorMessage = `Selecione pelo menos ${min}.`;
+      } else if (values.length > max) {
+        errorMessage = `Selecione no máximo ${max}.`;
       }
       break;
     }
@@ -116,21 +120,29 @@ export async function saveStep(slug: string, formData: FormData) {
       const values: Record<string, string> = {};
       for (const field of step.fields) {
         const value = String(formData.get(field.key) ?? "").trim();
-        if (!value) {
-          failWith(slug, "Preencha todos os campos desta situação.");
-        }
-        if (field.minChars && value.length < field.minChars) {
-          failWith(slug, `"${field.label}" precisa ter pelo menos ${field.minChars} caracteres.`);
-        }
-        if (field.maxChars && value.length > field.maxChars) {
-          failWith(slug, `"${field.label}" pode ter no máximo ${field.maxChars} caracteres.`);
-        }
         values[field.key] = value;
       }
-      if (values.acao && GENERIC_ACAO_ANSWERS.includes(normalize(values.acao))) {
-        failWith(slug, "Descreva sua contribuição específica — o que exatamente você fez, decidiu ou mudou.");
+      answers = deepSet(answers, step.path, values);
+
+      for (const field of step.fields) {
+        const value = values[field.key];
+        if (!value) {
+          errorMessage = "Preencha todos os campos desta situação.";
+          break;
+        }
+        if (field.minChars && value.length < field.minChars) {
+          errorMessage = `"${field.label}" precisa ter pelo menos ${field.minChars} caracteres.`;
+          break;
+        }
+        if (field.maxChars && value.length > field.maxChars) {
+          errorMessage = `"${field.label}" pode ter no máximo ${field.maxChars} caracteres.`;
+          break;
+        }
       }
-      if (step.rejectIfSameAs) {
+      if (!errorMessage && values.acao && GENERIC_ACAO_ANSWERS.includes(normalize(values.acao))) {
+        errorMessage = "Descreva sua contribuição específica — o que exatamente você fez, decidiu ou mudou.";
+      }
+      if (!errorMessage && step.rejectIfSameAs) {
         const other = deepGet(currentAnswers, step.rejectIfSameAs) as Record<string, string> | undefined;
         if (other) {
           // Nunca usar Object.values aqui: o JSONB do Postgres reordena as
@@ -143,21 +155,20 @@ export async function saveStep(slug: string, formData: FormData) {
           const otherText = normalize(fieldKeys.map((k) => other[k] ?? "").join(" "));
           const thisText = normalize(fieldKeys.map((k) => values[k] ?? "").join(" "));
           if (otherText && otherText === thisText) {
-            failWith(slug, "Essa situação está praticamente idêntica à anterior — conte algo diferente.");
+            errorMessage = "Essa situação está praticamente idêntica à anterior — conte algo diferente.";
           }
         }
       }
-      answers = deepSet(answers, step.path, values);
       break;
     }
     case "matrix": {
       const values: Record<string, string> = {};
       for (const row of step.rows) {
         const value = String(formData.get(row.value) ?? "");
-        if (!value) {
-          failWith(slug, "Responda todas as condições.");
-        }
         values[row.value] = value;
+        if (!value && !errorMessage) {
+          errorMessage = "Responda todas as condições.";
+        }
       }
       answers = deepSet(answers, step.path, values);
       break;
@@ -169,9 +180,13 @@ export async function saveStep(slug: string, formData: FormData) {
     data: {
       ...(intention ? { intention } : {}),
       ...(rotaProfissional ? { rotaProfissional } : {}),
-      ...(answers ? { answers: answers as Prisma.InputJsonValue } : {}),
+      answers: answers as Prisma.InputJsonValue,
     },
   });
+
+  if (errorMessage) {
+    redirect(`/diagnostico/${slug}?error=${encodeURIComponent(errorMessage)}`);
+  }
 
   const effectiveRota = rotaProfissional ?? rota;
   const next = getNextSlug(slug, effectiveRota);
