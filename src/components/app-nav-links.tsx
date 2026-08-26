@@ -112,7 +112,7 @@ export function AppNavLinks({
   }
 
   return (
-    <nav className="hidden xl:fixed xl:top-28 xl:left-10 xl:flex xl:w-52 xl:flex-col xl:gap-1">
+    <nav className="hidden xl:fixed xl:top-8 xl:left-10 xl:flex xl:w-52 xl:flex-col xl:gap-1">
       {items.map(({ href, label, Icon }) => (
         <a
           key={href}

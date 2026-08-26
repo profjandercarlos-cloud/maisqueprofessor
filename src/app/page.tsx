@@ -55,7 +55,7 @@ export default async function Home({
             {diagnostic ? "De volta" : "Bem-vindo(a) ao Mais Que Professor"}
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
-            Olá, <em className="font-medium text-gold not-italic">{dbUser?.name ?? user.email}.</em>
+            Olá, {dbUser?.name ?? user.email}.
           </h1>
         </div>
         <LogoutButton />
