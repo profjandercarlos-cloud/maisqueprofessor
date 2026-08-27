@@ -6,7 +6,7 @@ const textareaClass =
   "w-full rounded-lg border border-line bg-paper px-3.5 py-3 text-[15px] text-ink outline-none focus:border-petrol min-h-[120px] resize-y";
 
 const optionCardClass =
-  "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[15px] text-ink transition-colors has-[:checked]:border-petrol has-[:checked]:bg-gold-soft";
+  "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[15px] text-ink transition-colors hover:bg-paper-raised hover:shadow-[var(--shadow)] has-[:checked]:border-petrol has-[:checked]:bg-gold-soft has-[:checked]:shadow-none";
 
 const numberInputClass =
   "w-32 rounded-lg border border-line bg-paper px-3.5 py-2.5 text-[15px] text-ink outline-none focus:border-petrol";
