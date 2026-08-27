@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AppLogoMark } from "@/components/app-logo-mark";
 import { Medal } from "@/components/medal";
 import { PapelIcon, PAPEL_LABELS } from "@/components/papel-icon";
 import { loadActivePlanBadge } from "@/lib/plano/active-plan-badge";
@@ -16,9 +17,7 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
       <header className="mb-8 flex flex-col gap-2.5 border-b border-line py-4 sm:hidden">
         <div className="flex items-center justify-between gap-3">
           <a href="/" className="flex items-center gap-2.5">
-            <div className="relative h-7 w-7 shrink-0 rounded-lg bg-petrol">
-              <span className="absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold" />
-            </div>
+            <AppLogoMark />
             <div className="font-serif text-base font-semibold tracking-tight text-petrol">
               Mais Que Professor
             </div>
@@ -57,9 +56,7 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
       <header className="mb-10 hidden flex-wrap items-center justify-between gap-y-2 border-b border-line py-[22px] sm:flex">
         <div className="flex flex-wrap items-center gap-3">
           <a href="/" className="flex items-center gap-2.5">
-            <div className="relative h-7 w-7 shrink-0 rounded-lg bg-petrol">
-              <span className="absolute top-1/2 left-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold" />
-            </div>
+            <AppLogoMark />
             <div className="font-serif text-base font-semibold tracking-tight text-petrol">
               Mais Que Professor
             </div>
