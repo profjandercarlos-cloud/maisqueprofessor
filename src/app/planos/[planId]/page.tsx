@@ -80,34 +80,75 @@ export default async function PlanPage({
         </a>
       ) : null}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-4">
         {plan.weeks.map((week) => {
           const done = week.status === "CONCLUIDA";
           return (
             <article
               key={week.id}
-              className="rounded-[var(--radius-app)] border border-line bg-paper-raised p-4"
-              style={done ? { opacity: 0.75 } : undefined}
+              className="overflow-hidden rounded-[var(--radius-app)] border border-line bg-paper-raised shadow-[var(--shadow)]"
+              style={done ? { opacity: 0.7 } : undefined}
             >
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="font-mono text-[11px] tracking-wide text-ink-muted uppercase">
-                  Semana {week.weekNumber} {done ? "· concluída" : ""}
-                </span>
+              <div className="flex items-center justify-between gap-3 border-b border-line bg-paper px-4 py-2.5">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-petrol font-mono text-[11px] font-bold text-paper">
+                    {week.weekNumber}
+                  </span>
+                  <span className="font-mono text-[10.5px] tracking-[0.08em] text-ink-muted uppercase">
+                    {done ? "Concluída" : "Semana"}
+                  </span>
+                </div>
                 <span className="text-[12px] text-ink-muted">
                   {formatDate(week.scheduledDate, { day: "2-digit", month: "short" })}
                 </span>
               </div>
-              <p className="mb-2 text-[15px] font-medium text-ink">{week.meta}</p>
-              <ul className="mb-2 flex list-inside list-disc flex-col gap-1 text-[13.5px] text-ink">
-                {week.tasks.map((t) => (
-                  <li key={t.id}>{t.texto}</li>
-                ))}
-              </ul>
-              {week.dificuldadesAntecipadas ? (
-                <p className="text-[12.5px] text-ink-muted">
-                  <strong>Costuma travar em:</strong> {week.dificuldadesAntecipadas}
+
+              <div className="p-4">
+                <p className="mb-3.5 font-serif text-[16px] leading-snug font-medium text-ink">
+                  {week.meta}
                 </p>
-              ) : null}
+
+                <ul className="mb-3.5 flex flex-col gap-2">
+                  {week.tasks.map((t) => (
+                    <li
+                      key={t.id}
+                      className="flex items-start gap-2.5 rounded-lg bg-paper px-3.5 py-2.5"
+                    >
+                      <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-petrol" />
+                      <span className="flex-1 text-[13.5px] leading-[1.5] text-ink">{t.texto}</span>
+                      <span className="mt-px shrink-0 text-[11.5px] whitespace-nowrap text-ink-muted">
+                        {t.horasEstimadas}h
+                      </span>
+                      {t.opcional ? (
+                        <span className="mt-px shrink-0 rounded-full px-2 py-0.5 font-mono text-[9.5px] tracking-wide text-gold uppercase">
+                          Opcional
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+
+                {week.dificuldadesAntecipadas ? (
+                  <div className="flex items-start gap-2.5 rounded-lg border border-gold-soft bg-gold-soft px-3.5 py-3">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      className="mt-0.5 shrink-0"
+                    >
+                      <circle cx="8" cy="8" r="7" stroke="var(--gold)" strokeWidth="1.4" />
+                      <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
+                    </svg>
+                    <div>
+                      <p className="mb-0.5 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                        Ponto de atenção
+                      </p>
+                      <p className="text-[13px] leading-[1.5] text-ink">{week.dificuldadesAntecipadas}</p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </article>
           );
         })}
