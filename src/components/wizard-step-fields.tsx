@@ -1,5 +1,6 @@
 import type { WizardStep } from "@/lib/wizard/step-types";
 import { CharCounterTextarea } from "@/components/char-counter-textarea";
+import { CheckboxGroupField } from "@/components/checkbox-group-field";
 
 const textareaClass =
   "w-full rounded-lg border border-line bg-paper px-3.5 py-3 text-[15px] text-ink outline-none focus:border-petrol min-h-[120px] resize-y";
@@ -70,18 +71,13 @@ export function StepFields({
       const showOther = step.allowOther && hasOtherOption(step.options);
       return (
         <div className="flex flex-col gap-2.5">
-          {step.options.map((opt) => (
-            <label key={opt.value} className={optionCardClass}>
-              <input
-                type="checkbox"
-                name="value"
-                value={opt.value}
-                defaultChecked={selected.includes(opt.value)}
-                className="mt-1 accent-petrol"
-              />
-              <span>{opt.label}</span>
-            </label>
-          ))}
+          <CheckboxGroupField
+            options={step.options}
+            defaultSelected={selected}
+            minSelect={step.minSelect}
+            maxSelect={step.maxSelect}
+            optionCardClass={optionCardClass}
+          />
           {showOther ? <OtherDetailField currentValue={otherDetailValue} /> : null}
         </div>
       );

@@ -244,9 +244,9 @@ export const SHARED_STEPS: WizardStep[] = [
     slug: "aprendizado-desejado",
     block: 3,
     type: "textarea",
-    question: "O que você teria vontade de aprender se enxergasse uma aplicação profissional concreta?",
+    question: "Existe algo que você teria vontade de aprender se soubesse que isso poderia virar uma atividade profissional?",
     helper:
-      "Pense em algo específico — uma ferramenta, técnica, área de conhecimento ou habilidade — que você aceitaria estudar se soubesse exatamente para que trabalho ela serviria. Não precisa ser algo que você já sabe fazer.",
+      'Cite algo específico: uma ferramenta, técnica ou área de conhecimento — não uma qualidade genérica como "gostaria de aprender mais". Não precisa ser algo que você já sabe fazer hoje, nem algo que você já pesquisa por conta própria.',
     minChars: 50,
     maxChars: 700,
     path: ["blocoC", "aprendizadoDesejado"],
