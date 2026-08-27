@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1b3a3a",
+  themeColor: "#0b1420",
 };
 
 const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
@@ -55,7 +55,19 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <AppNavLinks isAdmin={navContext.isAdmin} variant="mobile" />
           </>
         ) : null}
-        <div className={navContext ? "flex flex-1 flex-col pb-16 xl:pb-0" : "flex flex-1 flex-col"}>
+        {/* xl:pl reserva o espaço da sidebar fixa (left-10 + w-52 = 248px, +
+            uma folga) — sem isso, o conteúdo só ficava livre da sidebar por
+            sorte, quando a tela era larga o bastante pra sobrar margem nos
+            dois lados da coluna centralizada. Em telas de notebook (perto de
+            1280px, o começo do breakpoint xl), a margem não era suficiente e
+            o conteúdo entrava por baixo da sidebar. */}
+        <div
+          className={
+            navContext
+              ? "flex flex-1 flex-col pb-16 xl:pb-0 xl:pl-[272px]"
+              : "flex flex-1 flex-col"
+          }
+        >
           {children}
         </div>
       </body>
