@@ -1,23 +1,30 @@
 @import "tailwindcss";
 
+/* Paleta alinhada à página de vendas (vendas-mais-que-professor/public_html/
+   assets/css/style.css) — navy + turquesa, pra não haver troca de ambiente
+   visual entre a venda e o app. Os nomes das variáveis (--petrol, --gold
+   etc.) foram mantidos de propósito, só os valores mudaram, pra não exigir
+   renomear classes Tailwind em todo o código. */
 :root {
-  --paper: #faf8f4;
+  --paper: #f8f9f3;
   --paper-raised: #ffffff;
-  --petrol: #1b3a3a;
-  --petrol-soft: #2e5252;
-  --gold: #c9a659;
-  --gold-soft: #efe3c4;
-  --ink: #24302e;
-  --ink-muted: #63706c;
-  --line: #e4dfd3;
+  --petrol: #0b1420; /* era o teal-escuro; agora é o "ink" navy da página de vendas — usado pra títulos, nav e (junto com --ink) todo texto de marca */
+  --petrol-soft: #213b52;
+  --gold: #028192; /* era dourado; agora é o turquesa "--accent" da página de vendas — cor de destaque, botões primários e marcações ativas */
+  --gold-soft: #e3f2f3;
+  --ink: #0b1420;
+  --ink-muted: #5b6470;
+  --line: #e7e9e1;
   --radius: 14px;
-  --shadow: 0 1px 2px rgba(27, 58, 58, 0.04), 0 8px 24px rgba(27, 58, 58, 0.06);
+  --shadow: 0 1px 2px rgba(11, 20, 32, 0.05), 0 8px 24px rgba(11, 20, 32, 0.07);
   --tint-base: #ffffff;
-  --badge-bg: #1b3a3a;
-  --badge-text: #c9a659;
+  --badge-bg: #0b1420;
+  --badge-text: #028192;
 
-  /* Um tom por papel das 5 possibilidades — ver Motor_IA_Geracao_5_Possibilidades.md */
-  --role-1: #1b3a3a; /* Onde você já é forte */
+  /* Um tom por papel das 5 possibilidades — role-2 a role-5 já batiam com a
+     página de vendas; role-1 foi ajustado pra bater também (não fica mais
+     amarrado ao valor do petrol). */
+  --role-1: #3f7a72; /* Onde você já é forte */
   --role-2: #a8763e; /* Para onde você quer ir */
   --role-3: #a14b3a; /* O que pode mobilizar você */
   --role-4: #3d5a78; /* Como quer trabalhar e crescer */
@@ -25,21 +32,21 @@
 }
 
 :root[data-theme="dark"] {
-  --paper: #12191b;
-  --paper-raised: #1b2427;
-  --petrol: #7fbfb6;
-  --petrol-soft: #9ad2c9;
-  --gold: #e0b975;
-  --gold-soft: #3a3221;
-  --ink: #eeeee9;
-  --ink-muted: #93a19d;
+  --paper: #081828;
+  --paper-raised: #102338;
+  --petrol: #f2f6f5;
+  --petrol-soft: #c3d2d9;
+  --gold: #33c2d4;
+  --gold-soft: #0e3238;
+  --ink: #f2f6f5;
+  --ink-muted: #9fb2be;
   --line: rgba(255, 255, 255, 0.09);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px rgba(0, 0, 0, 0.35);
   --tint-base: #000000;
-  --badge-bg: #0b1414;
-  --badge-text: #e0b975;
+  --badge-bg: #050b12;
+  --badge-text: #33c2d4;
 
-  --role-1: #5fafa6;
+  --role-1: #7bc2b7;
   --role-2: #d9a667;
   --role-3: #db8368;
   --role-4: #85a9cc;
@@ -48,21 +55,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #12191b;
-    --paper-raised: #1b2427;
-    --petrol: #7fbfb6;
-    --petrol-soft: #9ad2c9;
-    --gold: #e0b975;
-    --gold-soft: #3a3221;
-    --ink: #eeeee9;
-    --ink-muted: #93a19d;
+    --paper: #081828;
+    --paper-raised: #102338;
+    --petrol: #f2f6f5;
+    --petrol-soft: #c3d2d9;
+    --gold: #33c2d4;
+    --gold-soft: #0e3238;
+    --ink: #f2f6f5;
+    --ink-muted: #9fb2be;
     --line: rgba(255, 255, 255, 0.09);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px rgba(0, 0, 0, 0.35);
     --tint-base: #000000;
-    --badge-bg: #0b1414;
-    --badge-text: #e0b975;
+    --badge-bg: #050b12;
+    --badge-text: #33c2d4;
 
-    --role-1: #5faba6;
+    --role-1: #7bc2b7;
     --role-2: #d9a667;
     --role-3: #db8368;
     --role-4: #85a9cc;

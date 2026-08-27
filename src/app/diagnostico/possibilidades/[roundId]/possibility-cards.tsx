@@ -108,7 +108,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                 <form action={approvePossibility.bind(null, p.id)}>
                   <button
                     type="submit"
-                    className="mt-[18px] rounded-lg bg-petrol px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:bg-petrol-soft"
+                    className="mt-[18px] rounded-lg bg-gold px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:bg-gold-soft"
                   >
                     Aprovar esta possibilidade →
                   </button>

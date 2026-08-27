@@ -77,7 +77,7 @@ export default async function IncrementStepPage({
             pendingText={
               index === TOTAL_INCREMENT_STEPS - 1 ? "Gerando... até 1 minuto, não recarregue" : "Salvando..."
             }
-            className="rounded-lg bg-petrol px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
+            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
           >
             {index === TOTAL_INCREMENT_STEPS - 1 ? "Gerar novo conjunto →" : "Continuar"}
           </SubmitButton>

@@ -80,7 +80,7 @@ export default async function AdminUserDetailPage({
             <input type="hidden" name="name" value={user.name} />
             <button
               type="submit"
-              className="rounded-lg bg-petrol px-4 py-2 text-[13.5px] font-semibold text-paper transition-colors hover:bg-petrol-soft"
+              className="rounded-lg bg-gold px-4 py-2 text-[13.5px] font-semibold text-paper transition-colors hover:bg-gold-soft"
             >
               Conceder / renovar 1 ano
             </button>

@@ -185,7 +185,7 @@ export default async function AgendaPage({
 
           <button
             type="submit"
-            className="self-start rounded-lg bg-petrol px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
+            className="self-start rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
           >
             Salvar
           </button>

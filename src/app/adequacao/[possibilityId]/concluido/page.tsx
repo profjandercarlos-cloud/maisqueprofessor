@@ -55,7 +55,7 @@ export default async function AdequacaoConcluidoPage({
         {error ? <p className="mb-4 text-sm text-role-3">{error}</p> : null}
         <SubmitButton
           pendingText="Gerando seu plano... isso pode levar até 1 minuto, não recarregue a página"
-          className="rounded-lg bg-petrol px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
+          className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
         >
           Criar meu plano de 12 semanas →
         </SubmitButton>

@@ -107,7 +107,7 @@ export default async function Home({
       ) : (
         <a
           href={diagnosticCta.href}
-          className="mb-4 inline-block rounded-lg bg-petrol px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
+          className="mb-4 inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
         >
           {diagnosticCta.label} →
         </a>

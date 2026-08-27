@@ -16,7 +16,7 @@ export default function BemVindoPage() {
         </p>
         <a
           href="/esqueci-senha"
-          className="mt-2 self-start rounded-lg bg-petrol px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-petrol-soft"
+          className="mt-2 self-start rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
         >
           Reenviar link de acesso →
         </a>
