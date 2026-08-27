@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
-import { AppNavLinks } from "@/components/app-nav-links";
 import { PapelIcon } from "@/components/papel-icon";
 import type { PlanTask } from "@/generated/prisma/client";
 
@@ -113,8 +112,6 @@ export default async function Home({
           {diagnosticCta.label} →
         </a>
       )}
-
-      <AppNavLinks isAdmin={!!dbUser?.isAdmin} variant="mobile" />
     </div>
   );
 }

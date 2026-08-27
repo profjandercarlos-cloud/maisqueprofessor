@@ -1,3 +1,7 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 function InicioIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
@@ -81,15 +85,22 @@ const BASE_ITEMS = [
 
 const ADMIN_ITEM = { href: "/admin", label: "Administração", Icon: AdministracaoIcon };
 
+function isActiveHref(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 // No computador sobra espaço nas laterais da coluna central (max-w do
 // conteúdo) — a partir de xl (1280px) isso é grande o suficiente pra fixar
 // o menu no canto superior esquerdo sem sobrepor o conteúdo. Abaixo disso
-// (tablet e celular) usa a lista horizontal simples no rodapé.
+// (tablet e celular), onde não sobra espaço lateral nenhum, vira uma barra
+// fixa no rodapé só com ícones — o padrão comum de app em tela pequena,
+// sempre acessível sem precisar rolar a página.
 //
-// A sidebar é renderizada uma única vez pelo layout raiz (variant
-// "sidebar"), em toda página logada. A Home renderiza só a lista horizontal
-// (variant "mobile") pra não duplicar a sidebar nela — nenhuma outra página
-// tinha a lista horizontal antes, então elas não pedem essa variante.
+// As duas variantes são renderizadas uma única vez pelo layout raiz, em
+// toda página logada — cada uma se esconde via CSS (hidden/xl:hidden) no
+// breakpoint que não é seu, então nenhuma página precisa pedir isso de
+// novo individualmente.
 export function AppNavLinks({
   isAdmin,
   variant,
@@ -97,20 +108,41 @@ export function AppNavLinks({
   isAdmin: boolean;
   variant: "sidebar" | "mobile";
 }) {
+  const pathname = usePathname();
   const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
   if (variant === "mobile") {
     return (
-      <div className="flex gap-5 text-[13.5px] font-semibold text-petrol xl:hidden">
-        {items.map(({ href, label }) => (
-          <a key={href} href={href} className="hover:underline">
-            {label} →
-          </a>
-        ))}
-      </div>
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-line bg-paper xl:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        {items.map(({ href, label, Icon }) => {
+          const active = isActiveHref(pathname, href);
+          return (
+            <a
+              key={href}
+              href={href}
+              aria-label={label}
+              aria-current={active ? "page" : undefined}
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2"
+              style={{ color: active ? "var(--petrol)" : "var(--ink-muted)" }}
+            >
+              <Icon />
+              <span
+                className="h-1 w-1 rounded-full"
+                style={{ background: active ? "var(--gold)" : "transparent" }}
+              />
+            </a>
+          );
+        })}
+      </nav>
     );
   }
 
+  // Variante "sidebar" (computador) intencionalmente mantida idêntica à
+  // versão anterior, sem estado ativo — pedido explícito de não mexer na
+  // apresentação em telas grandes nesta rodada.
   return (
     <nav className="hidden xl:fixed xl:top-8 xl:left-10 xl:flex xl:w-52 xl:flex-col xl:gap-1">
       {items.map(({ href, label, Icon }) => (

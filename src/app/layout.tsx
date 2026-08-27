@@ -49,8 +49,15 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col bg-paper font-sans text-ink">
-        {navContext ? <AppNavLinks isAdmin={navContext.isAdmin} variant="sidebar" /> : null}
-        {children}
+        {navContext ? (
+          <>
+            <AppNavLinks isAdmin={navContext.isAdmin} variant="sidebar" />
+            <AppNavLinks isAdmin={navContext.isAdmin} variant="mobile" />
+          </>
+        ) : null}
+        <div className={navContext ? "flex flex-1 flex-col pb-16 xl:pb-0" : "flex flex-1 flex-col"}>
+          {children}
+        </div>
       </body>
     </html>
   );
