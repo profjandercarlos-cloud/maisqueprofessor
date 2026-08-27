@@ -84,7 +84,7 @@ export default async function CheckinPage({
 
         <button
           type="submit"
-          className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+          className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
         >
           Confirmar check-in →
         </button>

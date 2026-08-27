@@ -179,7 +179,7 @@ export function PlanMural({
                     </label>
                     <button
                       type="submit"
-                      className="rounded-full bg-gold px-3.5 py-1.5 text-[12px] font-semibold text-paper hover:bg-gold-soft"
+                      className="rounded-full bg-gold px-3.5 py-1.5 text-[12px] font-semibold text-paper hover:opacity-90"
                     >
                       Confirmar parcial
                     </button>
@@ -342,7 +342,7 @@ export function PlanMural({
 
           <button
             type="submit"
-            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Confirmar check-in →
           </button>

@@ -35,7 +35,7 @@ export default async function DiagnosticoConcluidoPage({
         <form action={generateForActiveDiagnostic}>
           <SubmitButton
             pendingText="Gerando suas possibilidades... isso pode levar até 1 minuto, não recarregue a página"
-            className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+            className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Gerar minhas 5 possibilidades →
           </SubmitButton>

@@ -43,7 +43,7 @@ export default async function AdequacaoEntryPage({
 
       <a
         href={`/adequacao/${possibilityId}/${resumeSlug}`}
-        className="inline-block rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+        className="inline-block rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
       >
         Ajustar meu plano →
       </a>

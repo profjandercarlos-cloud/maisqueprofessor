@@ -15,7 +15,7 @@ export default function AcessoExpiradoPage() {
       <div className="flex items-center gap-4">
         <a
           href="/configuracoes"
-          className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+          className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
         >
           Ver status de acesso
         </a>

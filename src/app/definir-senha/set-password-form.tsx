@@ -43,7 +43,7 @@ export function SetPasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="mt-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft disabled:opacity-60"
+        className="mt-1 rounded-lg bg-gold px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90 disabled:opacity-60"
       >
         {pending ? "Salvando..." : "Salvar e entrar"}
       </button>

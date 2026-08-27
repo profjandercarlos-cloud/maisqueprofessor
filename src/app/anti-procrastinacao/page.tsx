@@ -101,7 +101,7 @@ export default async function AntiProcrastinacaoPage({
 
             <button
               type="submit"
-              className="self-start rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+              className="self-start rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
             >
               Salvar
             </button>

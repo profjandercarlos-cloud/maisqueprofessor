@@ -53,7 +53,7 @@ export default async function AjustarConjuntoPage({
           </a>
           <SubmitButton
             pendingText="Gerando... até 1 minuto, não recarregue"
-            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Gerar novo conjunto →
           </SubmitButton>

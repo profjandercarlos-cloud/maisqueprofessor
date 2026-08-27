@@ -194,7 +194,7 @@ export default async function AdminDashboardPage({
           </div>
           <button
             type="submit"
-            className="rounded-lg bg-gold px-5 py-2 text-[13.5px] font-semibold text-paper transition-colors hover:bg-gold-soft"
+            className="rounded-lg bg-gold px-5 py-2 text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
           >
             Conceder / renovar 1 ano →
           </button>

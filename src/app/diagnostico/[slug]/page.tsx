@@ -77,7 +77,7 @@ export default async function DiagnosticStepPage({
           </a>
           <SubmitButton
             pendingText="Salvando..."
-            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
+            className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Continuar
           </SubmitButton>
