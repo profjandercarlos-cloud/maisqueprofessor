@@ -6,6 +6,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function generateForActiveDiagnostic() {
   const user = await requireActiveAccess();
@@ -48,6 +49,7 @@ export async function generateForActiveDiagnostic() {
           quemPagaria: p.quemPagaria,
           jaPossuiVsAprender: p.jaPossuiVsAprender,
           familiaValor: p.familiaValor,
+          mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
         })),
       },
     },

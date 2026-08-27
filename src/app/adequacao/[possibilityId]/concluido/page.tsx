@@ -8,7 +8,7 @@ import { getResumeSlug } from "@/lib/adequacao/steps";
 import { generatePlan } from "./actions";
 
 // Ver nota em diagnostico/concluido/page.tsx — sem isto a Vercel mata a
-// função aos 10s, e o plano de 12 semanas leva bem mais que isso pra gerar.
+// função aos 10s, e gerar o Plano Personalizado de Transição leva bem mais que isso.
 export const maxDuration = 60;
 
 export default async function AdequacaoConcluidoPage({
@@ -48,7 +48,8 @@ export default async function AdequacaoConcluidoPage({
       </h1>
       <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
         Vamos usar sua possibilidade escolhida, seu ponto de partida e as condições que você informou para
-        montar um plano de 12 semanas que produza evidências reais sem ultrapassar sua disponibilidade.
+        montar seu Plano Personalizado de Transição — a duração e a profundidade se ajustam a você, produzindo
+        evidências reais sem ultrapassar sua disponibilidade.
       </p>
 
       <form action={action}>
@@ -57,7 +58,7 @@ export default async function AdequacaoConcluidoPage({
           pendingText="Gerando seu plano... isso pode levar até 1 minuto, não recarregue a página"
           className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:bg-gold-soft"
         >
-          Criar meu plano de 12 semanas →
+          Criar meu Plano Personalizado de Transição →
         </SubmitButton>
       </form>
     </div>

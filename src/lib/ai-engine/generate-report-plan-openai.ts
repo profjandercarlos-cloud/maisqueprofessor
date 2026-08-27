@@ -1,7 +1,8 @@
 // Versão OpenAI de generate-report-plan.ts — a chamada mais pesada de todas
-// (sempre 12 semanas, tarefas com hora estimada), a que mais sofria com o
-// teto de 60s da Vercel Hobby via Anthropic. Mesmo prompt, saída estruturada
-// (json_schema strict) em vez de extração de texto.
+// (duração variável de 4 a 12 semanas, tarefas com hora estimada), a que
+// mais sofria com o teto de 60s da Vercel Hobby via Anthropic. Mesmo
+// prompt, saída estruturada (json_schema strict) em vez de extração de
+// texto.
 import { z } from "zod";
 import type {
   AcaoAceita,
@@ -10,10 +11,18 @@ import type {
   EstagioInicial,
   OrcamentoFaixa,
   RegraSegurancaFinanceira,
+  RitmoDesejado,
 } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { REPORT_PLAN_SYSTEM_PROMPT } from "./report-plan-prompt";
-import { PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
+import {
+  calcularDuracaoSemanas,
+  DURACAO_MAX_SEMANAS,
+  DURACAO_MIN_SEMANAS,
+  esforcoParaNivel,
+  marcosMaxParaDuracao,
+} from "@/lib/plano/formula";
+import type { MapaExecucao } from "./generate-possibilities-openai";
 
 const taskSchema = z.object({
   texto: z.string().min(1),
@@ -42,6 +51,8 @@ const CLASSIFICACAO_ENCAIXE_VALUES = [
   "conflito_explicito",
 ] as const;
 
+const NIVEL_EXECUCAO_VALUES = ["validacao", "implementacao", "desenvolvimento"] as const;
+
 const responseSchema = z.object({
   relatorio: z.object({
     quem_aparece: z.string().min(1),
@@ -51,10 +62,15 @@ const responseSchema = z.object({
     ponto_de_atencao: z.string().min(1),
     classificacao_encaixe: z.enum(CLASSIFICACAO_ENCAIXE_VALUES),
     explicacao_encaixe: z.string().min(1),
+    nivel_execucao: z.enum(NIVEL_EXECUCAO_VALUES),
+    resultado_minimo_viavel: z.string().min(1),
+    ttfr_semanas: z.number().int().positive(),
+    ttfr_resultado: z.string().min(1),
+    proporcao_aprendizado: z.number().min(0).max(1),
   }),
   semanas: z.array(weekSchema).min(1),
-  // Best effort — ver normalizeMarcos: uma contagem fora do pedido (3 a 5)
-  // não derruba a geração inteira, só ajusta o que sobra pra tela.
+  // Best effort — ver normalizeMarcos: uma contagem fora do alvo (proporcional
+  // à duração final) não derruba a geração inteira, só ajusta o que sobra pra tela.
   marcos: z.array(marcoSchema).max(8).default([]),
 });
 
@@ -73,6 +89,11 @@ const JSON_SCHEMA = {
         ponto_de_atencao: { type: "string" },
         classificacao_encaixe: { type: "string", enum: CLASSIFICACAO_ENCAIXE_VALUES },
         explicacao_encaixe: { type: "string" },
+        nivel_execucao: { type: "string", enum: NIVEL_EXECUCAO_VALUES },
+        resultado_minimo_viavel: { type: "string" },
+        ttfr_semanas: { type: "number" },
+        ttfr_resultado: { type: "string" },
+        proporcao_aprendizado: { type: "number" },
       },
       required: [
         "quem_aparece",
@@ -82,6 +103,11 @@ const JSON_SCHEMA = {
         "ponto_de_atencao",
         "classificacao_encaixe",
         "explicacao_encaixe",
+        "nivel_execucao",
+        "resultado_minimo_viavel",
+        "ttfr_semanas",
+        "ttfr_resultado",
+        "proporcao_aprendizado",
       ],
       additionalProperties: false,
     },
@@ -145,9 +171,9 @@ const DISTRIBUICAO_LABELS: Record<DistribuicaoTempo, string> = {
 
 const ORCAMENTO_LABELS: Record<OrcamentoFaixa, string> = {
   SEM_INVESTIMENTO: "Prefere não investir nada por enquanto.",
-  ATE_300: "Até R$300 no total, para as 12 semanas.",
-  DE_300_A_1000: "Entre R$300 e R$1.000 no total, para as 12 semanas.",
-  ACIMA_DE_1000: "Acima de R$1.000 no total, para as 12 semanas.",
+  ATE_300: "Até R$300 no total, ao longo do plano.",
+  DE_300_A_1000: "Entre R$300 e R$1.000 no total, ao longo do plano.",
+  ACIMA_DE_1000: "Acima de R$1.000 no total, ao longo do plano.",
 };
 
 const REGRA_FINANCEIRA_LABELS: Record<RegraSegurancaFinanceira, string> = {
@@ -166,6 +192,13 @@ const EQUILIBRIO_LABELS: Record<EquilibrioAprenderExecutar, string> = {
   SISTEMA_RECOMENDA: "Sem preferência — decida o equilíbrio a partir do estágio inicial da pessoa.",
 };
 
+const RITMO_LABELS: Record<RitmoDesejado, string> = {
+  RAPIDO: "Quer um plano mais rápido e concentrado.",
+  EQUILIBRADO: "Prefere um plano equilibrado.",
+  GRADUAL: "Prefere um plano mais leve e gradual.",
+  SISTEMA_RECOMENDA: "Sem preferência — decida o ritmo mais adequado a partir do resto do perfil da pessoa.",
+};
+
 const ACAO_LABELS: Record<AcaoAceita, string> = {
   PESQUISAR: "Pesquisar vagas, compradores, organizações ou concorrentes",
   CONVERSAR: "Conversar com profissionais, potenciais usuários ou possíveis clientes",
@@ -178,6 +211,19 @@ const ACAO_LABELS: Record<AcaoAceita, string> = {
   PREPARAR_PRIVADAMENTE: "Preparar-se de forma privada, sem contato externo por enquanto",
 };
 
+function formatMapaExecucao(mapa: MapaExecucao): string {
+  return `Objetivo principal: ${mapa.objetivoPrincipal}
+Resultado Mínimo Viável (RMV) desta possibilidade: ${mapa.resultadoMinimoViavel}
+Esforço estimado — Validação: ${mapa.esforcoMinimoHoras}h | Implementação: ${mapa.esforcoRecomendadoHoras}h | Desenvolvimento: ${mapa.esforcoAvancadoHoras}h
+TTFR-base (semanas até o primeiro resultado, antes de ajustar pelo perfil da pessoa): ${mapa.ttfrBaseSemanas}
+Competências necessárias: ${mapa.competenciasNecessarias.join("; ") || "nenhuma listada"}
+Competências a desenvolver: ${mapa.competenciasADesenvolver.join("; ") || "nenhuma listada"}
+Ações essenciais: ${mapa.acoesEssenciais.join("; ") || "nenhuma listada"}
+Nível de complexidade: ${mapa.nivelComplexidade}
+Principais dependências: ${mapa.principaisDependencias.join("; ") || "nenhuma"}
+Primeiro resultado observável esperado: ${mapa.primeiroResultadoObservavel}`;
+}
+
 export async function generateReportAndPlanOpenAI(params: {
   diagnosticInput: string;
   possibility: {
@@ -187,7 +233,7 @@ export async function generateReportAndPlanOpenAI(params: {
     quemPagaria: string;
     jaPossuiVsAprender: string;
   };
-  horasTotais: number;
+  mapaExecucao: MapaExecucao;
   horasPorSemana: number;
   horasNucleoSemana: number;
   estagioInicial: EstagioInicial;
@@ -196,6 +242,7 @@ export async function generateReportAndPlanOpenAI(params: {
   regraSegurancaFinanceira: RegraSegurancaFinanceira;
   acoesAceitas: AcaoAceita[];
   equilibrioAprenderExecutar: EquilibrioAprenderExecutar;
+  ritmoDesejado: RitmoDesejado;
   condicaoAdicionalExecucao?: string | null;
 }): Promise<ReportAndPlan> {
   const userMessage = `${params.diagnosticInput}
@@ -207,9 +254,11 @@ Por que apareceu: ${params.possibility.porQueApareceu}
 Quem pagaria: ${params.possibility.quemPagaria}
 Já possui vs. a aprender: ${params.possibility.jaPossuiVsAprender}
 
+MAPA DE EXECUÇÃO DA POSSIBILIDADE
+${formatMapaExecucao(params.mapaExecucao)}
+
 PARÂMETROS DO PLANO (já calculados, não decida isso)
-Duração: sempre ${PLAN_DURATION_SEMANAS} semanas
-Total de horas que o plano inteiro deve somar: ${params.horasTotais} horas
+Janela de duração permitida: entre ${DURACAO_MIN_SEMANAS} e ${DURACAO_MAX_SEMANAS} semanas — você decide o nível de execução, a duração nasce dele (ver instruções do sistema)
 Tempo disponível por semana declarado pela pessoa: ${params.horasPorSemana} horas
 Núcleo semanal (teto de tarefas obrigatórias por semana, individualmente): ${params.horasNucleoSemana} horas
 
@@ -220,14 +269,15 @@ Orçamento disponível: ${ORCAMENTO_LABELS[params.orcamentoFaixa]}
 Regra de segurança financeira: ${REGRA_FINANCEIRA_LABELS[params.regraSegurancaFinanceira]}
 Ações que a pessoa aceita realizar: ${params.acoesAceitas.map((a) => ACAO_LABELS[a]).join("; ")}
 Equilíbrio entre aprender e executar: ${EQUILIBRIO_LABELS[params.equilibrioAprenderExecutar]}
+Ritmo desejado: ${RITMO_LABELS[params.ritmoDesejado]}
 Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "nenhuma"}`;
 
   // Uma única tentativa, de propósito: cada chamada já leva 30-45s, e a
   // Vercel mata a função aos 60s (teto do plano Hobby) — não sobra tempo
-  // pra uma segunda rodada dentro da mesma requisição. Se a contagem de
-  // semanas vier errada, falha rápido e deixa a pessoa tentar de novo (nova
-  // requisição, novo orçamento de 60s) em vez de arriscar estourar o tempo
-  // tentando de novo aqui dentro.
+  // pra uma segunda rodada dentro da mesma requisição. A duração final é
+  // corrigida deterministicamente depois (normalizeWeekCount), então o
+  // lembrete abaixo pede só consistência interna, não uma contagem exata
+  // fixa (que não existe mais).
   const completion = await openai.chat.completions.create({
     model: OPENAI_GENERATION_MODEL,
     max_completion_tokens: 16000,
@@ -235,7 +285,7 @@ Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "n
       { role: "system", content: REPORT_PLAN_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `${userMessage}\n\nLEMBRETE FINAL: o array "semanas" da sua resposta precisa ter exatamente ${PLAN_DURATION_SEMANAS} elementos — nem ${PLAN_DURATION_SEMANAS - 1}, nem ${PLAN_DURATION_SEMANAS + 1}. Confira essa contagem antes de responder, e confira que nenhuma semana individualmente estourou o núcleo semanal informado acima.`,
+        content: `${userMessage}\n\nLEMBRETE FINAL: confira que o número de semanas do array "semanas" é coerente com o nível de execução que você escolheu (esforço daquele nível ÷ núcleo semanal, entre ${DURACAO_MIN_SEMANAS} e ${DURACAO_MAX_SEMANAS}), que a última semana fecha o ciclo, que existe uma revisão intermediária perto do meio do plano, e que nenhuma semana individualmente estourou o núcleo semanal informado acima.`,
       },
     ],
     response_format: {
@@ -251,39 +301,42 @@ Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "n
 
   const parsed = responseSchema.parse(JSON.parse(content));
 
-  const semanasNormalizadas = normalizeWeekCount(parsed);
+  const esforcoEscolhido = esforcoParaNivel(parsed.relatorio.nivel_execucao, params.mapaExecucao);
+  const duracaoAlvoSemanas = calcularDuracaoSemanas(esforcoEscolhido, params.horasNucleoSemana);
+
+  const semanasNormalizadas = normalizeWeekCount(parsed, duracaoAlvoSemanas);
   const horasNormalizadas = normalizeWeekHours(semanasNormalizadas, params.horasNucleoSemana);
-  return normalizeMarcoTipos(normalizeMarcos(horasNormalizadas));
+  return normalizeMarcoTipos(normalizeMarcos(horasNormalizadas, marcosMaxParaDuracao(duracaoAlvoSemanas)));
 }
 
 // Marcos são um extra sobre o plano principal — nunca vale a pena falhar
-// uma chamada de ~40s por causa da contagem deles. Só limita o teto (5);
-// vir com menos de 3 (ou até 0) é aceito como está, a tela reage ao que
-// tiver.
-const MAX_MARCOS = 5;
-function normalizeMarcos(parsed: ReportAndPlan): ReportAndPlan {
-  if (parsed.marcos.length <= MAX_MARCOS) return parsed;
-  return { ...parsed, marcos: parsed.marcos.slice(0, MAX_MARCOS) };
+// uma chamada de ~40s por causa da contagem deles. Só limita o teto
+// (proporcional à duração final do plano); vir com menos que o alvo (ou até
+// 0) é aceito como está, a tela reage ao que tiver.
+function normalizeMarcos(parsed: ReportAndPlan, maxMarcos: number): ReportAndPlan {
+  if (parsed.marcos.length <= maxMarcos) return parsed;
+  return { ...parsed, marcos: parsed.marcos.slice(0, maxMarcos) };
 }
 
-// Em teste, o modelo às vezes devolve uma semana a mais (13 em vez de 12) —
-// a estrutura em si sempre vem válida, só a contagem varia. Em vez de
-// falhar (e gastar os ~40s da chamada à toa), funde as semanas excedentes
-// na última: o mural + pool de pendências já construídos absorvem bem uma
+// Em teste, o modelo às vezes devolve uma semana a mais que o alvo calculado
+// deterministicamente a partir do nível de execução que ele mesmo escolheu —
+// a estrutura em si sempre vem válida, só a contagem varia. Em vez de falhar
+// (e gastar os ~40s da chamada à toa), funde as semanas excedentes na
+// última: o mural + pool de pendências já construídos absorvem bem uma
 // semana final mais cheia — a pessoa pode empurrar itens pro pool se achar
-// pesado demais. Faltar semana (menos que o esperado) é bem mais raro e
-// mais arriscado de "inventar" conteúdo, então esse caso continua falhando.
-function normalizeWeekCount(parsed: ReportAndPlan): ReportAndPlan {
-  if (parsed.semanas.length === PLAN_DURATION_SEMANAS) return parsed;
+// pesado demais. Faltar semana (menos que o alvo) é bem mais raro e mais
+// arriscado de "inventar" conteúdo, então esse caso continua falhando.
+function normalizeWeekCount(parsed: ReportAndPlan, duracaoAlvoSemanas: number): ReportAndPlan {
+  if (parsed.semanas.length === duracaoAlvoSemanas) return parsed;
 
-  if (parsed.semanas.length < PLAN_DURATION_SEMANAS) {
+  if (parsed.semanas.length < duracaoAlvoSemanas) {
     throw new Error(
-      `O modelo retornou ${parsed.semanas.length} semanas, esperado ${PLAN_DURATION_SEMANAS}.`,
+      `O modelo retornou ${parsed.semanas.length} semanas, esperado ${duracaoAlvoSemanas} (nível de execução: ${parsed.relatorio.nivel_execucao}).`,
     );
   }
 
-  const kept = parsed.semanas.slice(0, PLAN_DURATION_SEMANAS - 1);
-  const extra = parsed.semanas.slice(PLAN_DURATION_SEMANAS - 1);
+  const kept = parsed.semanas.slice(0, duracaoAlvoSemanas - 1);
+  const extra = parsed.semanas.slice(duracaoAlvoSemanas - 1);
   const lastWeek = extra[0];
   const mergedTasks = extra.flatMap((w) => w.tarefas);
   const mergedDificuldades = extra

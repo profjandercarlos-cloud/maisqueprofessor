@@ -6,6 +6,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
+import type { Prisma } from "@/generated/prisma/client";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
 
@@ -68,6 +69,7 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
           quemPagaria: p.quemPagaria,
           jaPossuiVsAprender: p.jaPossuiVsAprender,
           familiaValor: p.familiaValor,
+          mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
         })),
       },
     },

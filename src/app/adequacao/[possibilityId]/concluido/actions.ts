@@ -9,18 +9,27 @@ import {
   type EquilibrioAprenderExecutar,
   type EstagioInicial,
   MilestoneTipo,
+  NivelExecucao,
   type NivelAcompanhamento,
   type OrcamentoFaixa,
   type Prisma,
   type RegraSegurancaFinanceira,
+  type RitmoDesejado,
 } from "@/generated/prisma/client";
 
 const MARCO_TIPO_MAP: Record<string, MilestoneTipo> = {
   entrega_controlavel: MilestoneTipo.ENTREGA_CONTROLAVEL,
   sinal_externo: MilestoneTipo.SINAL_EXTERNO,
 };
-import { calcularHorasNucleoSemana, calcularHorasTotais, PLAN_DURATION_SEMANAS } from "@/lib/plano/formula";
+
+const NIVEL_EXECUCAO_MAP: Record<string, NivelExecucao> = {
+  validacao: NivelExecucao.VALIDACAO,
+  implementacao: NivelExecucao.IMPLEMENTACAO,
+  desenvolvimento: NivelExecucao.DESENVOLVIMENTO,
+};
+import { calcularHorasNucleoSemana } from "@/lib/plano/formula";
 import { generateReportAndPlanOpenAI } from "@/lib/ai-engine/generate-report-plan-openai";
+import type { MapaExecucao } from "@/lib/ai-engine/generate-possibilities-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
@@ -40,6 +49,15 @@ export async function generatePlan(possibilityId: string) {
   if (!possibility || possibility.round.diagnostic.userId !== user.id) redirect("/");
   if (possibility.status === "REJEITADA") redirect("/");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
+  // Possibilidades geradas antes do Mapa de Execução existir não têm esse
+  // dado — não há como calcular duração/nível de execução sem ele.
+  if (!possibility.mapaExecucao) {
+    fail(
+      possibilityId,
+      "Esta possibilidade foi gerada numa versão anterior do sistema e não tem os dados necessários para montar o plano. Gere um novo diagnóstico para continuar.",
+    );
+  }
+  const mapaExecucao = possibility.mapaExecucao as unknown as MapaExecucao;
 
   const response = await getOrCreateAdequacaoResponse(possibilityId);
   const answers = response.answers as Record<string, unknown>;
@@ -60,12 +78,12 @@ export async function generatePlan(possibilityId: string) {
   const regraSegurancaFinanceira = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
   const acoesAceitas = (answers.acoesAceitas as string[] | undefined) ?? [];
   const equilibrioAprenderExecutar = answers.equilibrioAprenderExecutar as EquilibrioAprenderExecutar;
+  const ritmoDesejado = answers.ritmoDesejado as RitmoDesejado;
   const acompanhamento = answers.nivelAcompanhamento as NivelAcompanhamento;
   const diaCheckin = Number(answers.diaCheckin);
   const condicaoAdicionalExecucao = typeof answers.condicaoAdicionalExecucao === "string" ? answers.condicaoAdicionalExecucao : null;
 
   const horasNucleoSemana = calcularHorasNucleoSemana(tempoDisponivelHoras);
-  const horasTotais = calcularHorasTotais(tempoDisponivelHoras);
 
   let generated;
   try {
@@ -78,7 +96,7 @@ export async function generatePlan(possibilityId: string) {
         quemPagaria: possibility.quemPagaria,
         jaPossuiVsAprender: possibility.jaPossuiVsAprender,
       },
-      horasTotais,
+      mapaExecucao,
       horasPorSemana: tempoDisponivelHoras,
       horasNucleoSemana,
       estagioInicial,
@@ -87,6 +105,7 @@ export async function generatePlan(possibilityId: string) {
       regraSegurancaFinanceira,
       acoesAceitas: acoesAceitas as AcaoAceita[],
       equilibrioAprenderExecutar,
+      ritmoDesejado,
       condicaoAdicionalExecucao,
     });
   } catch (err) {
@@ -130,9 +149,15 @@ export async function generatePlan(possibilityId: string) {
       regraSegurancaFinanceira,
       acoesAceitas: acoesAceitas as AcaoAceita[],
       equilibrioAprenderExecutar,
+      ritmoDesejado,
       condicaoAdicionalExecucao,
       classificacaoEncaixe: generated.relatorio.classificacao_encaixe,
-      duracaoSemanas: PLAN_DURATION_SEMANAS,
+      nivelExecucao: NIVEL_EXECUCAO_MAP[generated.relatorio.nivel_execucao],
+      resultadoMinimoViavel: generated.relatorio.resultado_minimo_viavel,
+      ttfrSemanas: generated.relatorio.ttfr_semanas,
+      ttfrResultado: generated.relatorio.ttfr_resultado,
+      proporcaoAprendizado: generated.relatorio.proporcao_aprendizado,
+      duracaoSemanas: generated.semanas.length,
       relatorio: generated.relatorio as Prisma.InputJsonValue,
       weeks: {
         create: generated.semanas.map((semana, index) => {

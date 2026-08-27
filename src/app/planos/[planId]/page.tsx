@@ -57,7 +57,7 @@ export default async function PlanPage({
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h2 className="mb-1 font-serif text-xl font-medium tracking-tight text-petrol">
-            Plano de execução — {plan.duracaoSemanas} semanas
+            Plano Personalizado de Transição — {plan.duracaoSemanas} semanas
           </h2>
           <p className="text-[13.5px] text-ink-muted">
             Check-in toda semana. O cronograma se ajusta ao seu ritmo real — nunca ao contrário.

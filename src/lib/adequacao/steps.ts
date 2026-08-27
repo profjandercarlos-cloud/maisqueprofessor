@@ -31,7 +31,7 @@ export const ADEQUACAO_STEPS: WizardStep[] = [
     block: 1,
     type: "number",
     question: "Quantas horas por semana você realmente consegue reservar para este plano?",
-    helper: "Considere uma média sustentável durante 12 semanas, não uma semana excepcional.",
+    helper: "Considere uma média sustentável ao longo de todo o período de execução, não uma semana excepcional.",
     min: 1,
     max: 40,
     step: 0.5,
@@ -55,7 +55,7 @@ export const ADEQUACAO_STEPS: WizardStep[] = [
     slug: "orcamento",
     block: 1,
     type: "single-select",
-    question: "Quanto você tem disponível para investir ao longo das 12 semanas, se realmente for necessário?",
+    question: "Quanto você tem disponível para investir ao longo deste plano, se realmente for necessário?",
     helper: "O plano não precisa gastar esse valor. Ele apenas não poderá ultrapassar o limite escolhido.",
     options: [
       { value: "SEM_INVESTIMENTO", label: "Prefiro não investir nada por enquanto." },
@@ -69,7 +69,7 @@ export const ADEQUACAO_STEPS: WizardStep[] = [
     slug: "seguranca-financeira",
     block: 1,
     type: "single-select",
-    question: "Durante estas 12 semanas, qual regra financeira o plano precisa respeitar?",
+    question: "Durante o período de execução, qual regra financeira o plano precisa respeitar?",
     options: [
       { value: "MANTER_RENDA_INTEGRAL", label: "Preciso manter integralmente minha renda e meus compromissos atuais." },
       {
@@ -128,10 +128,23 @@ export const ADEQUACAO_STEPS: WizardStep[] = [
     path: ["equilibrioAprenderExecutar"],
   },
   {
+    slug: "ritmo-desejado",
+    block: 1,
+    type: "single-select",
+    question: "Como você prefere executar esta possibilidade?",
+    options: [
+      { value: "RAPIDO", label: "Quero um plano mais rápido e concentrado." },
+      { value: "EQUILIBRADO", label: "Prefiro um plano equilibrado." },
+      { value: "GRADUAL", label: "Prefiro um plano mais leve e gradual." },
+      { value: "SISTEMA_RECOMENDA", label: "Quero que o sistema recomende o ritmo mais adequado para mim." },
+    ],
+    path: ["ritmoDesejado"],
+  },
+  {
     slug: "nivel-acompanhamento",
     block: 1,
     type: "single-select",
-    question: "Que nível de acompanhamento você quer durante as 12 semanas?",
+    question: "Que nível de acompanhamento você quer durante o período de execução?",
     options: [
       { value: "MINIMO", label: "Mínimo — um check-in no dia escolhido, nenhum lembrete adicional." },
       { value: "MEDIO", label: "Médio — check-in semanal e um lembrete quando o check-in estiver atrasado." },

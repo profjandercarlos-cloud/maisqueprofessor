@@ -87,6 +87,7 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
           quemPagaria: p.quemPagaria,
           jaPossuiVsAprender: p.jaPossuiVsAprender,
           familiaValor: p.familiaValor,
+          mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
         })),
       },
     },

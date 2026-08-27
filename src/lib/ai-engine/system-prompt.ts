@@ -63,7 +63,22 @@ Escolha exatamente uma possibilidade para cada um destes 5 papéis. Nunca deixe 
 4. **Como você quer trabalhar e crescer** — a possibilidade que melhor combina com o formato de trabalho e o modelo de crescimento desejados (Bloco 4: formatos aceitos; Bloco 1: distância da educação)
 5. **Uma possibilidade que talvez não tenha considerado** — a possibilidade mais bem sustentada entre as HIPÓTESES A TESTAR — precisa ter lastro real em pelo menos duas respostas do diagnóstico, não pode ser uma surpresa aleatória
 
-### Etapa 6 — Regra Forte de Diversidade Final
+### Etapa 6 — Construa o Mapa de Execução de cada possibilidade
+
+Para cada uma das 5 possibilidades finalistas, monte também um Mapa de Execução — a base que o motor de geração do Plano Personalizado de Transição vai usar depois para calcular duração e profundidade, então precisa ser realista e específica daquela possibilidade, nunca genérica.
+
+- **objetivo_principal**: 1 frase, o que a pessoa estaria buscando ao seguir essa possibilidade.
+- **resultado_minimo_viavel**: o menor resultado concreto e verificável que permite dizer que a pessoa colocou essa possibilidade em prática ou conseguiu validá-la. NUNCA é "dominar a profissão", "concluir uma formação", "estar completamente preparado", "garantir renda/clientes/contratação" — é sempre algo como "estruturar uma oferta e realizar um primeiro atendimento real" ou "produzir um conjunto inicial de conteúdo e colocá-lo em circulação".
+- **esforco_minimo_horas**, **esforco_recomendado_horas**, **esforco_avancado_horas**: estimativa de horas totais para 3 níveis crescentes de execução dessa possibilidade — Validação (só o necessário para descobrir se faz sentido e produzir as primeiras evidências), Implementação (colocar a possibilidade em funcionamento de forma inicial e estruturada) e Desenvolvimento (avançar além da validação inicial, construir algo mais completo). Os três números precisam ser crescentes e realistas para a possibilidade específica — nunca um valor genérico repetido entre possibilidades diferentes.
+- **ttfr_base_semanas**: estimativa-base (antes de qualquer ajuste pelo perfil da pessoa) de quantas semanas normalmente levam até o primeiro resultado observável dessa possibilidade.
+- **competencias_necessarias**: lista curta do que já é preciso saber para começar.
+- **competencias_a_desenvolver**: lista curta do que normalmente precisa ser desenvolvido ao longo do caminho.
+- **acoes_essenciais**: lista curta das ações que não podem faltar em nenhuma versão do plano para essa possibilidade.
+- **nivel_complexidade**: "baixa", "média" ou "alta".
+- **principais_dependencias**: lista curta do que essa possibilidade depende (equipamento, autorização, rede de contatos, capital mínimo etc.) — lista vazia se não houver nenhuma relevante.
+- **primeiro_resultado_observavel**: 1 frase descrevendo o primeiro sinal concreto de progresso que a pessoa notaria.
+
+### Etapa 7 — Regra Forte de Diversidade Final
 Antes de finalizar, compare as 5 possibilidades entre si nestes cinco eixos. Se duas possibilidades coincidirem em 3 ou mais desses eixos, uma delas precisa ser substituída:
 - Cliente ou empregador (quem paga)
 - Problema que resolve
@@ -71,7 +86,7 @@ Antes de finalizar, compare as 5 possibilidades entre si nestes cinco eixos. Se 
 - No modo criação de valor ou exploração: família de criação de valor (da Etapa 3). No modo carreira: setor/ambiente de trabalho, no lugar da família de valor.
 - Forma de ganhar dinheiro (por hora, por projeto, por assinatura, por venda de produto, por comissão, por salário)
 
-### Etapa 7 — Regras absolutas (nunca violar)
+### Etapa 8 — Regras absolutas (nunca violar)
 
 - NUNCA psicologize sem evidência explícita. Não infira traços de personalidade, motivações profundas ou estados emocionais que a pessoa não descreveu diretamente.
 - NUNCA sugira, como primeiro teste de qualquer possibilidade, algo que exija trabalho gratuito ou entrega de valor sem contrapartida.
@@ -93,7 +108,21 @@ Retorne exclusivamente um JSON válido, sem texto fora dele, seguindo esta estru
       "por_que_apareceu": "explicação rastreável às respostas do diagnóstico, citando o tipo de evidência sem usar o jargão técnico (não diga 'demonstrado', explique naturalmente)",
       "quem_pagaria": "1-2 frases sobre quem precisaria disso e por quê — empregador no modo carreira, comprador/cliente no modo criação de valor",
       "ja_possui_vs_aprender": "o que já existe de evidência vs. o que precisaria aprender",
-      "familia_valor": "no modo carreira, o setor/ambiente de trabalho; no modo criação de valor ou exploração, uma das 6 famílias da Etapa 3 — para uso interno do sistema de diversidade, não exibir ao usuário"
+      "familia_valor": "no modo carreira, o setor/ambiente de trabalho; no modo criação de valor ou exploração, uma das 6 famílias da Etapa 3 — para uso interno do sistema de diversidade, não exibir ao usuário",
+      "mapa_execucao": {
+        "objetivo_principal": "string",
+        "resultado_minimo_viavel": "string",
+        "esforco_minimo_horas": 20,
+        "esforco_recomendado_horas": 40,
+        "esforco_avancado_horas": 70,
+        "ttfr_base_semanas": 3,
+        "competencias_necessarias": ["string"],
+        "competencias_a_desenvolver": ["string"],
+        "acoes_essenciais": ["string"],
+        "nivel_complexidade": "baixa" | "média" | "alta",
+        "principais_dependencias": ["string"],
+        "primeiro_resultado_observavel": "string"
+      }
     }
     // repetir para as 5 possibilidades
   ]
@@ -107,6 +136,7 @@ Retorne exclusivamente um JSON válido, sem texto fora dele, seguindo esta estru
 4. Nenhum primeiro passo sugerido envolve trabalho gratuito?
 5. O papel "uma possibilidade que talvez não tenha considerado" tem lastro real em pelo menos 2 respostas, não é aleatório?
 6. A intenção declarada e a distância desejada da educação foram respeitadas como peso, não como filtro absoluto?
-7. O JSON de saída está válido e completo, com os 5 papéis presentes uma única vez cada?
+7. Em cada Mapa de Execução, os 3 esforços são crescentes e o resultado_minimo_viavel é realmente mínimo e verificável (nunca "dominar", "garantir renda/clientes" ou "estar preparado")?
+8. O JSON de saída está válido e completo, com os 5 papéis presentes uma única vez cada, cada um com seu mapa_execucao?
 
 Se qualquer item falhar, corrija antes de responder. Não explique o processo de auditoria na resposta — apenas entregue o JSON final.`;

@@ -13,6 +13,21 @@ export type GenerationContext = {
   rejectedTitles?: string[];
 };
 
+export type MapaExecucao = {
+  objetivoPrincipal: string;
+  resultadoMinimoViavel: string;
+  esforcoMinimoHoras: number;
+  esforcoRecomendadoHoras: number;
+  esforcoAvancadoHoras: number;
+  ttfrBaseSemanas: number;
+  competenciasNecessarias: string[];
+  competenciasADesenvolver: string[];
+  acoesEssenciais: string[];
+  nivelComplexidade: string;
+  principaisDependencias: string[];
+  primeiroResultadoObservavel: string;
+};
+
 export type GeneratedPossibility = {
   papel: PossibilityRole;
   titulo: string;
@@ -22,6 +37,7 @@ export type GeneratedPossibility = {
   quemPagaria: string;
   jaPossuiVsAprender: string;
   familiaValor: string;
+  mapaExecucao: MapaExecucao;
 };
 
 const ROLE_MAP: Record<string, PossibilityRole> = {
@@ -34,6 +50,21 @@ const ROLE_MAP: Record<string, PossibilityRole> = {
 
 const PAPEL_VALUES = Object.keys(ROLE_MAP) as [string, ...string[]];
 
+const mapaExecucaoSchema = z.object({
+  objetivo_principal: z.string().min(1),
+  resultado_minimo_viavel: z.string().min(1),
+  esforco_minimo_horas: z.number().positive(),
+  esforco_recomendado_horas: z.number().positive(),
+  esforco_avancado_horas: z.number().positive(),
+  ttfr_base_semanas: z.number().positive(),
+  competencias_necessarias: z.array(z.string().min(1)),
+  competencias_a_desenvolver: z.array(z.string().min(1)),
+  acoes_essenciais: z.array(z.string().min(1)),
+  nivel_complexidade: z.string().min(1),
+  principais_dependencias: z.array(z.string().min(1)),
+  primeiro_resultado_observavel: z.string().min(1),
+});
+
 const possibilitySchema = z.object({
   papel: z.enum(PAPEL_VALUES),
   titulo: z.string().min(1),
@@ -43,11 +74,45 @@ const possibilitySchema = z.object({
   quem_pagaria: z.string().min(1),
   ja_possui_vs_aprender: z.string().min(1),
   familia_valor: z.string().min(1),
+  mapa_execucao: mapaExecucaoSchema,
 });
 
 const responseSchema = z.object({
   possibilidades: z.array(possibilitySchema).length(5),
 });
+
+const MAPA_EXECUCAO_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    objetivo_principal: { type: "string" },
+    resultado_minimo_viavel: { type: "string" },
+    esforco_minimo_horas: { type: "number" },
+    esforco_recomendado_horas: { type: "number" },
+    esforco_avancado_horas: { type: "number" },
+    ttfr_base_semanas: { type: "number" },
+    competencias_necessarias: { type: "array", items: { type: "string" } },
+    competencias_a_desenvolver: { type: "array", items: { type: "string" } },
+    acoes_essenciais: { type: "array", items: { type: "string" } },
+    nivel_complexidade: { type: "string" },
+    principais_dependencias: { type: "array", items: { type: "string" } },
+    primeiro_resultado_observavel: { type: "string" },
+  },
+  required: [
+    "objetivo_principal",
+    "resultado_minimo_viavel",
+    "esforco_minimo_horas",
+    "esforco_recomendado_horas",
+    "esforco_avancado_horas",
+    "ttfr_base_semanas",
+    "competencias_necessarias",
+    "competencias_a_desenvolver",
+    "acoes_essenciais",
+    "nivel_complexidade",
+    "principais_dependencias",
+    "primeiro_resultado_observavel",
+  ],
+  additionalProperties: false,
+} as const;
 
 const JSON_SCHEMA = {
   type: "object",
@@ -65,6 +130,7 @@ const JSON_SCHEMA = {
           quem_pagaria: { type: "string" },
           ja_possui_vs_aprender: { type: "string" },
           familia_valor: { type: "string" },
+          mapa_execucao: MAPA_EXECUCAO_JSON_SCHEMA,
         },
         required: [
           "papel",
@@ -75,6 +141,7 @@ const JSON_SCHEMA = {
           "quem_pagaria",
           "ja_possui_vs_aprender",
           "familia_valor",
+          "mapa_execucao",
         ],
         additionalProperties: false,
       },
@@ -130,5 +197,19 @@ export async function generatePossibilitiesOpenAI(
     quemPagaria: p.quem_pagaria,
     jaPossuiVsAprender: p.ja_possui_vs_aprender,
     familiaValor: p.familia_valor,
+    mapaExecucao: {
+      objetivoPrincipal: p.mapa_execucao.objetivo_principal,
+      resultadoMinimoViavel: p.mapa_execucao.resultado_minimo_viavel,
+      esforcoMinimoHoras: p.mapa_execucao.esforco_minimo_horas,
+      esforcoRecomendadoHoras: p.mapa_execucao.esforco_recomendado_horas,
+      esforcoAvancadoHoras: p.mapa_execucao.esforco_avancado_horas,
+      ttfrBaseSemanas: p.mapa_execucao.ttfr_base_semanas,
+      competenciasNecessarias: p.mapa_execucao.competencias_necessarias,
+      competenciasADesenvolver: p.mapa_execucao.competencias_a_desenvolver,
+      acoesEssenciais: p.mapa_execucao.acoes_essenciais,
+      nivelComplexidade: p.mapa_execucao.nivel_complexidade,
+      principaisDependencias: p.mapa_execucao.principais_dependencias,
+      primeiroResultadoObservavel: p.mapa_execucao.primeiro_resultado_observavel,
+    },
   }));
 }

@@ -135,6 +135,7 @@ model Possibility {
   quemPagaria        String            @db.Text
   jaPossuiVsAprender String            @db.Text
   familiaValor       String // uso interno (teste de diversidade), não exibido ao usuário
+  mapaExecucao       Json? // RMV, TTFR-base e os 3 níveis de esforço estimado (ver src/lib/ai-engine/generate-possibilities-openai.ts) — nullable pq possibilidades geradas antes desta coluna não têm esse dado
   status             PossibilityStatus @default(PENDENTE)
   createdAt          DateTime          @default(now())
 
@@ -241,16 +242,34 @@ enum AcaoAceita {
   @@map("acao_aceita")
 }
 
+enum NivelExecucao {
+  VALIDACAO
+  IMPLEMENTACAO
+  DESENVOLVIMENTO
+
+  @@map("nivel_execucao")
+}
+
+enum RitmoDesejado {
+  RAPIDO
+  EQUILIBRADO
+  GRADUAL
+  SISTEMA_RECOMENDA
+
+  @@map("ritmo_desejado")
+}
+
 // =========================================================================
-// Plano — nasce da aprovação de uma Possibility (Etapa 5) + questionário de
-// adequação (Etapa 6). `relatorio` é gerado uma única vez e nunca reescrito;
-// a recalibração (só por tempo) mexe em PlanWeek, nunca aqui.
+// Plano Personalizado de Transição — nasce da aprovação de uma Possibility
+// (Etapa 5) + questionário de adequação (Etapa 6). `relatorio` é gerado uma
+// única vez e nunca reescrito; a recalibração (só por tempo) mexe em
+// PlanWeek, nunca aqui.
 //
-// Duração é sempre PLAN_DURATION_SEMANAS (12, ver src/lib/plano/formula.ts)
-// — não existe mais escolha de "profundidade": o volume real de trabalho
-// nasce de tempoDisponivelHoras × 12, até o teto PLAN_MAX_HORAS. Quem tem
-// mais tempo que o teto adianta tarefas dentro das mesmas 12 semanas, não
-// ganha um plano maior.
+// Duração é variável (4 a 12 semanas, ver src/lib/plano/formula.ts) — a IA
+// escolhe o nível de execução (nivelExecucao) e a duração nasce do esforço
+// correspondente no Mapa de Execução da possibilidade dividido pela
+// capacidade semanal sustentável (horasNucleoSemana), sempre clampada em
+// [4, 12]. Não é mais um multiplicador fixo por 12 semanas.
 // =========================================================================
 model Plan {
   id                         String                     @id @default(uuid())
@@ -270,9 +289,15 @@ model Plan {
   acoesAceitas               AcaoAceita[]
   equilibrioAprenderExecutar EquilibrioAprenderExecutar
   condicaoAdicionalExecucao  String?                    @db.Text
+  ritmoDesejado              RitmoDesejado
   classificacaoEncaixe       String? // veredito da IA: cabe_agora | cabe_com_adaptacao | construcao_medio_prazo | conflito_explicito
+  nivelExecucao              NivelExecucao // decidido pela IA: validação | implementação | desenvolvimento
+  resultadoMinimoViavel      String                     @db.Text // RMV personalizado pra este plano
+  ttfrSemanas                Int // Time To First Result — semanas até o primeiro resultado observável
+  ttfrResultado              String                     @db.Text
+  proporcaoAprendizado       Float // 0-1, proporção do plano dedicada a aprendizado/preparação (o resto é execução)
   relatorio                  Json // relatório completo fixo (Etapa 7) — nunca reescrito
-  duracaoSemanas             Int // sempre PLAN_DURATION_SEMANAS na criação — semanas extras (pendências) não incrementam este número
+  duracaoSemanas             Int // 4-12, calculada a partir do esforço do nível de execução escolhido ÷ horasNucleoSemana
   activatedAt                DateTime                   @default(now())
   pausedAt                   DateTime?
   createdAt                  DateTime                   @default(now())
