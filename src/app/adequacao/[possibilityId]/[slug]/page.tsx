@@ -42,12 +42,16 @@ export default async function AdequacaoStepPage({
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel={`AJUSTE ${index + 1}/${TOTAL_STEPS}`} />
 
-      <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-line">
+      <div className="mb-3 h-1 w-full overflow-hidden rounded-full bg-line">
         <div
           className="h-full rounded-full bg-gold transition-[width] duration-300"
           style={{ width: `${progressPct}%` }}
         />
       </div>
+
+      <p className="mb-5 text-[12px] font-medium tracking-wide text-ink-muted uppercase">
+        Ajustando o plano de: <span className="text-petrol">{possibility.titulo}</span>
+      </p>
 
       <form action={action} className="flex flex-col gap-6">
         <div>
