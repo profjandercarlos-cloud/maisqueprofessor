@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StepFields } from "@/components/wizard-step-fields";
 import { SubmitButton } from "@/components/submit-button";
@@ -20,6 +20,7 @@ export default async function DiagnosticStepPage({
   const user = await requireActiveAccess();
 
   const diagnostic = await getOrCreateActiveDiagnostic(user.id);
+  if (!diagnostic) redirect("/diagnostico/concluido");
   const rota = diagnostic.rotaProfissional;
 
   const step = getStepBySlug(slug, rota);

@@ -26,6 +26,7 @@ export async function saveStep(slug: string, formData: FormData) {
   const user = await requireActiveAccess();
 
   const diagnostic = await getOrCreateActiveDiagnostic(user.id);
+  if (!diagnostic) redirect("/diagnostico/concluido");
   const rota = diagnostic.rotaProfissional;
 
   const step = getStepBySlug(slug, rota);

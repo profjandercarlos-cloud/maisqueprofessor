@@ -1,5 +1,8 @@
+import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
+import { db } from "@/lib/db";
+import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { generateForActiveDiagnostic } from "./actions";
 
 // Sem isto, a Vercel mata a função depois de 10s (padrão do plano Hobby) —
@@ -15,6 +18,22 @@ export default async function DiagnosticoConcluidoPage({
 }) {
   const query = await searchParams;
   const error = typeof query.error === "string" ? query.error : undefined;
+
+  const user = await requireActiveAccess();
+  const diagnostic = await db.diagnostic.findFirst({
+    where: { userId: user.id, status: "CONCLUIDO" },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!diagnostic) redirect("/");
+
+  // Já existe uma rodada de possibilidades pra este diagnóstico — manda
+  // direto pra ela em vez de reoferecer "gerar minhas 5 possibilidades",
+  // que criaria uma rodada duplicada sem a pessoa perceber.
+  const latestRound = await db.generationRound.findFirst({
+    where: { diagnosticId: diagnostic.id },
+    orderBy: { roundNumber: "desc" },
+  });
+  if (latestRound) redirect(`/diagnostico/possibilidades/${latestRound.id}`);
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
