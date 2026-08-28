@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { timingSafeStringEqual } from "@/lib/timing-safe-equal";
 import {
   sendAccessExpiringReminder,
   sendCheckinReminder,
@@ -14,7 +15,8 @@ const ESCALATION_AFTER_DAYS = 28; // 4 semanas sem check-in
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
   if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  const authHeader = request.headers.get("authorization");
+  return authHeader !== null && timingSafeStringEqual(authHeader, `Bearer ${secret}`);
 }
 
 export async function GET(request: NextRequest) {

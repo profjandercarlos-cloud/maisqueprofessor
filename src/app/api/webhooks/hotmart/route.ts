@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { Prisma } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { applyHotmartEvent, parseHotmartPayload } from "@/lib/hotmart/process-event";
+import { timingSafeStringEqual } from "@/lib/timing-safe-equal";
 
 function isHottokValid(request: NextRequest, payload: Record<string, unknown>): boolean {
   const expected = process.env.HOTMART_HOTTOK;
@@ -10,7 +11,10 @@ function isHottokValid(request: NextRequest, payload: Record<string, unknown>): 
   const headerToken = request.headers.get("x-hotmart-hottok");
   const bodyToken = typeof payload.hottok === "string" ? payload.hottok : undefined;
 
-  return headerToken === expected || bodyToken === expected;
+  return (
+    (headerToken !== null && timingSafeStringEqual(headerToken, expected)) ||
+    (bodyToken !== undefined && timingSafeStringEqual(bodyToken, expected))
+  );
 }
 
 export async function POST(request: NextRequest) {

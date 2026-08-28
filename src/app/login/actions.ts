@@ -11,7 +11,11 @@ export async function signIn(
 ): Promise<AuthActionState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const next = String(formData.get("next") ?? "") || "/";
+  // Só aceita caminho relativo dentro do próprio site — "next" vem da query
+  // string (?next=...) e não pode virar redirecionamento pra um domínio
+  // externo depois do login (ex.: ?next=https://site-falso.exemplo).
+  const rawNext = String(formData.get("next") ?? "");
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/";
 
   if (!email || !password) {
     return { error: "Preencha e-mail e senha." };
