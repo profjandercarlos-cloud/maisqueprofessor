@@ -117,11 +117,15 @@ export async function generatePlan(possibilityId: string) {
   await db.adequacaoResponse.update({ where: { id: response.id }, data: { status: "CONCLUIDO" } });
 
   // Conflito explícito — alguma condição informada impede o teste que essa
-  // possibilidade exigiria. Não cria o Plan; desfaz a aprovação (volta pra
-  // PENDENTE, igual às outras 4 do conjunto) e devolve a pessoa pras 5
-  // possibilidades pra escolher outra, com o motivo explicado pela IA.
+  // possibilidade exigiria. Não cria o Plan; marca REJEITADA (não PENDENTE)
+  // pra fechar essa possibilidade de vez — não faz sentido tentar gerar o
+  // mesmo plano da mesma possibilidade de novo, e sem isso a pessoa podia
+  // aprovar e tentar de novo indefinidamente, disparando a chamada mais
+  // cara do app sem nenhum limite (ver approvePossibility, que agora
+  // recusa reaprovar uma possibilidade REJEITADA, e o guard no início desta
+  // função que já bloqueia gerar plano pra uma REJEITADA).
   if (generated.relatorio.classificacao_encaixe === "conflito_explicito") {
-    await db.possibility.update({ where: { id: possibility.id }, data: { status: "PENDENTE" } });
+    await db.possibility.update({ where: { id: possibility.id }, data: { status: "REJEITADA" } });
     redirect(
       `/diagnostico/possibilidades/${possibility.roundId}?conflito=${encodeURIComponent(generated.relatorio.explicacao_encaixe)}`,
     );

@@ -76,6 +76,7 @@ model Diagnostic {
   rotaProfissional   RotaProfissional? // respondida na 2ª pergunta (Bloco A) — nula até lá
   answers            Json // Blocos A-D + bloco condicional da rota
   incrementAnswers   Json? // incremento de diagnóstico (10-12 perguntas, caso raro — após 3 rodadas sem aprovação)
+  incrementUsedAt    DateTime? // marca a única execução permitida do incremento — nunca reseta, evita gerar rodadas extras ilimitadas
   status             DiagnosticStatus  @default(EM_ANDAMENTO)
   versaoQuestionario String            @default("descoberta_v1")
   createdAt          DateTime          @default(now())

@@ -26,6 +26,9 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
     include: { rounds: { include: { possibilities: true } } },
   });
   if (!diagnostic) redirect("/");
+  // Mesma checagem do page.tsx, repetida aqui porque a action pode ser
+  // chamada diretamente — só uma execução do incremento por diagnóstico.
+  if (diagnostic.incrementUsedAt) redirect("/");
 
   const value = String(formData.get("value") ?? "").trim();
   if (!value) {
@@ -72,6 +75,11 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
       `/diagnostico/incremento/${slug}?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
     );
   }
+
+  // Marca como usado assim que a IA responde de verdade — antes de criar a
+  // rodada, pra nunca deixar essa etapa disponível de novo, mesmo que o
+  // passo seguinte falhe por algum motivo raro.
+  await db.diagnostic.update({ where: { id: diagnostic.id }, data: { incrementUsedAt: new Date() } });
 
   const newRound = await db.generationRound.create({
     data: {

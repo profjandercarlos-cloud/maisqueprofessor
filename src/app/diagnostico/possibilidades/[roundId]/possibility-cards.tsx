@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ROLE_META, ROLE_ORDER } from "@/lib/possibilidades/role-meta";
-import type { PossibilityRole } from "@/generated/prisma/client";
+import type { PossibilityRole, PossibilityStatus } from "@/generated/prisma/client";
 import { approvePossibility } from "./actions";
 
 type PossibilityData = {
@@ -13,6 +13,7 @@ type PossibilityData = {
   porQueApareceu: string;
   quemPagaria: string;
   jaPossuiVsAprender: string;
+  status: PossibilityStatus;
 };
 
 export function PossibilityCards({ possibilities }: { possibilities: PossibilityData[] }) {
@@ -105,14 +106,21 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     <div className="text-[14px] leading-[1.55] text-ink">{p.jaPossuiVsAprender}</div>
                   </div>
                 </div>
-                <form action={approvePossibility.bind(null, p.id)}>
-                  <button
-                    type="submit"
-                    className="mt-[18px] rounded-lg bg-gold px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
-                  >
-                    Aprovar esta possibilidade →
-                  </button>
-                </form>
+                {p.status === "REJEITADA" ? (
+                  <p className="mt-[18px] text-[13px] text-ink-muted">
+                    Essa possibilidade já foi tentada antes e não pôde ser aproveitada — escolha outra do
+                    conjunto.
+                  </p>
+                ) : (
+                  <form action={approvePossibility.bind(null, p.id)}>
+                    <button
+                      type="submit"
+                      className="mt-[18px] rounded-lg bg-gold px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
+                    >
+                      Aprovar esta possibilidade →
+                    </button>
+                  </form>
+                )}
               </div>
             ) : null}
           </article>

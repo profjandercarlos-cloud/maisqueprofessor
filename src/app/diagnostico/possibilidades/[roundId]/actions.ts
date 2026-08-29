@@ -16,8 +16,15 @@ export async function approvePossibility(possibilityId: string) {
     redirect("/");
   }
 
-  // Os outros 4 do conjunto permanecem PENDENTE — ficam salvos no perfil,
-  // disponíveis depois para gerar plano próprio (Etapa 9), sem virar rejeitados.
+  // Uma possibilidade REJEITADA (ex.: já tentou gerar plano e deu conflito
+  // explícito) não pode ser reaprovada — sem essa checagem, reaprovar
+  // resetava a proteção contra gerar o mesmo plano indefinidamente.
+  if (possibility.status === "REJEITADA") {
+    redirect(`/diagnostico/possibilidades/${possibility.roundId}`);
+  }
+
+  // Os outros PENDENTE do conjunto continuam PENDENTE — ficam salvos no
+  // perfil, disponíveis depois para gerar plano próprio (Etapa 9).
   await db.possibility.update({
     where: { id: possibilityId },
     data: { status: "APROVADA" },

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
@@ -35,6 +35,10 @@ export default async function IncrementStepPage({
     orderBy: { createdAt: "desc" },
   });
   if (!diagnostic) notFound();
+  // Só permite essa rodada extra de perguntas uma única vez por diagnóstico
+  // — sem isso, a URL fixa desta tela (sem nenhum ID) podia ser visitada
+  // quantas vezes quisesse, cada uma disparando uma chamada cara à IA.
+  if (diagnostic.incrementUsedAt) redirect("/");
 
   const currentValue = deepGet(diagnostic.incrementAnswers as Record<string, unknown>, step.path);
   const index = getIncrementStepIndex(slug);
