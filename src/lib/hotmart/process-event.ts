@@ -60,6 +60,10 @@ export const REVOKE_EVENTS = new Set([
   "PURCHASE_REFUNDED",
   "PURCHASE_CHARGEBACK",
   "PURCHASE_PROTEST",
+  // O produto está cadastrado na Hotmart como venda única, então este
+  // evento não deveria nunca chegar de verdade — incluído só como
+  // segurança, sem custo, caso o cadastro do produto mude para recorrência.
+  "SUBSCRIPTION_CANCELLATION",
 ]);
 
 // Extrai os campos que interessam do payload cru da Hotmart — usado tanto
