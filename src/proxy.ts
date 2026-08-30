@@ -63,5 +63,11 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // icon/apple-icon: rotas de ícone geradas pelo Next (src/app/icon.tsx e
+  // apple-icon.tsx) — sem isso, o favicon vira um redirect pra /login pra
+  // quem não está logado, e a imagem também não carregaria no e-mail de
+  // convite do Supabase (que referencia a URL pública dessas rotas).
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|icon|apple-icon|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };
