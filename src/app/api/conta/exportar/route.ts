@@ -95,8 +95,29 @@ export async function GET() {
     doc.moveDown(0.8);
   };
 
-  // Capa
-  doc.fontSize(22).font("Helvetica-Bold").fillColor(PETROL).text("Mais Que Professor");
+  // Capa — a marca é desenhada como path (mesmo desenho de
+  // src/components/app-logo-mark.tsx), não uma imagem embutida, pra não
+  // depender de buscar um asset externo durante a geração do PDF.
+  const markSize = 28;
+  const markX = doc.page.margins.left;
+  const markY = doc.y;
+  doc.roundedRect(markX, markY, markSize, markSize, markSize * 0.22).fill("#0b1420");
+  doc.save();
+  const iconSize = markSize * 0.62;
+  const iconOffset = (markSize - iconSize) / 2;
+  doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 24);
+  doc.path("M5 18V6L12 14L19 6V18").lineWidth(3.4).lineJoin("round").lineCap("round").stroke("white");
+  doc.circle(19.4, 5.1, 2.4).fill("#028192");
+  doc.restore();
+
+  doc
+    .fontSize(22)
+    .font("Helvetica-Bold")
+    .fillColor(PETROL)
+    .text("Mais Que Professor", markX + markSize + 10, markY + 3);
+  doc.x = doc.page.margins.left;
+  doc.y = markY + markSize + 6;
+
   doc.fontSize(13).font("Helvetica").fillColor(INK_MUTED).text("Seus dados");
   doc.moveDown(1.2);
   doc.fontSize(11).font("Helvetica").fillColor(INK).text(`Nome: ${dbUser.name}`);
