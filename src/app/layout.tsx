@@ -38,7 +38,11 @@ export const viewport: Viewport = {
   themeColor: "#0b1420",
 };
 
-const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('theme');var t=s||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`;
+// Sem preferência salva ainda (primeiro login) → escuro, sempre — não olha
+// mais o prefers-color-scheme do sistema. Pedido explícito do usuário: só
+// muda se a pessoa trocar manualmente pelo ThemeToggle (que aí sim grava em
+// localStorage e passa a valer em todo login seguinte).
+const THEME_INIT_SCRIPT = `(function(){try{var s=localStorage.getItem('theme');document.documentElement.setAttribute('data-theme',s||'dark');}catch(e){}})();`;
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const navContext = await getNavContext();
