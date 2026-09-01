@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { AppLogoMark } from "@/components/app-logo-mark";
 
 function InicioIcon() {
   return (
@@ -140,21 +141,36 @@ export function AppNavLinks({
     );
   }
 
-  // Variante "sidebar" (computador) intencionalmente mantida idêntica à
-  // versão anterior, sem estado ativo — pedido explícito de não mexer na
-  // apresentação em telas grandes nesta rodada.
+  // Variante "sidebar" (computador) — envolvida num cartão com fundo
+  // próprio (bg-paper-raised, o mesmo token usado nos cards de conteúdo em
+  // toda a página) pra se diferenciar do fundo da coluna central, em vez de
+  // flutuar sem contorno sobre o mesmo bg-paper do body inteiro. A marca no
+  // topo do cartão substitui a que aparecia no AppHeader em telas grandes
+  // (escondida via xl:hidden lá, pra não duplicar).
   return (
-    <nav className="hidden xl:fixed xl:top-8 xl:left-10 xl:flex xl:w-52 xl:flex-col xl:gap-1">
-      {items.map(({ href, label, Icon }) => (
-        <a
-          key={href}
-          href={href}
-          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
-        >
-          <Icon />
-          {label}
-        </a>
-      ))}
+    <nav className="hidden xl:fixed xl:top-8 xl:left-10 xl:flex xl:w-60 xl:flex-col xl:gap-1 xl:rounded-2xl xl:border xl:border-line xl:bg-paper-raised xl:p-4 xl:shadow-[var(--shadow)]">
+      <a href="/" className="mb-3 flex items-center gap-2.5 px-1">
+        <AppLogoMark />
+        <span className="font-serif text-[15px] font-semibold tracking-tight text-petrol">
+          Mais Que Professor
+        </span>
+      </a>
+      {items.map(({ href, label, Icon }) => {
+        const active = isActiveHref(pathname, href);
+        return (
+          <a
+            key={href}
+            href={href}
+            aria-current={active ? "page" : undefined}
+            className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-semibold transition-colors ${
+              active ? "bg-gold-soft text-petrol" : "text-petrol hover:bg-gold-soft"
+            }`}
+          >
+            <Icon />
+            {label}
+          </a>
+        );
+      })}
     </nav>
   );
 }

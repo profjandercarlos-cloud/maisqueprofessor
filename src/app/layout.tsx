@@ -55,16 +55,17 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             <AppNavLinks isAdmin={navContext.isAdmin} variant="mobile" />
           </>
         ) : null}
-        {/* xl:pl reserva o espaço da sidebar fixa (left-10 + w-52 = 248px, +
-            uma folga) — sem isso, o conteúdo só ficava livre da sidebar por
-            sorte, quando a tela era larga o bastante pra sobrar margem nos
-            dois lados da coluna centralizada. Em telas de notebook (perto de
-            1280px, o começo do breakpoint xl), a margem não era suficiente e
-            o conteúdo entrava por baixo da sidebar. */}
+        {/* xl:pl reserva o espaço da sidebar fixa (left-10 + w-60 = 280px,
+            já incluindo o cartão com padding próprio, + uma folga) — sem
+            isso, o conteúdo só ficava livre da sidebar por sorte, quando a
+            tela era larga o bastante pra sobrar margem nos dois lados da
+            coluna centralizada. Em telas de notebook (perto de 1280px, o
+            começo do breakpoint xl), a margem não era suficiente e o
+            conteúdo entrava por baixo da sidebar. */}
         <div
           className={
             navContext
-              ? "flex flex-1 flex-col pb-16 xl:pb-0 xl:pl-[272px]"
+              ? "flex flex-1 flex-col pb-16 xl:pb-0 xl:pl-[312px]"
               : "flex flex-1 flex-col"
           }
         >

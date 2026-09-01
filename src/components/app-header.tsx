@@ -52,10 +52,12 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
         ) : null}
       </header>
 
-      {/* Tablet/computador (sm e acima) — layout original, sem alterações. */}
+      {/* Tablet/computador (sm e acima). A partir de xl a marca some daqui —
+          o cartão fixo da sidebar (AppNavLinks) já mostra o logo lá, e
+          duplicar nas duas colunas ficava redundante. */}
       <header className="mb-10 hidden flex-wrap items-center justify-between gap-y-2 border-b border-line py-[22px] sm:flex">
         <div className="flex flex-wrap items-center gap-3">
-          <a href="/" className="flex items-center gap-2.5">
+          <a href="/" className="flex items-center gap-2.5 xl:hidden">
             <AppLogoMark />
             <div className="font-serif text-base font-semibold tracking-tight text-petrol">
               Mais Que Professor
@@ -64,7 +66,7 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
 
           {badge ? (
             <div
-              className="flex items-center gap-2.5 border-l border-line pl-3"
+              className="flex items-center gap-2.5 border-l border-line pl-3 xl:border-l-0 xl:pl-0"
               title={PAPEL_LABELS[badge.papel]}
             >
               <PapelIcon papel={badge.papel} className="h-[17px] w-[17px] shrink-0 text-petrol" />
