@@ -6,7 +6,7 @@
    etc.) foram mantidos de propósito, só os valores mudaram, pra não exigir
    renomear classes Tailwind em todo o código. */
 :root {
-  --paper: #f8f9f3;
+  --paper: #f7f7f5; /* teste: mesmo tom de fundo usado nos Artifacts (cinza quase neutro), a pedido do usuário — era #f8f9f3 antes, com um leve tom esverdeado */
   --paper-raised: #ffffff;
   --petrol: #0b1420; /* era o teal-escuro; agora é o "ink" navy da página de vendas — usado pra títulos, nav e (junto com --ink) todo texto de marca */
   --petrol-soft: #213b52;
