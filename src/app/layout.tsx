@@ -1,20 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, Space_Mono } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans, Space_Mono } from "next/font/google";
 import "./globals.css";
 import { AppNavLinks } from "@/components/app-nav-links";
 import { getNavContext } from "@/lib/auth/require-active-access";
 
+// Sem `weight` fixo em nenhuma das duas — ambas são fontes variáveis, e
+// travar num array de pesos estáticos (como estava antes na Fraunces)
+// impede o navegador de pedir qualquer peso fora dessa lista, deixando os
+// títulos sempre mais "finos" do que poderiam ficar. Mesma configuração do
+// Professor Sem Susto (outro app da mesma casa), pra manter a tipografia
+// igual entre os dois.
 const fraunces = Fraunces({
   variable: "--font-fraunces",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
   style: ["normal", "italic"],
 });
 
-const inter = Inter({
-  variable: "--font-inter",
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
 const spaceMono = Space_Mono({
@@ -43,7 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${inter.variable} ${spaceMono.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${plusJakartaSans.variable} ${spaceMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
