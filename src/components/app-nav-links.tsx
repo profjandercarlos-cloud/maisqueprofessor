@@ -151,8 +151,11 @@ export function AppNavLinks({
     <nav className="hidden xl:fixed xl:top-8 xl:left-10 xl:flex xl:w-60 xl:flex-col xl:gap-1 xl:rounded-2xl xl:border xl:border-line xl:bg-paper-raised xl:p-4 xl:shadow-[var(--shadow)]">
       <a href="/" className="mb-3 flex items-center gap-2.5 px-1">
         <AppLogoMark />
-        <span className="font-serif text-[15px] font-semibold tracking-tight text-petrol">
-          Mais Que Professor
+        <span className="flex flex-col leading-tight">
+          <span className="font-serif text-[15px] font-semibold tracking-tight text-petrol">
+            Mais Que Professor
+          </span>
+          <span className="text-[10.5px] text-ink-muted">Plataforma de transição profissional</span>
         </span>
       </a>
       {items.map(({ href, label, Icon }) => {

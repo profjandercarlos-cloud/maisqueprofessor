@@ -15,8 +15,11 @@ export function AuthShell({
       <div className="w-full max-w-[420px]">
         <div className="mb-8 flex items-center gap-2.5">
           <AppLogoMark />
-          <div className="font-serif text-base font-semibold tracking-tight text-petrol">
-            Mais Que Professor
+          <div className="flex flex-col leading-tight">
+            <span className="font-serif text-base font-semibold tracking-tight text-petrol">
+              Mais Que Professor
+            </span>
+            <span className="text-[10.5px] text-ink-muted">Plataforma de transição profissional</span>
           </div>
         </div>
         <div className="rounded-[var(--radius-app)] border border-line bg-paper-raised p-7 shadow-[var(--shadow)]">
