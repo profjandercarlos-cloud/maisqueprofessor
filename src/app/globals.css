@@ -1,25 +1,29 @@
 @import "tailwindcss";
 
-/* Paleta alinhada à página de vendas (vendas-mais-que-professor/public_html/
-   assets/css/style.css) — navy + turquesa, pra não haver troca de ambiente
-   visual entre a venda e o app. Os nomes das variáveis (--petrol, --gold
+/* Paleta retintada pra bater com o rebuild mais recente do
+   quiz-mais-que-professor (dist/styles.css) — navy + teal + creme, a pedido
+   do usuário, substituindo o navy/turquesa "antigo" (ver memória
+   "reference-quiz-design-system" e o aviso de drift em
+   "decision-sales-page-palette"). Os nomes das variáveis (--petrol, --gold
    etc.) foram mantidos de propósito, só os valores mudaram, pra não exigir
-   renomear classes Tailwind em todo o código. */
+   renomear classes Tailwind em todo o código. Modo escuro NÃO foi
+   retintado — o quiz não tem tema escuro, então não existe uma referência
+   pra copiar; os valores de --root[data-theme="dark"] continuam os mesmos. */
 :root {
-  --paper: #f7f7f5; /* teste: mesmo tom de fundo usado nos Artifacts (cinza quase neutro), a pedido do usuário — era #f8f9f3 antes, com um leve tom esverdeado */
-  --paper-raised: #ffffff;
-  --petrol: #0b1420; /* era o teal-escuro; agora é o "ink" navy da página de vendas — usado pra títulos, nav e (junto com --ink) todo texto de marca */
-  --petrol-soft: #213b52;
-  --gold: #028192; /* era dourado; agora é o turquesa "--accent" da página de vendas — cor de destaque, botões primários e marcações ativas */
-  --gold-soft: #e3f2f3;
-  --ink: #0b1420;
-  --ink-muted: #5b6470;
-  --line: #e7e9e1;
-  --radius: 14px;
-  --shadow: 0 1px 2px rgba(11, 20, 32, 0.05), 0 8px 24px rgba(11, 20, 32, 0.07);
+  --paper: #f4f1e9; /* --cream do quiz */
+  --paper-raised: #fffefa; /* --paper do quiz */
+  --petrol: #071f2f; /* --navy do quiz — títulos, nav e texto de marca */
+  --petrol-soft: #0d2b3e; /* --navy-soft do quiz — painéis escuros secundários */
+  --gold: #0796ad; /* --teal do quiz — cor de destaque, botões primários e marcações ativas */
+  --gold-soft: #eff9f8; /* tom de seleção/chip claro do quiz (option[aria-checked] e afins) */
+  --ink: #0a1523;
+  --ink-muted: #5d6877;
+  --line: #dfe2dc;
+  --radius: 16px;
+  --shadow: 0 18px 45px rgba(4, 26, 39, 0.11);
   --tint-base: #ffffff;
-  --badge-bg: #e3f2f3; /* turquesa bem clara — chip leve, não uma placa navy sólida */
-  --badge-text: #028192;
+  --badge-bg: #eff9f8;
+  --badge-text: #087b8e; /* --teal-dark do quiz — mesmo tom usado nos "eyebrows" dele */
 
   /* Um tom por papel das 5 possibilidades — role-2 a role-5 já batiam com a
      página de vendas; role-1 foi ajustado pra bater também (não fica mais
@@ -98,9 +102,12 @@
 
   --radius-app: var(--radius);
 
-  --font-serif: var(--font-fraunces);
-  --font-sans: var(--font-jakarta);
-  --font-mono: var(--font-space-mono);
+  /* Uma única família (DM Sans) pra --font-serif/--font-sans/--font-mono —
+     o quiz não separa título de corpo, então nenhuma classe Tailwind
+     font-serif/font-sans/font-mono precisou mudar nos componentes. */
+  --font-serif: var(--font-dm-sans);
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-dm-sans);
 }
 
 * {

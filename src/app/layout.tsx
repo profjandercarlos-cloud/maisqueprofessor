@@ -1,30 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Plus_Jakarta_Sans, Space_Mono } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { AppNavLinks } from "@/components/app-nav-links";
 import { getNavContext } from "@/lib/auth/require-active-access";
 
-// Sem `weight` fixo em nenhuma das duas — ambas são fontes variáveis, e
-// travar num array de pesos estáticos (como estava antes na Fraunces)
-// impede o navegador de pedir qualquer peso fora dessa lista, deixando os
-// títulos sempre mais "finos" do que poderiam ficar. Mesma configuração do
-// Professor Sem Susto (outro app da mesma casa), pra manter a tipografia
-// igual entre os dois.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Uma única família pra tudo (títulos, corpo e rótulos), igual ao
+// quiz-mais-que-professor — trocado a pedido do usuário, alinhando o app ao
+// padrão visual mais recente do quiz em vez do Fraunces + Plus Jakarta Sans
+// usado antes (ver memória "reference-quiz-design-system"). --font-serif,
+// --font-sans e --font-mono em globals.css apontam todos pra esta mesma
+// variável, então nenhuma classe Tailwind precisou mudar nos componentes.
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
   style: ["normal", "italic"],
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
-  subsets: ["latin"],
-});
-
-const spaceMono = Space_Mono({
-  variable: "--font-space-mono",
-  subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -35,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b1420",
+  themeColor: "#071f2f",
 };
 
 // Sem preferência salva ainda (primeiro login) → escuro, sempre — não olha
@@ -51,7 +40,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${fraunces.variable} ${plusJakartaSans.variable} ${spaceMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
