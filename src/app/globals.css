@@ -10,7 +10,7 @@
    retintado — o quiz não tem tema escuro, então não existe uma referência
    pra copiar; os valores de --root[data-theme="dark"] continuam os mesmos. */
 :root {
-  --paper: #f4f1e9; /* --cream do quiz */
+  --paper: #f7f7f5; /* não é o --cream do quiz por pedido explícito — mesmo cinza quase neutro dos Artifacts já usado antes (commit ea92443), preferido ao creme */
   --paper-raised: #fffefa; /* --paper do quiz */
   --petrol: #071f2f; /* --navy do quiz — títulos, nav e texto de marca */
   --petrol-soft: #0d2b3e; /* --navy-soft do quiz — painéis escuros secundários */
