@@ -107,7 +107,7 @@ export async function GET() {
   const iconOffset = (markSize - iconSize) / 2;
   doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 24);
   doc.path("M5 18V6L12 14L19 6V18").lineWidth(3.4).lineJoin("round").lineCap("round").stroke("white");
-  doc.circle(19.4, 5.1, 2.4).fill("#028192");
+  doc.circle(20.3, 2.8, 1.9).fill("#028192");
   doc.restore();
 
   doc

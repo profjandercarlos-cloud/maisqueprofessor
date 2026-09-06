@@ -20,7 +20,7 @@ export function AppLogoMark({ className }: { className?: string }) {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx="19.4" cy="5.1" r="2.4" fill="#028192" />
+        <circle cx="20.3" cy="2.8" r="1.9" fill="#028192" />
       </svg>
     </div>
   );
