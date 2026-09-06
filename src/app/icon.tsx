@@ -38,7 +38,7 @@ export default function Icon() {
       >
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
           <path d={M_PATH} fill="white" />
-          <circle cx="20.3" cy="2.8" r="1.9" fill="#028192" />
+          <circle cx="21" cy="2.2" r="1.6" fill="#028192" />
         </svg>
       </div>
     ),

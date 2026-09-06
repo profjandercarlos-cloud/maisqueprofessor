@@ -17,10 +17,10 @@ export function AppLogoMark({ className }: { className?: string }) {
           d="M5 18V6L12 14L19 6V18"
           stroke="white"
           strokeWidth="3.4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeLinecap="butt"
+          strokeLinejoin="miter"
         />
-        <circle cx="20.3" cy="2.8" r="1.9" fill="#028192" />
+        <circle cx="21" cy="2.2" r="1.6" fill="#028192" />
       </svg>
     </div>
   );

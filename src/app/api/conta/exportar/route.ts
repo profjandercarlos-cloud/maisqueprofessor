@@ -106,8 +106,8 @@ export async function GET() {
   const iconSize = markSize * 0.62;
   const iconOffset = (markSize - iconSize) / 2;
   doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 24);
-  doc.path("M5 18V6L12 14L19 6V18").lineWidth(3.4).lineJoin("round").lineCap("round").stroke("white");
-  doc.circle(20.3, 2.8, 1.9).fill("#028192");
+  doc.path("M5 18V6L12 14L19 6V18").lineWidth(3.4).lineJoin("miter").lineCap("butt").stroke("white");
+  doc.circle(21, 2.2, 1.6).fill("#028192");
   doc.restore();
 
   doc
