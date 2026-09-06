@@ -12,7 +12,11 @@ export function AppLogoMark({ className }: { className?: string }) {
       className={`relative flex shrink-0 items-center justify-center rounded-[22%] ${className ?? "h-7 w-7"}`}
       style={{ background: "#0b1420" }}
     >
-      <svg viewBox="0 0 24 24" fill="none" className="h-[62%] w-[62%]">
+      {/* viewBox estendido pra cima e pra direita (24x24 → 27x27, mesma
+          origem/base do "M") só pra abrir espaço pro ponto — do tamanho que
+          precisa ficar, não cabia mais dentro do 24x24 original sem cortar
+          na borda do próprio svg. */}
+      <svg viewBox="0 -3 27 27" fill="none" className="h-[62%] w-[62%]">
         <path
           d="M5 18V6L12 14L19 6V18"
           stroke="white"
@@ -20,7 +24,7 @@ export function AppLogoMark({ className }: { className?: string }) {
           strokeLinecap="butt"
           strokeLinejoin="miter"
         />
-        <circle cx="21" cy="2.2" r="1.6" fill="#028192" />
+        <circle cx="23" cy="0.5" r="3" fill="#028192" />
       </svg>
     </div>
   );

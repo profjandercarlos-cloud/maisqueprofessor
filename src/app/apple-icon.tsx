@@ -27,9 +27,9 @@ export default function AppleIcon() {
           background: "#0b1420",
         }}
       >
-        <svg width="112" height="112" viewBox="0 0 24 24" fill="none">
+        <svg width="112" height="112" viewBox="0 -3 27 27" fill="none">
           <path d={M_PATH} fill="white" />
-          <circle cx="21" cy="2.2" r="1.6" fill="#028192" />
+          <circle cx="23" cy="0.5" r="3" fill="#028192" />
         </svg>
       </div>
     ),

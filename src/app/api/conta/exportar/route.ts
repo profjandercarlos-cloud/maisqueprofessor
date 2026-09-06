@@ -105,9 +105,12 @@ export async function GET() {
   doc.save();
   const iconSize = markSize * 0.62;
   const iconOffset = (markSize - iconSize) / 2;
-  doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 24);
-  doc.path("M5 18V6L12 14L19 6V18").lineWidth(3.4).lineJoin("miter").lineCap("butt").stroke("white");
-  doc.circle(21, 2.2, 1.6).fill("#028192");
+  // Mesmo espaço de desenho 27x27 de app-logo-mark.tsx (viewBox "0 -3 27
+  // 27") — como aqui não existe viewBox, o deslocamento de -3 é aplicado
+  // somando 3 a cada coordenada Y do path/círculo em vez de mudar a escala.
+  doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 27);
+  doc.path("M5 21V9L12 17L19 9V21").lineWidth(3.4).lineJoin("miter").lineCap("butt").stroke("white");
+  doc.circle(23, 3.5, 3).fill("#028192");
   doc.restore();
 
   doc
