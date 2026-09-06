@@ -103,14 +103,14 @@ export async function GET() {
   const markY = doc.y;
   doc.roundedRect(markX, markY, markSize, markSize, markSize * 0.22).fill("#0b1420");
   doc.save();
-  const iconSize = markSize * 0.62;
+  // Path e círculo exatos do arquivo original do usuário
+  // (favicon-512-transparente.svg, viewBox 0 0 512 512) — preenchido
+  // (fill), não traçado.
+  const iconSize = markSize * 0.9;
   const iconOffset = (markSize - iconSize) / 2;
-  // Mesmo espaço de desenho 27x27 de app-logo-mark.tsx (viewBox "0 -3 27
-  // 27") — como aqui não existe viewBox, o deslocamento de -3 é aplicado
-  // somando 3 a cada coordenada Y do path/círculo em vez de mudar a escala.
-  doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 27);
-  doc.path("M5 21V9L12 17L19 9V21").lineWidth(3.4).lineJoin("miter").lineCap("butt").stroke("white");
-  doc.circle(23, 3.5, 3).fill("#028192");
+  doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 512);
+  doc.path("M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z").fill("white");
+  doc.circle(394.5, 146.5, 43.5).fill("#028192");
   doc.restore();
 
   doc

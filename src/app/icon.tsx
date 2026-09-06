@@ -6,18 +6,12 @@ import { ImageResponse } from "next/og";
 // aqui também (não dá pra importar o componente React direto, o Satori só
 // entende um subconjunto de HTML/CSS/SVG).
 //
-// O "M" aqui é desenhado como 4 polígonos preenchidos (2 barras verticais +
-// 2 diagonais), não como um path com stroke — o Satori (motor do
-// ImageResponse) tem suporte ruim a stroke de SVG, o que deixava a perna
-// direita do M visivelmente mais grossa e torta que a esquerda. Preenchido
-// (fill), o Satori renderiza sem esse problema. As 4 formas são o mesmo
-// desenho de "M5 18V6L12 14L19 6V18" com strokeWidth 3.4, só convertido pra
-// contorno manual (offset de 1.7 = metade da espessura).
+// Path e círculo exatos do arquivo original do usuário
+// (favicon-512-transparente.svg, viewBox 0 0 512 512) — já preenchido
+// (fill), não traçado, então o Satori renderiza sem a distorção que dava
+// com um path de stroke.
 const M_PATH =
-  "M3.3,6 L6.7,6 L6.7,18 L3.3,18 Z" +
-  "M17.3,6 L20.7,6 L20.7,18 L17.3,18 Z" +
-  "M3.72,7.11 L6.28,4.89 L13.28,12.89 L10.72,15.11 Z" +
-  "M13.28,15.11 L10.72,12.89 L17.72,4.89 L20.28,7.11 Z";
+  "M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z";
 
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
@@ -36,9 +30,9 @@ export default function Icon() {
           borderRadius: "22%",
         }}
       >
-        <svg width="40" height="40" viewBox="0 -3 27 27" fill="none">
+        <svg width="58" height="58" viewBox="0 0 512 512" fill="none">
           <path d={M_PATH} fill="white" />
-          <circle cx="23" cy="0.5" r="3" fill="#028192" />
+          <circle cx="394.5" cy="146.5" r="43.5" fill="#028192" />
         </svg>
       </div>
     ),

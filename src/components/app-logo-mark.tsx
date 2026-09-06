@@ -12,19 +12,16 @@ export function AppLogoMark({ className }: { className?: string }) {
       className={`relative flex shrink-0 items-center justify-center rounded-[22%] ${className ?? "h-7 w-7"}`}
       style={{ background: "#0b1420" }}
     >
-      {/* viewBox estendido pra cima e pra direita (24x24 → 27x27, mesma
-          origem/base do "M") só pra abrir espaço pro ponto — do tamanho que
-          precisa ficar, não cabia mais dentro do 24x24 original sem cortar
-          na borda do próprio svg. */}
-      <svg viewBox="0 -3 27 27" fill="none" className="h-[62%] w-[62%]">
+      {/* Path e círculo exatos do arquivo original do usuário
+          (favicon-512-transparente.svg, viewBox 0 0 512 512) — preenchido
+          (fill), não traçado (stroke), então o mesmo path funciona sem
+          distorção tanto aqui quanto no Satori (icon.tsx/apple-icon.tsx). */}
+      <svg viewBox="0 0 512 512" fill="none" className="h-[90%] w-[90%]">
         <path
-          d="M5 18V6L12 14L19 6V18"
-          stroke="white"
-          strokeWidth="3.4"
-          strokeLinecap="butt"
-          strokeLinejoin="miter"
+          fill="white"
+          d="M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z"
         />
-        <circle cx="23" cy="0.5" r="3" fill="#028192" />
+        <circle cx="394.5" cy="146.5" r="43.5" fill="#028192" />
       </svg>
     </div>
   );

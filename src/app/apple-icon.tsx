@@ -1,15 +1,11 @@
 import { ImageResponse } from "next/og";
 
 // Ícone pra "Adicionar à Tela de Início" no iOS/iPadOS — mesmo desenho de
-// src/components/app-logo-mark.tsx, ver o comentário em icon.tsx sobre por
-// que isso não é importado direto do componente React, e sobre por que o
-// "M" aqui é preenchido (fill) em vez de traçado (stroke) — o Satori
-// deformava a perna direita do M quando o path usava stroke.
+// src/components/app-logo-mark.tsx. Path e círculo exatos do arquivo
+// original do usuário (favicon-512-transparente.svg, viewBox 0 0 512 512),
+// ver o comentário em icon.tsx.
 const M_PATH =
-  "M3.3,6 L6.7,6 L6.7,18 L3.3,18 Z" +
-  "M17.3,6 L20.7,6 L20.7,18 L17.3,18 Z" +
-  "M3.72,7.11 L6.28,4.89 L13.28,12.89 L10.72,15.11 Z" +
-  "M13.28,15.11 L10.72,12.89 L17.72,4.89 L20.28,7.11 Z";
+  "M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z";
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -27,9 +23,9 @@ export default function AppleIcon() {
           background: "#0b1420",
         }}
       >
-        <svg width="112" height="112" viewBox="0 -3 27 27" fill="none">
+        <svg width="162" height="162" viewBox="0 0 512 512" fill="none">
           <path d={M_PATH} fill="white" />
-          <circle cx="23" cy="0.5" r="3" fill="#028192" />
+          <circle cx="394.5" cy="146.5" r="43.5" fill="#028192" />
         </svg>
       </div>
     ),
