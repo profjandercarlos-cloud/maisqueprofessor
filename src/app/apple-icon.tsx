@@ -1,11 +1,13 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 // Ícone pra "Adicionar à Tela de Início" no iOS/iPadOS — mesmo desenho de
-// src/components/app-logo-mark.tsx. Path e círculo exatos do arquivo
-// original do usuário (favicon-512-transparente.svg, viewBox 0 0 512 512),
-// ver o comentário em icon.tsx.
-const M_PATH =
-  "M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z";
+// src/components/app-logo-mark.tsx (monograma RAS), ver o comentário em
+// icon.tsx sobre a fonte carregada manualmente pro Satori.
+const manropeExtraBold = await readFile(
+  join(process.cwd(), "src/assets/fonts/Manrope-ExtraBold.woff"),
+);
 
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
@@ -15,20 +17,46 @@ export default function AppleIcon() {
     (
       <div
         style={{
+          position: "relative",
           width: "100%",
           height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0b1420",
+          background: "#081828",
         }}
       >
-        <svg width="162" height="162" viewBox="0 0 512 512" fill="none">
-          <path d={M_PATH} fill="white" />
-          <circle cx="394.5" cy="146.5" r="43.5" fill="#028192" />
-        </svg>
+        <div
+          style={{
+            display: "flex",
+            fontFamily: "Manrope",
+            fontWeight: 800,
+            fontSize: 58,
+            letterSpacing: "-4.5px",
+            color: "white",
+            lineHeight: 1,
+          }}
+        >
+          <span>R</span>
+          <span style={{ color: "#13B8B1" }}>A</span>
+          <span>S</span>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: "24.6%",
+            top: "67.8%",
+            width: "50.8%",
+            height: 5,
+            background: "#F36F3D",
+            borderRadius: 999,
+          }}
+        />
       </div>
     ),
-    { ...size },
+    {
+      ...size,
+      fonts: [{ name: "Manrope", data: manropeExtraBold, weight: 800, style: "normal" }],
+    },
   );
 }

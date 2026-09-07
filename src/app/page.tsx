@@ -51,7 +51,7 @@ export default async function Home({
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-            {diagnostic ? "De volta" : "Bem-vindo(a) ao Mais Que Professor"}
+            {diagnostic ? "De volta" : "Bem-vindo(a) à Rota Além da Sala"}
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
             Olá, {dbUser?.name ?? user.email}.

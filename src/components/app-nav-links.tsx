@@ -153,9 +153,9 @@ export function AppNavLinks({
         <AppLogoMark />
         <span className="flex flex-col leading-tight">
           <span className="font-serif text-[15px] font-semibold tracking-tight text-petrol">
-            Mais Que Professor
+            Rota Além da Sala
           </span>
-          <span className="text-[10.5px] text-ink-muted">Plataforma de transição profissional</span>
+          <span className="text-[10.5px] text-ink-muted">Planejador de transição para professores</span>
         </span>
       </a>
       {items.map(({ href, label, Icon }) => {

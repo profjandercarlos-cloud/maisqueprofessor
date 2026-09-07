@@ -20,9 +20,9 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
             <AppLogoMark />
             <div className="flex flex-col leading-tight">
               <span className="font-serif text-base font-semibold tracking-tight text-petrol">
-                Mais Que Professor
+                Rota Além da Sala
               </span>
-              <span className="text-[10.5px] text-ink-muted">Plataforma de transição profissional</span>
+              <span className="text-[10.5px] text-ink-muted">Planejador de transição para professores</span>
             </div>
           </a>
           <ThemeToggle />
@@ -64,9 +64,9 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
             <AppLogoMark />
             <div className="flex flex-col leading-tight">
               <span className="font-serif text-base font-semibold tracking-tight text-petrol">
-                Mais Que Professor
+                Rota Além da Sala
               </span>
-              <span className="text-[10.5px] text-ink-muted">Plataforma de transição profissional</span>
+              <span className="text-[10.5px] text-ink-muted">Planejador de transição para professores</span>
             </div>
           </a>
 

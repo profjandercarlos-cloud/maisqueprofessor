@@ -1,11 +1,14 @@
 import PDFDocument from "pdfkit";
 import { NextResponse } from "next/server";
+import { join } from "node:path";
 import { db } from "@/lib/db";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format-date";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
+
+const MANROPE_PATH = join(process.cwd(), "src/assets/fonts/Manrope-ExtraBold.woff");
 
 const PETROL = "#1b3a3a";
 const INK = "#24302e";
@@ -95,32 +98,39 @@ export async function GET() {
     doc.moveDown(0.8);
   };
 
-  // Capa — a marca é desenhada como path (mesmo desenho de
-  // src/components/app-logo-mark.tsx), não uma imagem embutida, pra não
+  // Capa — monograma RAS (mesmo desenho de src/components/app-logo-mark.tsx:
+  // quadrado navy, "RAS" com o "A" em teal, barra laranja embaixo), desenhado
+  // com texto/formas nativas do pdfkit, não uma imagem embutida, pra não
   // depender de buscar um asset externo durante a geração do PDF.
   const markSize = 28;
   const markX = doc.page.margins.left;
   const markY = doc.y;
-  doc.roundedRect(markX, markY, markSize, markSize, markSize * 0.22).fill("#0b1420");
+  doc.roundedRect(markX, markY, markSize, markSize, markSize * 0.22).fill("#081828");
   doc.save();
-  // Path e círculo exatos do arquivo original do usuário
-  // (favicon-512-transparente.svg, viewBox 0 0 512 512) — preenchido
-  // (fill), não traçado.
-  const iconSize = markSize * 0.9;
-  const iconOffset = (markSize - iconSize) / 2;
-  doc.translate(markX + iconOffset, markY + iconOffset).scale(iconSize / 512);
-  doc.path("M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z").fill("white");
-  doc.circle(394.5, 146.5, 43.5).fill("#028192");
+  doc.translate(markX, markY);
+  const monogramFontSize = markSize * 0.32;
+  doc.font(MANROPE_PATH).fontSize(monogramFontSize);
+  const monogramWidth = doc.widthOfString("RAS");
+  const monogramX = (markSize - monogramWidth) / 2;
+  const monogramY = (markSize - monogramFontSize) / 2;
+  doc.fillColor("white").text("R", monogramX, monogramY, { continued: true, lineBreak: false });
+  doc.fillColor("#13B8B1").text("A", { continued: true, lineBreak: false });
+  doc.fillColor("white").text("S", { lineBreak: false });
+  const barHeight = markSize * 0.029;
+  doc
+    .roundedRect(markSize * 0.246, markSize * 0.678, markSize * 0.508, barHeight, barHeight / 2)
+    .fill("#F36F3D");
   doc.restore();
 
   doc
     .fontSize(22)
     .font("Helvetica-Bold")
     .fillColor(PETROL)
-    .text("Mais Que Professor", markX + markSize + 10, markY + 3);
+    .text("Rota Além da Sala", markX + markSize + 10, markY + 3);
   doc.x = doc.page.margins.left;
   doc.y = markY + markSize + 6;
 
+  doc.fontSize(9).font("Helvetica").fillColor(INK_MUTED).text("uma solução Mais Que Professor");
   doc.fontSize(13).font("Helvetica").fillColor(INK_MUTED).text("Seus dados");
   doc.moveDown(1.2);
   doc.fontSize(11).font("Helvetica").fillColor(INK).text(`Nome: ${dbUser.name}`);

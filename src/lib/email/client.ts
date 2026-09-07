@@ -16,4 +16,7 @@ export function getResend(): Resend {
 // ATENÇÃO: o domínio em EMAIL_FROM precisa estar verificado no painel da
 // Resend antes de enviar em produção — sem isso, o envio falha. Até lá, dá
 // pra usar o remetente de testes da própria Resend (onboarding@resend.dev).
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? "Mais Que Professor <onboarding@resend.dev>";
+// Este fallback só vale quando a env var EMAIL_FROM não está definida — na
+// Vercel ela está (ver .env.example), então pra esse rebrand valer em
+// produção de verdade, o valor lá também precisa ser atualizado à mão.
+export const EMAIL_FROM = process.env.EMAIL_FROM ?? "Rota Além da Sala <onboarding@resend.dev>";

@@ -17,14 +17,14 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Mais Que Professor",
+  title: "Rota Além da Sala",
   description:
-    "Descubra caminhos profissionais além da sala de aula, com um plano de execução semanal feito para você.",
+    "Responda ao diagnóstico, receba cinco possibilidades profissionais e transforme a escolhida em um plano personalizado de transição. Uma solução Mais Que Professor.",
   manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#071f2f",
+  themeColor: "#081828",
 };
 
 // Sem preferência salva ainda (primeiro login) → escuro, sempre — não olha

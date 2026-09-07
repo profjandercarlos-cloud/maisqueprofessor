@@ -11,8 +11,8 @@ function wrapEmailHtml(bodyHtml: string): string {
   <table role="presentation" width="100%" style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">
     <tr>
       <td style="padding:32px 32px 20px;text-align:center;">
-        <img src="${APP_URL}/icon" width="40" height="40" alt="Mais Que Professor" style="display:block;margin:0 auto 8px;" />
-        <div style="font-size:15px;font-weight:700;color:#0b1420;">Mais Que Professor</div>
+        <img src="${APP_URL}/icon" width="40" height="40" alt="Rota Além da Sala" style="display:block;margin:0 auto 8px;" />
+        <div style="font-size:15px;font-weight:700;color:#081828;">Rota Além da Sala</div>
       </td>
     </tr>
     <tr>
@@ -87,6 +87,6 @@ export async function sendAccessExpiringReminder(params: {
     to: params.to,
     subject: `Seu acesso expira em ${params.daysRemaining} dias`,
     html: wrapEmailHtml(`<p>Olá, ${params.name}.</p>
-<p>Seu acesso ao Mais Que Professor expira em ${params.daysRemaining} dias. Renove sua compra para não perder o acesso ao seu plano.</p>`),
+<p>Seu acesso ao Rota Além da Sala expira em ${params.daysRemaining} dias. Renove sua compra para não perder o acesso ao seu plano.</p>`),
   });
 }

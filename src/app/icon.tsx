@@ -1,17 +1,17 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 // Ícone da aba do navegador — mesmo desenho de src/components/app-logo-mark.tsx
-// (quadrado navy arredondado, "M" branco, ponto turquesa), gerado como PNG
-// porque favicon não aceita SVG dinâmico. Se o desenho da marca mudar, mudar
-// aqui também (não dá pra importar o componente React direto, o Satori só
-// entende um subconjunto de HTML/CSS/SVG).
-//
-// Path e círculo exatos do arquivo original do usuário
-// (favicon-512-transparente.svg, viewBox 0 0 512 512) — já preenchido
-// (fill), não traçado, então o Satori renderiza sem a distorção que dava
-// com um path de stroke.
-const M_PATH =
-  "M144 364V159h62l36.5 139L279 159h63v205h-38V202l-41 162h-41l-40-162v162z";
+// (monograma RAS: quadrado navy arredondado, texto "RAS" com o "A" em teal
+// e uma barra laranja embaixo), gerado como PNG porque favicon não aceita
+// SVG dinâmico. Se o desenho da marca mudar, mudar aqui também (não dá pra
+// importar o componente React direto, o Satori só entende um subconjunto
+// de HTML/CSS/SVG) — e a fonte Manrope precisa ser carregada manualmente
+// aqui, já que o Satori não tem acesso ao Google Fonts do next/font.
+const manropeExtraBold = await readFile(
+  join(process.cwd(), "src/assets/fonts/Manrope-ExtraBold.woff"),
+);
 
 export const size = { width: 64, height: 64 };
 export const contentType = "image/png";
@@ -21,21 +21,47 @@ export default function Icon() {
     (
       <div
         style={{
+          position: "relative",
           width: "100%",
           height: "100%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#0b1420",
+          background: "#081828",
           borderRadius: "22%",
         }}
       >
-        <svg width="58" height="58" viewBox="0 0 512 512" fill="none">
-          <path d={M_PATH} fill="white" />
-          <circle cx="394.5" cy="146.5" r="43.5" fill="#028192" />
-        </svg>
+        <div
+          style={{
+            display: "flex",
+            fontFamily: "Manrope",
+            fontWeight: 800,
+            fontSize: 21,
+            letterSpacing: "-1.5px",
+            color: "white",
+            lineHeight: 1,
+          }}
+        >
+          <span>R</span>
+          <span style={{ color: "#13B8B1" }}>A</span>
+          <span>S</span>
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: "24.6%",
+            top: "67.8%",
+            width: "50.8%",
+            height: 2,
+            background: "#F36F3D",
+            borderRadius: 999,
+          }}
+        />
       </div>
     ),
-    { ...size },
+    {
+      ...size,
+      fonts: [{ name: "Manrope", data: manropeExtraBold, weight: 800, style: "normal" }],
+    },
   );
 }

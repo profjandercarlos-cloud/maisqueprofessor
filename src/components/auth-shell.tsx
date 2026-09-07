@@ -17,9 +17,14 @@ export function AuthShell({
           <AppLogoMark />
           <div className="flex flex-col leading-tight">
             <span className="font-serif text-base font-semibold tracking-tight text-petrol">
-              Mais Que Professor
+              Rota Além da Sala
             </span>
-            <span className="text-[10.5px] text-ink-muted">Plataforma de transição profissional</span>
+            <span className="text-[10.5px] text-ink-muted">Planejador de transição para professores</span>
+            {/* Atribuição à marca-mãe — só aqui (não no header/sidebar, que
+                já ficam justos com as 2 linhas existentes), pelo mesmo
+                motivo da página de vendas: reforçar a procedência sem
+                competir com o nome principal em todo canto. */}
+            <span className="mt-0.5 text-[9.5px] text-ink-muted/70">uma solução Mais Que Professor</span>
           </div>
         </div>
         <div className="rounded-[var(--radius-app)] border border-line bg-paper-raised p-7 shadow-[var(--shadow)]">
