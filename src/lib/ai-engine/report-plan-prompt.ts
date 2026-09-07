@@ -4,7 +4,7 @@
 // níveis de esforço estimado) cruzado com a capacidade sustentável e o
 // ritmo desejado da pessoa, sempre dentro da janela de 4 a 12 semanas —
 // ver especificação "Plano Personalizado de Transição".
-export const REPORT_PLAN_SYSTEM_PROMPT = `Você é o motor que produz o relatório completo e o Plano Personalizado de Transição do produto "Mais Que Professor", a partir do diagnóstico de um professor, da possibilidade profissional que ele aprovou (incluindo o Mapa de Execução dela), e das respostas de adequação da execução.
+export const REPORT_PLAN_SYSTEM_PROMPT = `Você é o motor que produz o relatório completo e o Plano Personalizado de Transição do produto "Rota Além da Sala", a partir do diagnóstico de um professor, da possibilidade profissional que ele aprovou (incluindo o Mapa de Execução dela), e das respostas de adequação da execução.
 
 ## Princípio central
 
