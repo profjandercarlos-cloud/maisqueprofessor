@@ -53,6 +53,13 @@ const CLASSIFICACAO_ENCAIXE_VALUES = [
 
 const NIVEL_EXECUCAO_VALUES = ["validacao", "implementacao", "desenvolvimento"] as const;
 
+const criteriosDecisaoSchema = z.object({
+  perguntas: z.array(z.string().min(1)).min(1).max(8),
+  regra_avancar: z.string().min(1),
+  regra_ajustar: z.string().min(1),
+  regra_encerrar: z.string().min(1),
+});
+
 const responseSchema = z.object({
   relatorio: z.object({
     quem_aparece: z.string().min(1),
@@ -67,6 +74,10 @@ const responseSchema = z.object({
     ttfr_semanas: z.number().int().positive(),
     ttfr_resultado: z.string().min(1),
     proporcao_aprendizado: z.number().min(0).max(1),
+    hipotese_de_teste: z.string().min(1),
+    entregas_finais: z.array(z.string().min(1)).min(1).max(6),
+    condicao_de_termino: z.string().min(1),
+    criterios_decisao: criteriosDecisaoSchema,
   }),
   semanas: z.array(weekSchema).min(1),
   // Best effort — ver normalizeMarcos: uma contagem fora do alvo (proporcional
@@ -94,6 +105,20 @@ const JSON_SCHEMA = {
         ttfr_semanas: { type: "number" },
         ttfr_resultado: { type: "string" },
         proporcao_aprendizado: { type: "number" },
+        hipotese_de_teste: { type: "string" },
+        entregas_finais: { type: "array", items: { type: "string" } },
+        condicao_de_termino: { type: "string" },
+        criterios_decisao: {
+          type: "object",
+          properties: {
+            perguntas: { type: "array", items: { type: "string" } },
+            regra_avancar: { type: "string" },
+            regra_ajustar: { type: "string" },
+            regra_encerrar: { type: "string" },
+          },
+          required: ["perguntas", "regra_avancar", "regra_ajustar", "regra_encerrar"],
+          additionalProperties: false,
+        },
       },
       required: [
         "quem_aparece",
@@ -108,6 +133,10 @@ const JSON_SCHEMA = {
         "ttfr_semanas",
         "ttfr_resultado",
         "proporcao_aprendizado",
+        "hipotese_de_teste",
+        "entregas_finais",
+        "condicao_de_termino",
+        "criterios_decisao",
       ],
       additionalProperties: false,
     },

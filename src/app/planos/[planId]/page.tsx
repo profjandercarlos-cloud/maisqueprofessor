@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { formatDate } from "@/lib/format-date";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
+import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
 
 export default async function PlanPage({
   params,
@@ -36,9 +37,54 @@ export default async function PlanPage({
       <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
         Relatório completo
       </span>
-      <h1 className="mb-8 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
+      <h1 className="mb-5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
         {plan.possibility.titulo}
       </h1>
+
+      {/* relatorio.hipotese_de_teste guarda a presença dos campos novos —
+          planos gerados antes desta mudança não têm esse bloco no JSON
+          salvo, e não vale a pena reprocessá-los só por isso. */}
+      {relatorio.hipotese_de_teste ? (
+        <div className="mb-8 rounded-[var(--radius-app)] border border-petrol/20 bg-paper-raised p-5 shadow-[var(--shadow)]">
+          <div className="mb-3 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Seu experimento
+          </div>
+          <dl className="flex flex-col gap-3 text-[14px] text-ink">
+            <div>
+              <dt className="mb-0.5 font-semibold text-petrol">Hipótese</dt>
+              <dd className="leading-[1.5]">{relatorio.hipotese_de_teste}</dd>
+            </div>
+            <div>
+              <dt className="mb-0.5 font-semibold text-petrol">Entregas finais</dt>
+              <dd>
+                <ul className="flex flex-col gap-1">
+                  {relatorio.entregas_finais.map((entrega, i) => (
+                    <li key={i} className="flex items-start gap-2 leading-[1.5]">
+                      <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
+                      {entrega}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+            <div>
+              <dt className="mb-0.5 font-semibold text-petrol">Carga total</dt>
+              <dd className="leading-[1.5]">
+                {plan.duracaoSemanas} semanas · {plan.horasNucleoSemana}h por semana ·{" "}
+                {plan.duracaoSemanas * plan.horasNucleoSemana}h no total
+              </dd>
+            </div>
+            <div>
+              <dt className="mb-0.5 font-semibold text-petrol">Investimento máximo</dt>
+              <dd className="leading-[1.5]">{INVESTIMENTO_LABELS[plan.investimentoFaixa]}</dd>
+            </div>
+            <div>
+              <dt className="mb-0.5 font-semibold text-petrol">O experimento termina quando</dt>
+              <dd className="leading-[1.5]">{relatorio.condicao_de_termino}</dd>
+            </div>
+          </dl>
+        </div>
+      ) : null}
 
       <div className="mb-12 flex flex-col gap-5">
         {REPORT_SECTIONS.map((section) => (
@@ -57,8 +103,12 @@ export default async function PlanPage({
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h2 className="mb-1 font-serif text-xl font-medium tracking-tight text-petrol">
-            Plano Personalizado de Transição — {plan.duracaoSemanas} semanas
+            Plano Personalizado de Transição
           </h2>
+          <p className="mb-1 font-mono text-[11px] tracking-wide text-ink-muted uppercase">
+            {plan.duracaoSemanas} semanas · {plan.horasNucleoSemana}h por semana ·{" "}
+            {plan.duracaoSemanas * plan.horasNucleoSemana}h no total
+          </p>
           <p className="text-[13.5px] text-ink-muted">
             Check-in toda semana. O cronograma se ajusta ao seu ritmo real — nunca ao contrário.
           </p>
@@ -153,6 +203,39 @@ export default async function PlanPage({
           );
         })}
       </div>
+
+      {relatorio.criterios_decisao ? (
+        <div className="mt-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
+          <div className="mb-3 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Critérios de decisão final
+          </div>
+          <p className="mb-2 text-[13.5px] font-medium text-ink">
+            Ao concluir a última semana, responda:
+          </p>
+          <ul className="mb-4 flex flex-col gap-1.5">
+            {relatorio.criterios_decisao.perguntas.map((pergunta, i) => (
+              <li key={i} className="flex items-start gap-2 text-[13.5px] leading-[1.5] text-ink">
+                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
+                {pergunta}
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-col gap-2 text-[13px] leading-[1.5]">
+            <p>
+              <span className="font-semibold text-petrol">Avançar: </span>
+              {relatorio.criterios_decisao.regra_avancar}
+            </p>
+            <p>
+              <span className="font-semibold text-petrol">Ajustar: </span>
+              {relatorio.criterios_decisao.regra_ajustar}
+            </p>
+            <p>
+              <span className="font-semibold text-petrol">Encerrar: </span>
+              {relatorio.criterios_decisao.regra_encerrar}
+            </p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

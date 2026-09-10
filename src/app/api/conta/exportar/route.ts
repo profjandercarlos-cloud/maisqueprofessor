@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/format-date";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
+import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
 
 const MANROPE_PATH = join(process.cwd(), "src/assets/fonts/Manrope-ExtraBold.woff");
 
@@ -179,8 +180,30 @@ export async function GET() {
       body(relatorio[section.key]);
     }
 
+    // Planos gerados antes desses campos existirem não têm essa parte do
+    // relatório salva — omite o bloco em vez de quebrar a exportação.
+    if (relatorio.hipotese_de_teste) {
+      h3("Seu experimento");
+      body(`Hipótese: ${relatorio.hipotese_de_teste}`);
+      body(`Entregas finais: ${relatorio.entregas_finais.join("; ")}`);
+      body(
+        `Carga total: ${plan.duracaoSemanas} semanas · ${plan.horasNucleoSemana}h por semana · ${plan.duracaoSemanas * plan.horasNucleoSemana}h no total`,
+      );
+      body(`Investimento máximo: ${INVESTIMENTO_LABELS[plan.investimentoFaixa]}`);
+      body(`O experimento termina quando: ${relatorio.condicao_de_termino}`);
+    }
+
     h2(`Execução — ${plan.duracaoSemanas} semanas`);
     for (const week of plan.weeks) {
+      // Evita o cabeçalho da semana (número + meta) ficar sozinho no fim de
+      // uma página, com as tarefas escorrendo pra próxima — força quebra de
+      // página cedo quando sobra pouco espaço, em vez de deixar o pdfkit
+      // quebrar no meio do bloco por conta própria. Não garante que toda a
+      // semana caiba inteira numa única página (uma semana muito longa ainda
+      // pode continuar na seguinte), só evita o caso mais comum e mais feio.
+      const espacoRestante = doc.page.height - doc.page.margins.bottom - doc.y;
+      if (espacoRestante < 170) doc.addPage();
+
       h3(`Semana ${week.weekNumber} — ${week.meta}`);
       meta(
         `Data prevista: ${formatDate(week.scheduledDate, { day: "2-digit", month: "short", year: "numeric" })} · ${week.status === "CONCLUIDA" ? "concluída" : "pendente"}`,

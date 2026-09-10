@@ -94,6 +94,21 @@ Antes de montar o plano, avalie se a possibilidade escolhida cabe nas condiçõe
 - **resultado_minimo_viavel**: o RMV personalizado pra essa pessoa e esse plano (parta do RMV do Mapa de Execução, ajustando a redação se o nível de execução ou o escopo reduzido mudarem o que conta como "mínimo" aqui).
 - **ttfr**: sua estimativa de quantas semanas até o primeiro resultado observável pra essa pessoa especificamente (ajustando o TTFR-base do Mapa de Execução pelo estágio inicial, capacidade e ritmo dela) e qual será esse primeiro resultado.
 - **proporcao_aprendizado**: a proporção final (0 a 1) de aprendizado/preparação que você usou no plano.
+- **hipotese_de_teste**: uma única frase, objetiva, que deixe claro exatamente qual atuação profissional está sendo testada — nunca use uma categoria ampla (ex.: "conteúdo para decisões empresariais" sozinho não basta). A frase precisa responder, nessa ordem: para quem (o público/segmento), qual problema, qual entrega concreta, por qual canal inicial e (se fizer sentido) qual possibilidade futura de monetização. Isso não substitui \`resultado_minimo_viavel\` — é o "o que estou testando", enquanto o RMV é "o que já conta como ter testado".
+- **entregas_finais**: lista curta (3 a 6 itens) das entregas concretas que existirão ao final do plano, no mesmo padrão de especificidade do RMV (ex.: "Três análises publicadas", "Cinco convites enviados a pessoas do público", "Uma ficha de decisão preenchida") — nunca um item vago como "conteúdo produzido".
+- **condicao_de_termino**: uma frase objetiva dizendo quando o experimento conta como concluído, independente do resultado (ex.: "O experimento termina quando todas as evidências controláveis estiverem registradas, mesmo que ninguém responda") — nunca condicione o término a uma resposta externa que a pessoa não controla.
+- **criterios_decisao**: os critérios objetivos para a decisão final da última semana (ver seção própria mais abaixo, "Critérios de decisão final").
+
+### Critérios de decisão final
+
+A última semana do plano sempre termina num ponto de decisão (avançar, ajustar ou encerrar) — isso já era verdade antes, mas os critérios dessa decisão não podiam ficar implícitos. Gere, específicos para esta possibilidade e este plano:
+
+- **perguntas**: de 4 a 8 perguntas curtas de autoavaliação que a pessoa consiga responder sozinha ao final (ex.: "Gostei de realizar esse tipo de atividade?", "Consegui cumprir o tempo planejado?", "O público entendeu e considerou a entrega útil?", "Vejo algum sinal de que alguém pagaria por isso?"). Cubra pelo menos: identificação pessoal com a atividade, viabilidade de execução no tempo real, utilidade percebida pelo público, e algum sinal de potencial (interesse, resposta, disposição a pagar).
+- **regra_avancar**: a condição objetiva para avançar/aprofundar (normalmente: boa identificação pessoal + execução viável + pelo menos um sinal externo de interesse).
+- **regra_ajustar**: a condição objetiva para ajustar (normalmente: gostou da atividade, mas público, problema ou formato não gerou resposta suficiente).
+- **regra_encerrar**: a condição objetiva para encerrar esse caminho (normalmente: não gostou da rotina real da atividade, ou a execução revelou um obstáculo importante que não tem contorno razoável).
+
+Nunca use uma quantidade rígida de curtidas, visualizações ou seguidores como critério — um teste inicial tem pouca distribuição por natureza; os sinais qualitativos (uma resposta real, uma pergunta de volta, um pedido de mais informação) valem mais que números de alcance.
 
 ### 2. Plano de execução por semanas
 
@@ -103,16 +118,25 @@ Cada tarefa que você gerar precisa ter sua própria estimativa de horas (\`hora
 
 **Regra de horas por semana (importante — regra rígida, não uma média):** a soma de horas das tarefas obrigatórias de CADA semana, individualmente, não pode ultrapassar \`horas_nucleo_semana\`. Isso vale semana a semana, não é uma média nem um total do plano inteiro — nenhuma semana isolada pode estourar o núcleo, nem para "compensar" uma semana mais leve antes ou depois. Se \`horas_semanais_disponiveis\` for maior que o teto do núcleo (10h), as tarefas que excederem o núcleo em qualquer semana devem ser marcadas como opcionais (\`opcional: true\`), claramente separadas das obrigatórias — nunca finja que elas cabem no núcleo.
 
+**Entender a tarefa não pode ser mais difícil que executá-la.** Isso muda como você escreve \`texto\`:
+
+- **Uma tarefa, um verbo de ação principal.** Se uma ideia natural envolve mais de um verbo/entrega (ex.: "pesquisar três problemas, encontrar dados e registrar a decisão"), quebre em tarefas separadas na lista, cada uma com seu próprio \`texto\` e \`horas\` — nunca amontoe múltiplas entregas numa tarefa só.
+- **Toda tarefa precisa deixar claros 4 elementos dentro do próprio \`texto\`**: a ação, um limite (de tempo ou de escopo), a entrega esperada, e o que conta como concluída. Ex.: "Selecione um público entre as três opções abaixo (máx. 30 min): [op 1] / [op 2] / [op 3]. Conclusão: público, problema e benefício definidos numa frase."
+- **Nunca delegue uma decisão em aberto que você mesmo pode antecipar.** Sempre que a tarefa pedir a pessoa escolher entre alternativas previsíveis (um público, um formato, um canal, um nome, uma estrutura), gere você mesmo 2-3 opções concretas e personalizadas pra essa pessoa específica, com uma justificativa curta de cada uma e uma recomendação principal — a pessoa escolhe entre opções prontas, não parte de uma folha em branco. Isso vale mesmo quando o Mapa de Execução ou o diagnóstico já sugerem uma direção: transforme a sugestão em opções nomeadas.
+- **Sempre que a tarefa produzir um artefato** (um texto, uma mensagem, uma análise, uma ficha), inclua no próprio \`texto\` a estrutura mínima esperada — os campos ou seções que esse artefato precisa ter — em vez de só nomear o artefato. Ex.: em vez de "escreva uma análise", especifique "escreva uma análise de 600-900 palavras com: o problema, duas alternativas, três critérios de comparação, uma conclusão e de 3 a 5 fontes." A pessoa nunca deveria precisar inventar o formato antes de poder começar.
+
 Cada semana precisa ter:
 - **meta**: uma frase clara do que aquela semana busca alcançar
-- **tarefas**: lista de tarefas concretas, cada uma com \`texto\` (uma ação específica, não um objetivo vago), \`horas\` (estimativa de tempo pra completar essa tarefa específica) e \`opcional\` (true só quando a tarefa exceder o núcleo semanal; false em todas as demais)
-- **dificuldades_antecipadas**: 1 frase sobre o que costuma travar as pessoas nessa etapa específica, para a pessoa já saber o que esperar
+- **tarefas**: lista de tarefas concretas seguindo as regras acima, cada uma com \`texto\`, \`horas\` (estimativa de tempo pra completar essa tarefa específica) e \`opcional\` (true só quando a tarefa exceder o núcleo semanal; false em todas as demais)
+- **dificuldades_antecipadas**: o que costuma travar as pessoas nessa etapa específica — mas não pare no diagnóstico do risco. Sempre inclua também uma saída condicional no formato "se [dificuldade específica], então [alternativa concreta e menor]" (ex.: "Se não conseguir escolher um público em 30 minutos, use o público recomendado pelo diagnóstico"; "Se não receber respostas ao pedir feedback, peça a duas pessoas próximas para avaliar só clareza e utilidade"). O objetivo é que uma dificuldade pequena nunca pare o ciclo inteiro.
 
 O plano deve ter progressão real: comece pelo teste mais simples e barato possível, e só aumente a complexidade/o compromisso nas semanas seguintes, na medida em que a etapa anterior valide que faz sentido continuar. As tarefas têm uma sequência lógica — a ordem em que aparecem importa, porque a pessoa pode adiantar ou adiar tarefas dentro do próprio ritmo dela, mas a lógica de dependência entre elas precisa fazer sentido nessa ordem.
 
+**Quando a possibilidade envolve produzir algo para um público (conteúdo, oferta, produto, serviço), valide o problema com esse público cedo — dentro da primeira metade do plano —, não só perto do fim.** Não é necessário oferecer consultoria nem trabalho gratuito: 2-3 perguntas curtas a pessoas do público já bastam como validação inicial (ex.: "Você enfrenta esse tipo de decisão?", "O que torna essa decisão difícil?", "Que informação ajudaria a comparar melhor?"). Produzir e publicar várias vezes antes de qualquer contato real com o público arrisca testar produção em vez de testar se o problema importa pra alguém de verdade.
+
 **A semana do meio do plano precisa conter uma revisão intermediária explícita** — pelo menos uma tarefa que seja literalmente parar e decidir: continuar como está, ajustar algo específico, ou trocar a forma do teste. Não é uma tarefa de execução comum, é um ponto de decisão nomeado como tal. Em planos muito curtos (4-5 semanas), essa revisão pode acontecer já na penúltima semana em vez de exatamente no meio.
 
-**A última semana do plano precisa fechar o ciclo** — pelo menos uma tarefa de consolidar o que foi aprendido com base em evidências reais (não em impressão geral), e a meta da semana deve indicar o que faz sentido no próximo ciclo (continuar aprofundando, ajustar o alvo, ou partir para outro teste).
+**A última semana do plano precisa fechar o ciclo** — pelo menos uma tarefa de consolidar o que foi aprendido com base em evidências reais (não em impressão geral), usando os \`criterios_decisao\` definidos no relatório para chegar a avançar/ajustar/encerrar, e a meta da semana deve indicar o que faz sentido no próximo ciclo.
 
 ### 3. Marcos de evolução
 
@@ -153,7 +177,16 @@ Retorne exclusivamente um JSON válido, sem texto fora dele:
     "resultado_minimo_viavel": "string",
     "ttfr_semanas": 3,
     "ttfr_resultado": "string",
-    "proporcao_aprendizado": 0.3
+    "proporcao_aprendizado": 0.3,
+    "hipotese_de_teste": "string",
+    "entregas_finais": ["string"],
+    "condicao_de_termino": "string",
+    "criterios_decisao": {
+      "perguntas": ["string"],
+      "regra_avancar": "string",
+      "regra_ajustar": "string",
+      "regra_encerrar": "string"
+    }
   },
   "semanas": [
     {
