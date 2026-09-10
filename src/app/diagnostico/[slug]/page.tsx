@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StepFields } from "@/components/wizard-step-fields";
 import { SubmitButton } from "@/components/submit-button";
+import { StepErrorBanner } from "@/components/step-error-banner";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
 import { deepGet } from "@/lib/wizard/deep-set";
@@ -67,7 +68,7 @@ export default async function DiagnosticStepPage({
 
         <StepFields step={step} currentValue={currentValue} otherDetailValue={otherDetailValue} />
 
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
+        {error ? <StepErrorBanner error={error} /> : null}
 
         <div className="flex items-center justify-between gap-4 pt-2">
           <a

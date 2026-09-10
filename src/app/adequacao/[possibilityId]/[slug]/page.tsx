@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { StepFields } from "@/components/wizard-step-fields";
+import { StepErrorBanner } from "@/components/step-error-banner";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
@@ -70,7 +71,7 @@ export default async function AdequacaoStepPage({
 
         <StepFields step={step} currentValue={currentValue} />
 
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
+        {error ? <StepErrorBanner error={error} /> : null}
 
         <div className="flex items-center justify-between gap-4 pt-2">
           <a

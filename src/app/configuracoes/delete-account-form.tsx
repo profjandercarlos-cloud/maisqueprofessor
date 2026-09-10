@@ -6,6 +6,7 @@ import { deleteAccount } from "./actions";
 export function DeleteAccountForm({ email, error }: { email: string; error?: string }) {
   const [confirming, setConfirming] = useState(false);
   const [typedEmail, setTypedEmail] = useState("");
+  const [errorDismissed, setErrorDismissed] = useState(false);
   const matches = typedEmail.trim().toLowerCase() === email.toLowerCase();
 
   if (!confirming) {
@@ -30,11 +31,14 @@ export function DeleteAccountForm({ email, error }: { email: string; error?: str
         type="text"
         name="confirmation"
         value={typedEmail}
-        onChange={(e) => setTypedEmail(e.target.value)}
+        onChange={(e) => {
+          setTypedEmail(e.target.value);
+          setErrorDismissed(true);
+        }}
         placeholder={email}
         className="w-full rounded-lg border border-line bg-paper px-3.5 py-2 text-[14px] text-ink outline-none focus:border-role-3"
       />
-      {error ? <p className="text-sm text-role-3">{error}</p> : null}
+      {error && !errorDismissed ? <p className="text-sm text-role-3">{error}</p> : null}
       <div className="flex items-center gap-3">
         <button
           type="submit"

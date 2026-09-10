@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/format-date";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { updateSettings } from "./actions";
 import { DeleteAccountForm } from "./delete-account-form";
+import { StepErrorBanner } from "@/components/step-error-banner";
 
 const fieldLabel = "mb-1.5 block text-[15px] font-medium text-ink";
 const inputClass =
@@ -95,7 +96,7 @@ export default async function ConfiguracoesPage({
           <p className="mt-1 text-[12.5px] text-ink-muted">Pelo menos um precisa ficar ativo.</p>
         </div>
 
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
+        {error ? <StepErrorBanner error={error} /> : null}
 
         <button
           type="submit"

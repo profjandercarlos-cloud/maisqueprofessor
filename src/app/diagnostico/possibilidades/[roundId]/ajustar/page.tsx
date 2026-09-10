@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
+import { StepErrorBanner } from "@/components/step-error-banner";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { submitAdjustment } from "./actions";
@@ -43,7 +44,7 @@ export default async function AjustarConjuntoPage({
           placeholder="Ex.: nenhuma parecia algo que eu faria de verdade, ou todas ficaram muito perto da sala de aula quando eu queria distância..."
           className="min-h-[160px] w-full resize-y rounded-lg border border-line bg-paper px-3.5 py-3 text-[15px] text-ink outline-none focus:border-petrol"
         />
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
+        {error ? <StepErrorBanner error={error} /> : null}
         <div className="flex items-center justify-between gap-4">
           <a
             href={`/diagnostico/possibilidades/${roundId}`}

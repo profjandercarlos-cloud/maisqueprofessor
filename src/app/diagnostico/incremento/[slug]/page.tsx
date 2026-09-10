@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { db } from "@/lib/db";
 import { deepGet } from "@/lib/wizard/deep-set";
 import { StepFields } from "@/components/wizard-step-fields";
+import { StepErrorBanner } from "@/components/step-error-banner";
 import {
   getIncrementPrevSlug,
   getIncrementStepBySlug,
@@ -64,7 +65,7 @@ export default async function IncrementStepPage({
 
         <StepFields step={step} currentValue={currentValue} />
 
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
+        {error ? <StepErrorBanner error={error} /> : null}
 
         <div className="flex items-center justify-between gap-4 pt-2">
           {prevSlug ? (

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
 import { submitCheckin } from "./actions";
+import { StepErrorBanner } from "@/components/step-error-banner";
 
 const optionCardClass =
   "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[14.5px] text-ink transition-colors has-[:checked]:border-petrol has-[:checked]:bg-gold-soft";
@@ -80,7 +81,7 @@ export default async function CheckinPage({
           <textarea id="diaryText" name="diaryText" className={`${textareaClass} min-h-[70px]`} />
         </div>
 
-        {error ? <p className="text-sm text-role-3">{error}</p> : null}
+        {error ? <StepErrorBanner error={error} /> : null}
 
         <button
           type="submit"
