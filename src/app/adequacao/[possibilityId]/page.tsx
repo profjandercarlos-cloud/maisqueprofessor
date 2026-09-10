@@ -34,11 +34,44 @@ export default async function AdequacaoEntryPage({
       <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
         Possibilidade aprovada
       </span>
-      <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
+      <h1 className="mb-6 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
         {possibility.titulo}
       </h1>
-      <p className="mb-8 max-w-[50ch] text-[14.5px] text-ink-muted">
-        Só mais algumas perguntas para calibrar o plano ao seu tempo, aos seus recursos e ao seu jeito de acompanhar.
+
+      {/* Recapitula o que essa possibilidade é antes de pedir pra pessoa
+          decidir prosseguir — sem isso, quem chega aqui a partir de "Meus
+          planos" (às vezes dias depois de ter visto o conjunto original de
+          5 possibilidades) não tem como lembrar do que se trata. */}
+      <div className="mb-8 flex flex-col gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            O que seria, na prática
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.naPratica}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Por que apareceu para você
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.porQueApareceu}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Quem pagaria por isso
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.quemPagaria}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Já possui vs. o que precisaria aprender
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.jaPossuiVsAprender}</div>
+        </div>
+      </div>
+
+      <p className="mb-4 max-w-[50ch] text-[14.5px] text-ink-muted">
+        Se essa continua sendo a possibilidade que faz sentido pra você, só mais algumas perguntas para calibrar o
+        plano ao seu tempo, aos seus recursos e ao seu jeito de acompanhar.
       </p>
 
       <a
