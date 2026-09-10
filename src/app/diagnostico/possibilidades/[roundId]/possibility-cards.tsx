@@ -9,10 +9,16 @@ type PossibilityData = {
   id: string;
   papel: PossibilityRole;
   titulo: string;
+  subtitulo: string;
   naPratica: string;
-  porQueApareceu: string;
+  entregaPrincipal: string;
   quemPagaria: string;
-  jaPossuiVsAprender: string;
+  comoSeriaRotina: string;
+  porQueApareceu: string;
+  capacidadesAproveitaveis: string[];
+  aprendizagensPrioritarias: string[];
+  primeiraVersaoPossivel: string;
+  pontoDeAtencao: string;
   status: PossibilityStatus;
 };
 
@@ -61,7 +67,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                 <span className="mb-1 block font-serif text-[19px] font-medium tracking-tight text-ink">
                   {p.titulo}
                 </span>
-                <span className="block text-[13px] text-ink-muted">{meta.subtitle}</span>
+                <span className="block text-[13px] text-ink-muted">{p.subtitulo}</span>
               </span>
               <span
                 className="mt-[3px] flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line transition-transform"
@@ -83,9 +89,27 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                 <div className="flex flex-col gap-3.5">
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      O que seria, na prática
+                      O que você faria na prática
                     </div>
                     <div className="text-[14px] leading-[1.55] text-ink">{p.naPratica}</div>
+                  </div>
+                  <div>
+                    <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                      O que você entregaria
+                    </div>
+                    <div className="text-[14px] leading-[1.55] text-ink">{p.entregaPrincipal}</div>
+                  </div>
+                  <div>
+                    <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                      Quem pagaria e por quê
+                    </div>
+                    <div className="text-[14px] leading-[1.55] text-ink">{p.quemPagaria}</div>
+                  </div>
+                  <div>
+                    <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                      Como seria sua rotina
+                    </div>
+                    <div className="text-[14px] leading-[1.55] text-ink">{p.comoSeriaRotina}</div>
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
@@ -95,15 +119,34 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Quem pagaria por isso
+                      O que você já traz e o que precisaria desenvolver
                     </div>
-                    <div className="text-[14px] leading-[1.55] text-ink">{p.quemPagaria}</div>
+                    <ul className="flex flex-col gap-1">
+                      {p.capacidadesAproveitaveis.map((item, i) => (
+                        <li key={`c-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink">
+                          <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
+                          {item}
+                        </li>
+                      ))}
+                      {p.aprendizagensPrioritarias.map((item, i) => (
+                        <li key={`a-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink-muted">
+                          <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-gold" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Já possui vs. o que precisaria aprender
+                      Primeira versão possível
                     </div>
-                    <div className="text-[14px] leading-[1.55] text-ink">{p.jaPossuiVsAprender}</div>
+                    <div className="text-[14px] leading-[1.55] text-ink">{p.primeiraVersaoPossivel}</div>
+                  </div>
+                  <div>
+                    <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                      Principal ponto de atenção
+                    </div>
+                    <div className="text-[14px] leading-[1.55] text-ink">{p.pontoDeAtencao}</div>
                   </div>
                 </div>
                 {p.status === "REJEITADA" ? (

@@ -71,6 +71,16 @@ export default async function PossibilitiesReviewPage({
         </div>
       ) : null}
 
+      {round.notaDiversidade ? (
+        <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+            <circle cx="8" cy="8" r="7" stroke="var(--petrol)" strokeWidth="1.4" />
+            <path d="M8 5v4M8 11v.1" stroke="var(--petrol)" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          <span>{round.notaDiversidade}</span>
+        </div>
+      ) : null}
+
       <PossibilityCards possibilities={round.possibilities} />
 
       {alreadyApproved ? (

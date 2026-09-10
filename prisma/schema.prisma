@@ -98,6 +98,7 @@ model GenerationRound {
   diagnostic   Diagnostic @relation(fields: [diagnosticId], references: [id], onDelete: Cascade)
   roundNumber  Int
   feedbackText String?    @db.Text // feedback do professor sobre o conjunto anterior (null na rodada 1)
+  notaDiversidade String  @db.Text // explica quando as 5 possibilidades variam formato dentro do mesmo território em vez de território — string vazia quando não se aplica
   createdAt    DateTime   @default(now())
 
   possibilities Possibility[]
@@ -125,20 +126,25 @@ enum PossibilityStatus {
 }
 
 model Possibility {
-  id                 String            @id @default(uuid())
-  roundId            String
-  round              GenerationRound   @relation(fields: [roundId], references: [id], onDelete: Cascade)
-  papel              PossibilityRole
-  titulo             String
-  subtitulo          String
-  naPratica          String            @db.Text
-  porQueApareceu     String            @db.Text
-  quemPagaria        String            @db.Text
-  jaPossuiVsAprender String            @db.Text
-  familiaValor       String // uso interno (teste de diversidade), não exibido ao usuário
-  mapaExecucao       Json? // RMV, TTFR-base e os 3 níveis de esforço estimado (ver src/lib/ai-engine/generate-possibilities-openai.ts) — nullable pq possibilidades geradas antes desta coluna não têm esse dado
-  status             PossibilityStatus @default(PENDENTE)
-  createdAt          DateTime          @default(now())
+  id                        String            @id @default(uuid())
+  roundId                   String
+  round                     GenerationRound   @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  papel                     PossibilityRole
+  titulo                    String
+  subtitulo                 String // frase curta (até ~25 palavras) específica da possibilidade, exibida no card fechado
+  naPratica                 String            @db.Text
+  entregaPrincipal          String            @db.Text
+  quemPagaria               String            @db.Text
+  comoSeriaRotina           String            @db.Text
+  porQueApareceu            String            @db.Text
+  capacidadesAproveitaveis  String[] // 2-4 capacidades já aproveitáveis (ver src/lib/ai-engine/generate-possibilities-openai.ts)
+  aprendizagensPrioritarias String[] // até 3 aprendizagens prioritárias
+  primeiraVersaoPossivel    String            @db.Text
+  pontoDeAtencao            String            @db.Text
+  familiaValor              String // uso interno (teste de diversidade), não exibido ao usuário
+  mapaExecucao              Json? // RMV, TTFR-base e os 3 níveis de esforço estimado (ver src/lib/ai-engine/generate-possibilities-openai.ts) — nullable pq possibilidades geradas antes desta coluna não têm esse dado
+  status                    PossibilityStatus @default(PENDENTE)
+  createdAt                 DateTime          @default(now())
 
   plan              Plan?
   adequacaoResponse AdequacaoResponse?

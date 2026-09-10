@@ -258,9 +258,14 @@ export async function generateReportAndPlanOpenAI(params: {
   possibility: {
     titulo: string;
     naPratica: string;
-    porQueApareceu: string;
+    entregaPrincipal: string;
     quemPagaria: string;
-    jaPossuiVsAprender: string;
+    comoSeriaRotina: string;
+    porQueApareceu: string;
+    capacidadesAproveitaveis: string[];
+    aprendizagensPrioritarias: string[];
+    primeiraVersaoPossivel: string;
+    pontoDeAtencao: string;
   };
   mapaExecucao: MapaExecucao;
   horasPorSemana: number;
@@ -279,9 +284,14 @@ export async function generateReportAndPlanOpenAI(params: {
 POSSIBILIDADE APROVADA
 Título: ${params.possibility.titulo}
 Na prática: ${params.possibility.naPratica}
-Por que apareceu: ${params.possibility.porQueApareceu}
+O que entregaria: ${params.possibility.entregaPrincipal}
 Quem pagaria: ${params.possibility.quemPagaria}
-Já possui vs. a aprender: ${params.possibility.jaPossuiVsAprender}
+Como seria a rotina: ${params.possibility.comoSeriaRotina}
+Por que apareceu: ${params.possibility.porQueApareceu}
+Capacidades já aproveitáveis: ${params.possibility.capacidadesAproveitaveis.join("; ")}
+Aprendizagens prioritárias: ${params.possibility.aprendizagensPrioritarias.join("; ")}
+Primeira versão possível: ${params.possibility.primeiraVersaoPossivel}
+Principal ponto de atenção: ${params.possibility.pontoDeAtencao}
 
 MAPA DE EXECUÇÃO DA POSSIBILIDADE
 ${formatMapaExecucao(params.mapaExecucao)}

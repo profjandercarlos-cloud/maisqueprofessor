@@ -60,9 +60,27 @@ export default async function AdequacaoEntryPage({
       <div className="mb-8 flex flex-col gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            O que seria, na prática
+            O que você faria na prática
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.naPratica}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            O que você entregaria
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.entregaPrincipal}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Quem pagaria e por quê
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.quemPagaria}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Como seria sua rotina
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.comoSeriaRotina}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
@@ -72,15 +90,34 @@ export default async function AdequacaoEntryPage({
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Quem pagaria por isso
+            O que você já traz e o que precisaria desenvolver
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.quemPagaria}</div>
+          <ul className="flex flex-col gap-1">
+            {possibility.capacidadesAproveitaveis.map((item, i) => (
+              <li key={`c-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink">
+                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
+                {item}
+              </li>
+            ))}
+            {possibility.aprendizagensPrioritarias.map((item, i) => (
+              <li key={`a-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink-muted">
+                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-gold" />
+                {item}
+              </li>
+            ))}
+          </ul>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Já possui vs. o que precisaria aprender
+            Primeira versão possível
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.jaPossuiVsAprender}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.primeiraVersaoPossivel}</div>
+        </div>
+        <div>
+          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+            Principal ponto de atenção
+          </div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.pontoDeAtencao}</div>
         </div>
       </div>
 

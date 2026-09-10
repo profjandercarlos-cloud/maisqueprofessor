@@ -85,15 +85,21 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
     data: {
       diagnosticId: diagnostic.id,
       roundNumber: roundsCount + 1,
+      notaDiversidade: generated.notaDiversidade,
       possibilities: {
-        create: generated.map((p) => ({
+        create: generated.possibilities.map((p) => ({
           papel: p.papel,
           titulo: p.titulo,
           subtitulo: p.subtitulo,
           naPratica: p.naPratica,
-          porQueApareceu: p.porQueApareceu,
+          entregaPrincipal: p.entregaPrincipal,
           quemPagaria: p.quemPagaria,
-          jaPossuiVsAprender: p.jaPossuiVsAprender,
+          comoSeriaRotina: p.comoSeriaRotina,
+          porQueApareceu: p.porQueApareceu,
+          capacidadesAproveitaveis: p.capacidadesAproveitaveis,
+          aprendizagensPrioritarias: p.aprendizagensPrioritarias,
+          primeiraVersaoPossivel: p.primeiraVersaoPossivel,
+          pontoDeAtencao: p.pontoDeAtencao,
           familiaValor: p.familiaValor,
           mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
         })),

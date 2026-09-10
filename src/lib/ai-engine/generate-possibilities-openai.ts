@@ -33,11 +33,21 @@ export type GeneratedPossibility = {
   titulo: string;
   subtitulo: string;
   naPratica: string;
-  porQueApareceu: string;
+  entregaPrincipal: string;
   quemPagaria: string;
-  jaPossuiVsAprender: string;
+  comoSeriaRotina: string;
+  porQueApareceu: string;
+  capacidadesAproveitaveis: string[];
+  aprendizagensPrioritarias: string[];
+  primeiraVersaoPossivel: string;
+  pontoDeAtencao: string;
   familiaValor: string;
   mapaExecucao: MapaExecucao;
+};
+
+export type GeneratedPossibilitiesResult = {
+  possibilities: GeneratedPossibility[];
+  notaDiversidade: string;
 };
 
 const ROLE_MAP: Record<string, PossibilityRole> = {
@@ -70,15 +80,21 @@ const possibilitySchema = z.object({
   titulo: z.string().min(1),
   subtitulo: z.string().min(1),
   na_pratica: z.string().min(1),
-  por_que_apareceu: z.string().min(1),
+  entrega_principal: z.string().min(1),
   quem_pagaria: z.string().min(1),
-  ja_possui_vs_aprender: z.string().min(1),
+  como_seria_rotina: z.string().min(1),
+  por_que_apareceu: z.string().min(1),
+  capacidades_aproveitaveis: z.array(z.string().min(1)).min(2).max(4),
+  aprendizagens_prioritarias: z.array(z.string().min(1)).min(1).max(3),
+  primeira_versao_possivel: z.string().min(1),
+  ponto_de_atencao: z.string().min(1),
   familia_valor: z.string().min(1),
   mapa_execucao: mapaExecucaoSchema,
 });
 
 const responseSchema = z.object({
   possibilidades: z.array(possibilitySchema).length(5),
+  nota_diversidade: z.string(),
 });
 
 const MAPA_EXECUCAO_JSON_SCHEMA = {
@@ -126,9 +142,14 @@ const JSON_SCHEMA = {
           titulo: { type: "string" },
           subtitulo: { type: "string" },
           na_pratica: { type: "string" },
-          por_que_apareceu: { type: "string" },
+          entrega_principal: { type: "string" },
           quem_pagaria: { type: "string" },
-          ja_possui_vs_aprender: { type: "string" },
+          como_seria_rotina: { type: "string" },
+          por_que_apareceu: { type: "string" },
+          capacidades_aproveitaveis: { type: "array", items: { type: "string" } },
+          aprendizagens_prioritarias: { type: "array", items: { type: "string" } },
+          primeira_versao_possivel: { type: "string" },
+          ponto_de_atencao: { type: "string" },
           familia_valor: { type: "string" },
           mapa_execucao: MAPA_EXECUCAO_JSON_SCHEMA,
         },
@@ -137,17 +158,23 @@ const JSON_SCHEMA = {
           "titulo",
           "subtitulo",
           "na_pratica",
-          "por_que_apareceu",
+          "entrega_principal",
           "quem_pagaria",
-          "ja_possui_vs_aprender",
+          "como_seria_rotina",
+          "por_que_apareceu",
+          "capacidades_aproveitaveis",
+          "aprendizagens_prioritarias",
+          "primeira_versao_possivel",
+          "ponto_de_atencao",
           "familia_valor",
           "mapa_execucao",
         ],
         additionalProperties: false,
       },
     },
+    nota_diversidade: { type: "string" },
   },
-  required: ["possibilidades"],
+  required: ["possibilidades", "nota_diversidade"],
   additionalProperties: false,
 } as const;
 
@@ -162,7 +189,7 @@ function buildUserMessage({ diagnosticInput, feedback, rejectedTitles }: Generat
 
 export async function generatePossibilitiesOpenAI(
   context: GenerationContext,
-): Promise<GeneratedPossibility[]> {
+): Promise<GeneratedPossibilitiesResult> {
   const completion = await openai.chat.completions.create({
     model: OPENAI_GENERATION_MODEL,
     max_completion_tokens: 16000,
@@ -188,28 +215,36 @@ export async function generatePossibilitiesOpenAI(
     throw new Error("O modelo retornou papéis repetidos ou ausentes entre as 5 possibilidades.");
   }
 
-  return parsed.possibilidades.map((p) => ({
-    papel: ROLE_MAP[p.papel],
-    titulo: p.titulo,
-    subtitulo: p.subtitulo,
-    naPratica: p.na_pratica,
-    porQueApareceu: p.por_que_apareceu,
-    quemPagaria: p.quem_pagaria,
-    jaPossuiVsAprender: p.ja_possui_vs_aprender,
-    familiaValor: p.familia_valor,
-    mapaExecucao: {
-      objetivoPrincipal: p.mapa_execucao.objetivo_principal,
-      resultadoMinimoViavel: p.mapa_execucao.resultado_minimo_viavel,
-      esforcoMinimoHoras: p.mapa_execucao.esforco_minimo_horas,
-      esforcoRecomendadoHoras: p.mapa_execucao.esforco_recomendado_horas,
-      esforcoAvancadoHoras: p.mapa_execucao.esforco_avancado_horas,
-      ttfrBaseSemanas: p.mapa_execucao.ttfr_base_semanas,
-      competenciasNecessarias: p.mapa_execucao.competencias_necessarias,
-      competenciasADesenvolver: p.mapa_execucao.competencias_a_desenvolver,
-      acoesEssenciais: p.mapa_execucao.acoes_essenciais,
-      nivelComplexidade: p.mapa_execucao.nivel_complexidade,
-      principaisDependencias: p.mapa_execucao.principais_dependencias,
-      primeiroResultadoObservavel: p.mapa_execucao.primeiro_resultado_observavel,
-    },
-  }));
+  return {
+    possibilities: parsed.possibilidades.map((p) => ({
+      papel: ROLE_MAP[p.papel],
+      titulo: p.titulo,
+      subtitulo: p.subtitulo,
+      naPratica: p.na_pratica,
+      entregaPrincipal: p.entrega_principal,
+      quemPagaria: p.quem_pagaria,
+      comoSeriaRotina: p.como_seria_rotina,
+      porQueApareceu: p.por_que_apareceu,
+      capacidadesAproveitaveis: p.capacidades_aproveitaveis,
+      aprendizagensPrioritarias: p.aprendizagens_prioritarias,
+      primeiraVersaoPossivel: p.primeira_versao_possivel,
+      pontoDeAtencao: p.ponto_de_atencao,
+      familiaValor: p.familia_valor,
+      mapaExecucao: {
+        objetivoPrincipal: p.mapa_execucao.objetivo_principal,
+        resultadoMinimoViavel: p.mapa_execucao.resultado_minimo_viavel,
+        esforcoMinimoHoras: p.mapa_execucao.esforco_minimo_horas,
+        esforcoRecomendadoHoras: p.mapa_execucao.esforco_recomendado_horas,
+        esforcoAvancadoHoras: p.mapa_execucao.esforco_avancado_horas,
+        ttfrBaseSemanas: p.mapa_execucao.ttfr_base_semanas,
+        competenciasNecessarias: p.mapa_execucao.competencias_necessarias,
+        competenciasADesenvolver: p.mapa_execucao.competencias_a_desenvolver,
+        acoesEssenciais: p.mapa_execucao.acoes_essenciais,
+        nivelComplexidade: p.mapa_execucao.nivel_complexidade,
+        principaisDependencias: p.mapa_execucao.principais_dependencias,
+        primeiroResultadoObservavel: p.mapa_execucao.primeiro_resultado_observavel,
+      },
+    })),
+    notaDiversidade: parsed.nota_diversidade,
+  };
 }
