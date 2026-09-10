@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { formatDate } from "@/lib/format-date";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
 import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
+import { ROLE_META } from "@/lib/possibilidades/role-meta";
 
 export default async function PlanPage({
   params,
@@ -34,9 +35,25 @@ export default async function PlanPage({
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="ETAPA 07 / 10" />
 
-      <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-        Relatório completo
-      </span>
+      {/* De onde essa possibilidade veio (um dos 5 papéis fixos) — some
+          fácil de esquecer qual dos 5 ângulos originais gerou essa
+          possibilidade, então mostra de novo aqui, não só como ícone com
+          tooltip (como na lista de "Meus planos"). */}
+      <div className="mb-[18px] flex flex-wrap items-center gap-2">
+        <span className="inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
+          Relatório completo
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full py-[3px] pr-[9px] pl-2 font-mono text-[10px] tracking-[0.07em] uppercase"
+          style={{
+            color: ROLE_META[plan.possibility.papel].accentVar,
+            background: `color-mix(in srgb, ${ROLE_META[plan.possibility.papel].accentVar} 13%, var(--tint-base))`,
+          }}
+        >
+          {ROLE_META[plan.possibility.papel].icon}
+          {ROLE_META[plan.possibility.papel].label}
+        </span>
+      </div>
       <h1 className="mb-5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
         {plan.possibility.titulo}
       </h1>

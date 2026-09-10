@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
+import { ROLE_META } from "@/lib/possibilidades/role-meta";
 
 export default async function AdequacaoEntryPage({
   params,
@@ -31,9 +32,23 @@ export default async function AdequacaoEntryPage({
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="POSSIBILIDADE APROVADA" />
 
-      <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-        Possibilidade aprovada
-      </span>
+      {/* De onde essa possibilidade veio (um dos 5 papéis fixos) — ver
+          mesmo raciocínio em planos/[planId]/page.tsx. */}
+      <div className="mb-[18px] flex flex-wrap items-center gap-2">
+        <span className="inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
+          Possibilidade aprovada
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full py-[3px] pr-[9px] pl-2 font-mono text-[10px] tracking-[0.07em] uppercase"
+          style={{
+            color: ROLE_META[possibility.papel].accentVar,
+            background: `color-mix(in srgb, ${ROLE_META[possibility.papel].accentVar} 13%, var(--tint-base))`,
+          }}
+        >
+          {ROLE_META[possibility.papel].icon}
+          {ROLE_META[possibility.papel].label}
+        </span>
+      </div>
       <h1 className="mb-6 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
         {possibility.titulo}
       </h1>
