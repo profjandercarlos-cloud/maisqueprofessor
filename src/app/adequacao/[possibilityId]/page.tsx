@@ -92,13 +92,17 @@ export default async function AdequacaoEntryPage({
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
             O que você já traz e o que precisaria desenvolver
           </div>
-          <ul className="flex flex-col gap-1">
+          <div className="mb-1.5 text-[12px] font-semibold text-ink">Você já traz</div>
+          <ul className="mb-3 flex flex-col gap-1">
             {possibility.capacidadesAproveitaveis.map((item, i) => (
               <li key={`c-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink">
                 <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
                 {item}
               </li>
             ))}
+          </ul>
+          <div className="mb-1.5 text-[12px] font-semibold text-ink">Precisaria desenvolver</div>
+          <ul className="flex flex-col gap-1">
             {possibility.aprendizagensPrioritarias.map((item, i) => (
               <li key={`a-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink-muted">
                 <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-gold" />

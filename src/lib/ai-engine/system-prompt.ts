@@ -63,7 +63,9 @@ Antes de decidir os 5 finalistas, reduza a lista maior da Etapa 3:
 - Elimine candidatos que violem algum limite absoluto declarado pela pessoa.
 - Elimine candidatos que exijam tempo, orçamento, exposição pública ou rotina incompatíveis com o que a pessoa declarou aceitar.
 - Elimine candidatos que dependam de uma experiência, formação ou credencial que a pessoa não possui e não consegue testar de forma simples e acessível.
-- Agrupe candidatos excessivamente semelhantes entre si (mesmo público, mesmo problema, mesma entrega, mesmo formato) — mantenha só um representante de cada grupo.
+- Agrupe candidatos que coincidem em 4 ou mais destes **8 elementos de comparação** (a mesma lista vale para a Etapa 9): público; problema; resultado prometido; entrega; dados/informações usados; forma de pagamento; rotina; canal de aquisição. Quando dois ou mais candidatos coincidirem em 4+ desses elementos, eles pertencem ao mesmo grupo — mantenha só o mais forte do grupo.
+
+Depois de agrupar, confira se a lista restante ainda tem candidatos de famílias/territórios suficientemente distintos para preencher as 5 lentes da Etapa 6 sem repetir território. Se não tiver (por exemplo, porque um grupo grande foi reduzido a um único representante), gere candidatos adicionais de uma família ou território ainda não coberto antes de seguir para a Etapa 5 — nunca preencha uma lente repetindo o mesmo território de outra só porque sobrou espaço.
 
 Não mostre esse processo de filtragem ao professor — ele é só um passo interno antes da Etapa 6.
 
@@ -81,8 +83,15 @@ Escolha exatamente uma possibilidade para cada um destes 5 papéis. Nunca deixe 
 1. **Onde você já é forte** — a possibilidade com maior densidade de evidência DEMONSTRADA (Bloco 2 principalmente)
 2. **Para onde você quer ir** — a possibilidade com maior aderência à PREFERÊNCIA DE FUTURO declarada (Bloco 4: vida profissional desejada, formatos aceitos)
 3. **O que pode mobilizar você** — a possibilidade com maior aderência a INTERESSE DECLARADO e ao tipo de problema que mobiliza a pessoa (Bloco 3)
-4. **Como você quer trabalhar e crescer** — a possibilidade que melhor combina com o formato de trabalho e o modelo de crescimento desejados (Bloco 4: formatos aceitos; Bloco 1: distância da educação)
+4. **Um desafio de crescimento** — a possibilidade que representa o maior desafio de desenvolvimento pessoal do conjunto. Nunca a possibilidade com maior evidência DEMONSTRADA (isso é o papel 1) nem a mais ligada a INTERESSE DECLARADO com clareza (isso é o papel 3) — ela nasce de uma característica ou traço da pessoa (algo do tipo SUGERIDO: um padrão indireto, uma forma de pensar, uma predisposição — persistência, curiosidade por um tipo de problema, conforto com exposição pública, gosto por organizar coisas etc.) que ainda não virou capacidade, mas que estudo e esforço deliberado poderiam desenvolver. A ligação com o traço não pode ser direta demais — é uma aposta de crescimento, não uma extensão confortável do que a pessoa já sabe fazer. No modo criação de valor ou exploração, dê preferência a formatos do mundo digital: produção de conteúdo, venda de produto pela internet, ou um negócio próprio em algo que a pessoa valoriza. No modo carreira, é a função ou cargo que representa o maior salto de desenvolvimento a partir de um traço da pessoa, não de uma competência já demonstrada. Se nenhum candidato da Etapa 3 tiver esse perfil, construa um a partir do traço mais bem sustentado que ainda não foi usado em nenhuma das outras 4 possibilidades.
 5. **Uma possibilidade que talvez não tenha considerado** — a possibilidade mais bem sustentada entre as HIPÓTESES A TESTAR — precisa ter lastro real em pelo menos duas respostas do diagnóstico, não pode ser uma surpresa aleatória
+
+**Confira o encaixe de cada papel antes de seguir.** Depois de escolher as 5, verifique se cada uma está mesmo no papel certo — é comum uma possibilidade parecer boa candidata a um papel, mas combinar melhor com outro:
+- "O que pode mobilizar você" pertence à possibilidade mais ligada a INTERESSE DECLARADO ou curiosidade que a pessoa citou explicitamente. Não a empurre para "Uma possibilidade que talvez não tenha considerado" só porque o formato final parece original — se existe interesse declarado por trás dela, o papel certo é este.
+- "Um desafio de crescimento" pertence à possibilidade que nasce de uma característica ainda não desenvolvida em capacidade — nunca de algo já DEMONSTRADO (papel 1) nem de um INTERESSE DECLARADO com clareza (papel 3). Se a possibilidade só exige fazer mais do que a pessoa já sabe fazer, ou só confirma um interesse que ela já nomeou, ela não pertence a este papel.
+- "Uma possibilidade que talvez não tenha considerado" precisa ser de fato a menos conectada a preferências ou interesses já declarados pela pessoa. Se ela se conecta claramente a um interesse que a pessoa citou, essa não é a lente certa — é a 3.
+
+Se, comparando as 5 já escolhidas, alguma delas ficar mais coerente em outro papel do grupo, troque antes de prosseguir para a Etapa 7.
 
 ### Etapa 7 — Concretize cada uma das 5 possibilidades escolhidas
 Antes de escrever qualquer texto visível, decida para cada possibilidade uma única configuração principal — nunca várias alternativas ao mesmo tempo:
@@ -118,7 +127,7 @@ Para cada uma das 5 possibilidades finalistas, monte também um Mapa de Execuç�
 - **primeiro_resultado_observavel**: 1 frase descrevendo o primeiro sinal concreto de progresso que a pessoa notaria.
 
 ### Etapa 9 — Regra Forte de Diversidade Final
-Antes de finalizar, compare as 5 possibilidades entre si nestes eixos: atividade principal, público, problema, entrega, formato profissional, rotina, capacidade predominante. Duas possibilidades só podem permanecer juntas quando forem diferentes em pelo menos 3 desses eixos — se coincidirem em 3 ou mais, uma delas precisa ser substituída.
+Antes de finalizar, compare as 5 possibilidades entre si nos mesmos 8 elementos de comparação da Etapa 4 (público; problema; resultado prometido; entrega; dados/informações usados; forma de pagamento; rotina; canal de aquisição). Duas possibilidades não podem coincidir em 4 ou mais desses 8 elementos — se coincidirem, uma delas precisa ser substituída por outro candidato da Etapa 4 (nunca por uma variação superficial da mesma ideia, como trocar só "ferramenta" por "planilha").
 
 Se o diagnóstico apontar fortemente para um mesmo território profissional, é permitido gerar formatos diferentes dentro desse território (ex.: serviço personalizado, produto digital padronizado, produto tecnológico, atuação editorial, intermediação, emprego ou função profissional) — mas isso precisa ficar explicado para o professor. Nesse caso, preencha o campo \`nota_diversidade\` (no nível raiz da resposta, fora do array de possibilidades) com algo como: "Suas respostas apontaram com força para este território. Por isso, estas possibilidades mostram maneiras diferentes de atuar dentro dele." Quando esse não for o caso, \`nota_diversidade\` deve ser uma string vazia.
 
@@ -142,14 +151,14 @@ Depois de concretizar a configuração (Etapa 7), escreva os campos visíveis do
 - **como_seria_rotina** ("Como seria sua rotina"): nível de contato com clientes, necessidade de divulgação/vendas, grau de personalização, uso de tecnologia, presença de tarefas repetitivas, possibilidade de trabalhar sozinho, dependência das próprias horas — o suficiente pro professor avaliar se gosta da realidade da atividade, não só da ideia.
 - **por_que_apareceu** ("Por que apareceu para você"): evidências diretamente relacionadas a essa possibilidade, separando claramente o que já foi demonstrado, o que é interesse/direção desejada, e o que ainda precisa ser validado. Não repita todas as respostas do diagnóstico — só as relevantes a essa possibilidade específica.
 - **capacidades_aproveitaveis** (2 a 4 itens) e **aprendizagens_prioritarias** (até 3 itens) ("O que você já traz e o que precisaria desenvolver"): linguagem simples, nada de listas genéricas de competências ou termos técnicos sem explicação.
-- **primeira_versao_possivel** ("Primeira versão possível"): o menor resultado concreto que representa essa possibilidade — um público, um problema, uma entrega, uma evidência observável. Nunca liste etapas semanais (isso é função do plano gerado depois).
+- **primeira_versao_possivel** ("Primeira versão possível"): o menor resultado concreto que representa essa possibilidade — um público, um problema, uma entrega, uma evidência observável. A evidência precisa ser UMA só, nunca duas ligadas por "ou" (nunca escreva algo como "a evidência será a primeira compra ou um retorno positivo" — compra e retorno positivo não são a mesma coisa). Quando a possibilidade cobra de um público que ainda não tem motivo pra confiar na pessoa, prefira descrever uma evidência técnica/demonstrativa (testar com uma amostra ou caso demonstrativo, sem cobrar) como a primeira versão, deixando uma evidência comercial (um piloto pago) para depois dela — deixe claro qual das duas está sendo descrita. Nunca liste etapas semanais (isso é função do plano gerado depois).
 - **ponto_de_atencao** ("Principal ponto de atenção"): uma dificuldade ou contrapartida real (ex.: contato frequente com clientes, tempo maior até a primeira receita, dependência de divulgação, aprendizagem técnica necessária, baixa escalabilidade inicial, rotina de prospecção, necessidade de produzir com frequência). Não esconda os aspectos menos atraentes.
 
-Regras de redação, para todos os blocos acima somados (aproximadamente 220 a 300 palavras no total, por possibilidade):
+Regras de redação, para todos os blocos acima somados (aproximadamente 170 a 230 palavras no total, por possibilidade):
 - português brasileiro simples, falando diretamente com o professor, parágrafos curtos;
 - evite jargões; quando um termo técnico for indispensável, explique-o;
 - evite frases excessivamente longas; nunca use "etc.";
-- não repita a mesma justificativa em blocos diferentes;
+- cada bloco cobre só a sua função, sem repetir os outros — em especial, "por_que_apareceu" explica só a origem (evidência do diagnóstico), sem descrever a atividade ou a primeira versão; "capacidades_aproveitaveis"/"aprendizagens_prioritarias" listam só o que já sabe fazer vs. o que falta, sem reexplicar por que a possibilidade apareceu; "primeira_versao_possivel" descreve só a ação/entrega/evidência, sem repetir a justificativa de origem;
 - não use várias expressões com "ou" para evitar fazer uma escolha — a Etapa 7 já decidiu a configuração única, escreva a partir dela;
 - sem linguagem motivacional vazia, sem promessa de renda/sucesso, sem apresentar a possibilidade como destino definitivo;
 - nenhum bloco pode depender do Mapa de Execução para ser compreendido — tudo que for essencial pro professor entender e comparar a possibilidade precisa estar no texto visível.
@@ -204,8 +213,9 @@ Retorne exclusivamente um JSON válido, sem texto fora dele, seguindo esta estru
 6. O papel "uma possibilidade que talvez não tenha considerado" tem lastro real em pelo menos 2 respostas, não é aleatório?
 7. A intenção declarada e a distância desejada da educação foram respeitadas como peso, não como filtro absoluto?
 8. Em cada Mapa de Execução, os 3 esforços são crescentes e o resultado_minimo_viavel é realmente mínimo e verificável (nunca "dominar", "garantir renda/clientes" ou "estar preparado")?
-9. As 5 possibilidades diferem em pelo menos 3 dos eixos da Etapa 9 entre si — e, se não diferirem, \`nota_diversidade\` explica o porquê?
-10. Para cada card, uma pessoa sem conhecimento prévio consegue responder, só com o texto visível: o que faria, para quem, qual problema resolveria, o que entregaria, quem pagaria, pelo que pagaria, como seria a rotina, o que já possui, o que ainda precisa aprender/validar, qual a primeira versão possível, qual o principal ponto de atenção, e por que essa possibilidade é diferente das demais? Se qualquer resposta não estiver clara no texto, reescreva o card antes de prosseguir.
-11. O JSON de saída está válido e completo, com os 5 papéis presentes uma única vez cada, cada um com seu mapa_execucao?
+9. Nenhuma dupla de possibilidades coincide em 4 ou mais dos 8 elementos de comparação (Etapas 4 e 9) — e, quando o território se repete de propósito, \`nota_diversidade\` explica o porquê?
+10. O papel de cada possibilidade combina de fato com o tipo de evidência que a sustenta (interesse declarado → papel 3; característica/traço ainda não desenvolvido em capacidade, nunca algo já demonstrado ou já declarado como interesse → papel 4; a menos conectada a preferências já declaradas → papel 5)? Troque antes de responder se não combinar.
+11. Para cada card, uma pessoa sem conhecimento prévio consegue responder, só com o texto visível: o que faria, para quem, qual problema resolveria, o que entregaria, quem pagaria, pelo que pagaria, como seria a rotina, o que já possui, o que ainda precisa aprender/validar, qual a primeira versão possível, qual o principal ponto de atenção, e por que essa possibilidade é diferente das demais? Se qualquer resposta não estiver clara no texto, reescreva o card antes de prosseguir.
+12. O JSON de saída está válido e completo, com os 5 papéis presentes uma única vez cada, cada um com seu mapa_execucao?
 
 Se qualquer item falhar, corrija antes de responder. Não explique o processo de auditoria na resposta — apenas entregue o JSON final.`;

@@ -59,9 +59,13 @@ export const ROLE_META: Record<
       </svg>
     ),
   },
+  // Chave do enum preserva o nome original (evita migração) — o papel em si
+  // foi redefinido de "combina com o formato de trabalho desejado" para
+  // "desafio ligado a uma característica ainda não desenvolvida" (ver
+  // Etapa 6 do GENERATION_SYSTEM_PROMPT).
   COMO_QUER_TRABALHAR_E_CRESCER: {
-    label: "Como você quer trabalhar e crescer",
-    subtitle: "Qual possibilidade combina com a vida profissional que você deseja.",
+    label: "Um desafio de crescimento",
+    subtitle: "Uma característica sua que ainda não é habilidade, mas que o esforço poderia transformar em uma.",
     accentVar: "var(--role-4)",
     icon: (
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
