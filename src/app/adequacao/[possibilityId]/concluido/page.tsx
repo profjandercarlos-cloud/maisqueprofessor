@@ -9,7 +9,7 @@ import { generatePlan } from "./actions";
 
 // Ver nota em diagnostico/concluido/page.tsx — sem isto a Vercel mata a
 // função aos 10s, e gerar o Plano Personalizado de Transição leva bem mais que isso.
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export default async function AdequacaoConcluidoPage({
   params,

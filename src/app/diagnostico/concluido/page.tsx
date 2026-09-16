@@ -9,7 +9,7 @@ import { generateForActiveDiagnostic } from "./actions";
 // e a geração das 5 possibilidades leva de 15s a mais de 1 minuto. 60 é o
 // teto permitido no Hobby; se continuar estourando, só resolve de vez com
 // upgrade pra Pro (até 300s).
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export default async function DiagnosticoConcluidoPage({
   searchParams,
