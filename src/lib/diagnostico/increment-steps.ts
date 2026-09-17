@@ -1,4 +1,5 @@
 import type { DiagnosticStep } from "./steps";
+import { deepGet } from "@/lib/wizard/deep-set";
 
 // Caso raro — dispara só depois de 3 rodadas de ajuste sem aprovação.
 // Conjunto padronizado e fixo, sempre o mesmo (Diagnostico_Perguntas_Finais.md).
@@ -103,3 +104,14 @@ export function getIncrementPrevSlug(slug: string): string | null {
 }
 
 export const TOTAL_INCREMENT_STEPS = INCREMENT_STEPS.length;
+
+// Formata as respostas do incremento como um bloco de texto extra, apenso
+// ao final da entrada do diagnóstico — reaproveitado pela fase PENDENTE da
+// fila de geração (run-generation-pipeline.ts), já que essa fase só recebe
+// o roundId e recalcula tudo a partir do banco.
+export function buildIncrementoTexto(incrementAnswers: unknown): string {
+  return INCREMENT_STEPS.map((s) => {
+    const answer = deepGet(incrementAnswers as Record<string, unknown> | null, s.path);
+    return `${s.question} ${typeof answer === "string" && answer ? answer : "não informado"}`;
+  }).join("\n");
+}

@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { PossibilityCards } from "./possibility-cards";
+import { PollingWait } from "./polling-wait";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
 
@@ -21,6 +23,51 @@ export default async function PossibilitiesReviewPage({
     include: { possibilities: true, diagnostic: true },
   });
   if (!round || round.diagnostic.userId !== user.id) notFound();
+
+  const EM_ANDAMENTO = ["PENDENTE", "GERANDO", "VALIDANDO", "CORRIGINDO", "PROCESSANDO"];
+  if (EM_ANDAMENTO.includes(round.status)) {
+    return (
+      <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
+        <AppHeader progressLabel="ETAPA 03 / 10" />
+        <div className="mb-11">
+          <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
+            Preparando seu diagnóstico
+          </span>
+          <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
+            Cinco possibilidades a caminho.
+          </h1>
+          <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
+            Estamos analisando suas respostas com cuidado. Não feche esta página — ela vai se
+            atualizar sozinha assim que estiver pronta.
+          </p>
+        </div>
+        <PollingWait roundId={round.id} status={round.status} updatedAtIso={round.updatedAt.toISOString()} />
+      </div>
+    );
+  }
+
+  if (round.status === "FALHOU") {
+    return (
+      <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
+        <AppHeader progressLabel="ETAPA 03 / 10" />
+        <div className="mb-11">
+          <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
+            Não conseguimos gerar suas possibilidades agora.
+          </h1>
+          <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
+            Algo deu errado durante a geração. Você pode tentar novamente — nada do que você
+            respondeu foi perdido.
+          </p>
+        </div>
+        <Link
+          href="/diagnostico/concluido"
+          className="inline-block rounded-full bg-petrol px-5 py-2.5 text-[13.5px] font-semibold text-white hover:opacity-90"
+        >
+          Tentar novamente →
+        </Link>
+      </div>
+    );
+  }
 
   const adjustmentsUsed = round.roundNumber - 1;
   const adjustmentsRemaining = Math.max(0, MAX_ADJUSTMENT_ROUNDS - adjustmentsUsed);
@@ -71,16 +118,6 @@ export default async function PossibilitiesReviewPage({
         </div>
       ) : null}
 
-      {round.notaDiversidade ? (
-        <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
-            <circle cx="8" cy="8" r="7" stroke="var(--petrol)" strokeWidth="1.4" />
-            <path d="M8 5v4M8 11v.1" stroke="var(--petrol)" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <span>{round.notaDiversidade}</span>
-        </div>
-      ) : null}
-
       {round.avisoEconomico ? (
         <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
@@ -88,20 +125,6 @@ export default async function PossibilitiesReviewPage({
             <path d="M8 5v4M8 11v.1" stroke="var(--role-2)" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
           <span>{round.avisoEconomico}</span>
-        </div>
-      ) : null}
-
-      {round.dadosAusentesRelevantes.length > 0 ? (
-        <div className="mb-7 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
-          <p className="mb-1.5 font-semibold text-ink">O que ajudaria a refinar esta análise</p>
-          <ul className="flex flex-col gap-1">
-            {round.dadosAusentesRelevantes.map((item, i) => (
-              <li key={i} className="flex items-start gap-2">
-                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-role-2" />
-                {item}
-              </li>
-            ))}
-          </ul>
         </div>
       ) : null}
 
@@ -121,12 +144,12 @@ export default async function PossibilitiesReviewPage({
               {adjustmentsRemaining === 1 ? "rodada" : "rodadas"}.
             </p>
           </div>
-          <a
+          <Link
             href={`/diagnostico/possibilidades/${round.id}/ajustar`}
             className="text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
           >
             Ajustar conjunto →
-          </a>
+          </Link>
         </footer>
       ) : (
         <footer className="mt-9 flex flex-col items-start justify-between gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px] sm:flex-row sm:items-center">
@@ -136,12 +159,12 @@ export default async function PossibilitiesReviewPage({
               As rodadas de ajuste acabaram — algumas perguntas extras podem ajudar a fechar isso.
             </p>
           </div>
-          <a
+          <Link
             href="/diagnostico/incremento/incremento-1"
             className="text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
           >
             Responder perguntas extras →
-          </a>
+          </Link>
         </footer>
       )}
     </div>

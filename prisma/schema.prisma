@@ -98,11 +98,15 @@ model GenerationRound {
   diagnostic   Diagnostic @relation(fields: [diagnosticId], references: [id], onDelete: Cascade)
   roundNumber  Int
   feedbackText String?    @db.Text // feedback do professor sobre o conjunto anterior (null na rodada 1)
-  notaDiversidade String  @db.Text // explica quando as 5 possibilidades variam formato dentro do mesmo território em vez de território — string vazia quando não se aplica
-  metaFinanceiraUsada Json // valor_mensal (sempre null enquanto o diagnóstico não coleta essa pergunta) + natureza + prazo_desejado
-  avisoEconomico String @db.Text // aviso fixo de que são hipóteses de construção/monetização, não promessa de renda
-  dadosAusentesRelevantes String[] // o que ajudaria a refinar a análise (ex.: público acessível, meta financeira) — vazio quando não há nada relevante
+  status       GenerationRoundStatus @default(PROCESSANDO)
+  versaoMotor  String? // "v4" — só informativo, qual motor gerou esta rodada
+  rascunhoAtual Json? // rascunho do gerador (já mesclado com correção, se houver) — inclui as reservas por papel; consumido entre as fases da fila
+  auditoriaAtual Json? // último resultado do auditor (status/manter/substituir/motivo) — consumido pela fase de correção
+  correcaoTentada Boolean @default(false) // no máximo 1 correção direcionada; se a verificação final ainda reprovar, tenta reserva
+  metaFinanceiraUsada Json? // valor_mensal (null quando o professor não respondeu) + natureza + prazo_desejado — só preenchido em CONCLUIDO
+  avisoEconomico String? @db.Text // aviso fixo de que são hipóteses de construção/monetização, não promessa de renda — só preenchido em CONCLUIDO
   createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt // usado pra detectar rodada travada entre fases (ver polling-wait.tsx)
 
   possibilities Possibility[]
 
@@ -129,10 +133,24 @@ enum PossibilityStatus {
   @@map("possibility_status")
 }
 
+enum GenerationRoundStatus {
+  PROCESSANDO // legado (motor V3) — nenhum round novo usa mais, mantido só porque o Postgres não permite remover valor de enum sem recriar o tipo
+  PRONTO // legado (motor V3), equivalente a CONCLUIDO
+  PENDENTE
+  GERANDO
+  VALIDANDO
+  CORRIGINDO
+  CONCLUIDO
+  FALHOU
+
+  @@map("generation_round_status")
+}
+
 enum HorizonteEconomico {
   CURTO_PRAZO
   MEDIO_PRAZO
   LONGO_PRAZO
+  A_VALIDAR // só usado por horizonteRelevanciaFinanceira, nunca por tempoPrimeiraValidacao
 
   @@map("horizonte_economico")
 }
@@ -152,19 +170,18 @@ model Possibility {
   papel                PossibilityRole
   titulo               String
   subtitulo            String // frase (12-24 palavras) do card fechado — o que a pessoa faria, para quem e com qual finalidade
-  horizonteEconomico   HorizonteEconomico
-  nivelLastro          NivelLastro
+  tempoPrimeiraValidacao       HorizonteEconomico // nunca A_VALIDAR
+  horizonteRelevanciaFinanceira HorizonteEconomico // pode ser A_VALIDAR quando faltar base (meta financeira etc.)
+  baseNoHistorico      NivelLastro
   destaque             Boolean            @default(false) // true só na possibilidade MAIOR_CONVERGENCIA_COMERCIAL
-  comoFunciona         String             @db.Text
-  quemPagariaEComo     String             @db.Text
-  porQueCombinaComVoce String             @db.Text
-  comoSeriaRotina      String             @db.Text
-  primeiraValidacao    String             @db.Text
-  caminhoEconomico     String             @db.Text
-  pontoDeAtencao       String             @db.Text
-  analiseInterna       Json // configuracao_interna + evidencias_base + viabilidade_economica_interna do prompt — nunca exibido ao professor, consumido depois pelo plano
+  comoFunciona         String             @db.Text // bloco 1 — "A possibilidade"
+  comoGerarReceita     String             @db.Text // bloco 3 — "Como pode gerar receita" (funde o antigo quemPagariaEComo + caminhoEconomico)
+  porQueCombinaComVoce String             @db.Text // bloco 2 — "Por que combina com você"
+  primeiraValidacao    String             @db.Text // bloco 4 — "Como validar sem construir tudo"
+  pontoDeAtencao       String             @db.Text // bloco 5 — "Ponto de atenção"
+  impressaoDigital     Json // impressão digital semântica compacta (papel/território/problema/público/pagador/entrega/modelo_receita/evidências/risco/confiança) — nunca exibido ao professor, usado pelo auditor pra comparar possibilidades
   analiseConvergenciaComercial Json? // só a possibilidade com destaque=true tem; null nas outras 4
-  mapaExecucao         Json? // RMV, TTFR-base e os 3 níveis de esforço estimado (ver src/lib/ai-engine/generate-possibilities-openai.ts) — nullable pq possibilidades geradas antes desta coluna não têm esse dado
+  mapaExecucao         Json? // gerado só depois que o professor aprova esta possibilidade (ver adequacao/[possibilityId]/concluido/actions.ts) — null até lá
   status               PossibilityStatus  @default(PENDENTE)
   createdAt            DateTime           @default(now())
 

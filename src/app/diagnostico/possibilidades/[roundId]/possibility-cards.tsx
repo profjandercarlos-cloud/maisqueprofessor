@@ -26,16 +26,15 @@ type PossibilityData = {
   papel: PossibilityRole;
   titulo: string;
   subtitulo: string;
-  horizonteEconomico: HorizonteEconomico;
-  nivelLastro: NivelLastro;
+  tempoPrimeiraValidacao: HorizonteEconomico;
+  horizonteRelevanciaFinanceira: HorizonteEconomico;
+  baseNoHistorico: NivelLastro;
   destaque: boolean;
-  comoFunciona: string;
-  quemPagariaEComo: string;
-  porQueCombinaComVoce: string;
-  comoSeriaRotina: string;
-  primeiraValidacao: string;
-  caminhoEconomico: string;
-  pontoDeAtencao: string;
+  comoFunciona: string; // bloco 1 — "A possibilidade"
+  comoGerarReceita: string; // bloco 3 — "Como pode gerar receita"
+  porQueCombinaComVoce: string; // bloco 2 — "Por que combina com você"
+  primeiraValidacao: string; // bloco 4 — "Como validar sem construir tudo"
+  pontoDeAtencao: string; // bloco 5 — "Ponto de atenção"
   analiseConvergenciaComercial: unknown;
   status: PossibilityStatus;
 };
@@ -44,11 +43,12 @@ const HORIZONTE_LABELS: Record<HorizonteEconomico, string> = {
   CURTO_PRAZO: "Curto prazo",
   MEDIO_PRAZO: "Médio prazo",
   LONGO_PRAZO: "Longo prazo",
+  A_VALIDAR: "A validar",
 };
 
 const LASTRO_LABELS: Record<NivelLastro, string> = {
-  FORTE: "Lastro forte",
-  MODERADO: "Lastro moderado",
+  FORTE: "Base forte",
+  MODERADO: "Base moderada",
   EXPLORATORIO: "Exploratório",
 };
 
@@ -105,10 +105,15 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     {meta.label}
                   </span>
                   <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
-                    {HORIZONTE_LABELS[p.horizonteEconomico]}
+                    Tempo para validar: {HORIZONTE_LABELS[p.tempoPrimeiraValidacao]}
                   </span>
+                  {p.horizonteRelevanciaFinanceira !== "A_VALIDAR" ? (
+                    <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
+                      Maturação financeira: {HORIZONTE_LABELS[p.horizonteRelevanciaFinanceira]}
+                    </span>
+                  ) : null}
                   <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
-                    {LASTRO_LABELS[p.nivelLastro]}
+                    Base no seu histórico: {LASTRO_LABELS[p.baseNoHistorico]}
                   </span>
                 </span>
                 <span className="mb-1 block font-serif text-[19px] font-medium tracking-tight text-ink">
@@ -136,15 +141,9 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                 <div className="flex flex-col gap-3.5">
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Como funciona
+                      A possibilidade
                     </div>
                     <div className="text-[14px] leading-[1.55] text-ink">{p.comoFunciona}</div>
-                  </div>
-                  <div>
-                    <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Quem pagaria e como
-                    </div>
-                    <div className="text-[14px] leading-[1.55] text-ink">{p.quemPagariaEComo}</div>
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
@@ -154,25 +153,19 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Como seria sua rotina
+                      Como pode gerar receita
                     </div>
-                    <div className="text-[14px] leading-[1.55] text-ink">{p.comoSeriaRotina}</div>
+                    <div className="text-[14px] leading-[1.55] text-ink">{p.comoGerarReceita}</div>
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Primeira validação
+                      Como validar sem construir tudo
                     </div>
                     <div className="text-[14px] leading-[1.55] text-ink">{p.primeiraValidacao}</div>
                   </div>
                   <div>
                     <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Caminho econômico
-                    </div>
-                    <div className="text-[14px] leading-[1.55] text-ink">{p.caminhoEconomico}</div>
-                  </div>
-                  <div>
-                    <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                      Principal ponto de atenção
+                      Ponto de atenção
                     </div>
                     <div className="text-[14px] leading-[1.55] text-ink">{p.pontoDeAtencao}</div>
                   </div>

@@ -5,11 +5,12 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { generateForActiveDiagnostic } from "./actions";
 
-// Sem isto, a Vercel mata a função depois de 10s (padrão do plano Hobby) —
-// e a geração das 5 possibilidades leva de 15s a mais de 1 minuto. 60 é o
-// teto permitido no Hobby; se continuar estourando, só resolve de vez com
-// upgrade pra Pro (até 300s).
-export const maxDuration = 120;
+// maxDuration tem que ficar aqui (na page), não no arquivo "use server" —
+// um arquivo "use server" só pode exportar funções async. Isto rege o
+// tempo do Server Action chamado nesta página, que por sua vez rege o
+// after() disparado dentro dele: gerador → auditor → até 2 regenerações
+// já mediu até ~8min no pior caso real.
+export const maxDuration = 300;
 
 export default async function DiagnosticoConcluidoPage({
   searchParams,
@@ -53,7 +54,7 @@ export default async function DiagnosticoConcluidoPage({
         ) : null}
         <form action={generateForActiveDiagnostic}>
           <SubmitButton
-            pendingText="Gerando suas possibilidades... isso pode levar até 1 minuto, não recarregue a página"
+            pendingText="Preparando sua geração..."
             className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Gerar minhas 5 possibilidades →

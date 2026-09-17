@@ -1,12 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
-import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
-import { logDebugError } from "@/lib/debug-error-log";
-import type { Prisma } from "@/generated/prisma/client";
+import { triggerGenerationStep } from "@/lib/ai-engine/trigger-generation-step";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
 
@@ -20,7 +18,7 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
 
   const round = await db.generationRound.findUnique({
     where: { id: roundId },
-    include: { possibilities: true, diagnostic: { include: { rounds: { include: { possibilities: true } } } } },
+    include: { diagnostic: true },
   });
   if (!round || round.diagnostic.userId !== user.id) redirect("/");
 
@@ -29,62 +27,20 @@ export async function submitAdjustment(roundId: string, formData: FormData) {
     redirect(`/diagnostico/possibilidades/${roundId}`);
   }
 
-  const rejectedTitles = round.diagnostic.rounds.flatMap((r) => r.possibilities.map((p) => p.titulo));
-
-  let generated;
-  try {
-    generated = await generatePossibilitiesOpenAI({
-      diagnosticInput: formatDiagnosticInput(round.diagnostic),
-      feedback,
-      rejectedTitles,
-    });
-  } catch (err) {
-    // Só marca o conjunto anterior como rejeitado depois que a geração do
-    // novo conjunto realmente funcionar — se falhar aqui, a pessoa não pode
-    // ficar sem nenhum conjunto de possibilidades.
-    console.error("Erro ao gerar novo conjunto de possibilidades", err);
-    await logDebugError("ajustar:generatePossibilities", err);
-    redirect(
-      `/diagnostico/possibilidades/${roundId}/ajustar?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
-    );
-  }
-
-  await db.possibility.updateMany({
-    where: { roundId: round.id },
-    data: { status: "REJEITADA" },
-  });
-
+  // O conjunto atual só é marcado REJEITADA quando o novo for aprovado
+  // (dentro da fila) — se a geração falhar, a pessoa não fica sem nenhum
+  // conjunto válido. rejectedTitles não precisa mais ser passado: a fase
+  // PENDENTE recalcula a partir de todas as rodadas do diagnóstico.
   const newRound = await db.generationRound.create({
     data: {
       diagnosticId: round.diagnosticId,
       roundNumber: round.roundNumber + 1,
       feedbackText: feedback,
-      notaDiversidade: generated.notaDiversidade,
-      avisoEconomico: generated.avisoEconomico,
-      dadosAusentesRelevantes: generated.dadosAusentesRelevantes,
-      metaFinanceiraUsada: generated.metaFinanceiraUsada as unknown as Prisma.InputJsonValue,
-      possibilities: {
-        create: generated.possibilities.map((p) => ({
-          papel: p.papel,
-          titulo: p.titulo,
-          subtitulo: p.subtitulo,
-          horizonteEconomico: p.horizonteEconomico,
-          nivelLastro: p.nivelLastro,
-          destaque: p.destaque,
-          comoFunciona: p.comoFunciona,
-          quemPagariaEComo: p.quemPagariaEComo,
-          porQueCombinaComVoce: p.porQueCombinaComVoce,
-          comoSeriaRotina: p.comoSeriaRotina,
-          primeiraValidacao: p.primeiraValidacao,
-          caminhoEconomico: p.caminhoEconomico,
-          pontoDeAtencao: p.pontoDeAtencao,
-          analiseInterna: p.analiseInterna as unknown as Prisma.InputJsonValue,
-          analiseConvergenciaComercial: p.analiseConvergenciaComercial as unknown as Prisma.InputJsonValue,
-          mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
-        })),
-      },
+      status: "PENDENTE",
     },
   });
+
+  after(() => triggerGenerationStep(newRound.id));
 
   redirect(`/diagnostico/possibilidades/${newRound.id}`);
 }

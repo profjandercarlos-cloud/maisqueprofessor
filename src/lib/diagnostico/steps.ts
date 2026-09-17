@@ -494,8 +494,47 @@ export const ROUTE_STEPS: Record<RotaProfissional, WizardStep[]> = {
   ],
 };
 
+// ===== Bloco F — viabilidade econômica (Parte A5 do prompt V3) =====
+// Sem essas respostas, o gerador ainda funciona (Parte A5 já prevê isso),
+// mas não pode quantificar caminho até a meta nem classificar a
+// convergência comercial da 5ª como "forte".
+export const ECONOMIC_STEPS: WizardStep[] = [
+  {
+    slug: "meta-financeira-mensal",
+    block: 6,
+    type: "textarea",
+    question: "Qual valor mensal líquido faria uma nova atividade profissional valer a pena para você?",
+    helper: "Pode responder com um valor livre ou uma faixa (ex.: \"entre R$ 4.000 e R$ 6.000\"). Se preferir não informar agora, deixe em branco.",
+    optional: true,
+    maxChars: 200,
+    path: ["blocoEconomico", "metaFinanceiraMensal"],
+  },
+  {
+    slug: "prazo-meta-financeira",
+    block: 6,
+    type: "single-select",
+    question: "Em quanto tempo você considera aceitável buscar esse patamar?",
+    options: [
+      { value: "ate_12_meses", label: "Até 12 meses" },
+      { value: "entre_1_e_2_anos", label: "Entre 1 e 2 anos" },
+      { value: "entre_2_e_4_anos", label: "Entre 2 e 4 anos" },
+      { value: "longo_prazo", label: "Aceito construir no longo prazo" },
+    ],
+    path: ["blocoEconomico", "prazoMeta"],
+  },
+  {
+    slug: "publicos-acessiveis",
+    block: 6,
+    type: "textarea",
+    question: "Com quais tipos de pessoas, profissionais, empresas ou setores você consegue conversar ou possui contato hoje?",
+    helper: "Se não houver nenhum público específico ao qual você já tenha acesso, escreva \"nenhum público específico\" — essa é uma resposta válida.",
+    maxChars: 400,
+    path: ["blocoEconomico", "publicosAcessiveis"],
+  },
+];
+
 export function getStepsForRoute(rota: RotaProfissional | null | undefined): WizardStep[] {
-  return rota ? [...SHARED_STEPS, ...ROUTE_STEPS[rota]] : SHARED_STEPS;
+  return rota ? [...SHARED_STEPS, ...ROUTE_STEPS[rota], ...ECONOMIC_STEPS] : SHARED_STEPS;
 }
 
 export function getStepBySlug(slug: string, rota: RotaProfissional | null | undefined) {

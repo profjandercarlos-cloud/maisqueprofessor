@@ -48,11 +48,26 @@ export async function proxy(request: NextRequest) {
   // Supabase em vez de confiar cegamente no cookie.
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
 
   const isPublicPath = PUBLIC_PATHS.some((path) => request.nextUrl.pathname.startsWith(path));
 
+  // Sem usuário normalmente significa "não logado" ou "sessão inválida" —
+  // redireciona, como sempre. A única exceção: erro claramente de SERVIDOR
+  // (5xx) do lado da Supabase, que pode acontecer sob carga (ex.: cada poll
+  // da tela de espera de geração chamando getUser() muitas vezes seguidas).
+  // Não é o mesmo caso de "sem sessão nenhuma" (AuthSessionMissingError,
+  // status 400 — visitante nunca logado, deve continuar redirecionando
+  // normalmente) nem de token realmente inválido/expirado (401/403) — só
+  // 5xx é passado adiante, confiando em requireActiveAccess()/requireUser()
+  // (runtime Node normal, roda de novo na página) pra decidir de verdade.
+  const erroDeServidor = typeof error?.status === "number" && error.status >= 500;
   if (!user && !isPublicPath) {
+    if (erroDeServidor) {
+      console.error("proxy: getUser() falhou com erro de servidor — deixando passar", error);
+      return supabaseResponse;
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname);

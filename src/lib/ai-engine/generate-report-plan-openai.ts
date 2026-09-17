@@ -22,7 +22,7 @@ import {
   esforcoParaNivel,
   marcosMaxParaDuracao,
 } from "@/lib/plano/formula";
-import type { MapaExecucao } from "./generate-possibilities-openai";
+import type { MapaExecucao } from "./generate-mapa-execucao-openai";
 
 const taskSchema = z.object({
   texto: z.string().min(1),
@@ -258,11 +258,9 @@ export async function generateReportAndPlanOpenAI(params: {
   possibility: {
     titulo: string;
     comoFunciona: string;
-    quemPagariaEComo: string;
+    comoGerarReceita: string;
     porQueCombinaComVoce: string;
-    comoSeriaRotina: string;
     primeiraValidacao: string;
-    caminhoEconomico: string;
     pontoDeAtencao: string;
   };
   mapaExecucao: MapaExecucao;
@@ -281,12 +279,10 @@ export async function generateReportAndPlanOpenAI(params: {
 
 POSSIBILIDADE APROVADA
 Título: ${params.possibility.titulo}
-Como funciona: ${params.possibility.comoFunciona}
-Quem pagaria e como: ${params.possibility.quemPagariaEComo}
+A possibilidade: ${params.possibility.comoFunciona}
+Como pode gerar receita: ${params.possibility.comoGerarReceita}
 Por que combina com a pessoa: ${params.possibility.porQueCombinaComVoce}
-Como seria a rotina: ${params.possibility.comoSeriaRotina}
-Primeira validação: ${params.possibility.primeiraValidacao}
-Caminho econômico: ${params.possibility.caminhoEconomico}
+Como validar: ${params.possibility.primeiraValidacao}
 Principal ponto de atenção: ${params.possibility.pontoDeAtencao}
 
 MAPA DE EXECUÇÃO DA POSSIBILIDADE

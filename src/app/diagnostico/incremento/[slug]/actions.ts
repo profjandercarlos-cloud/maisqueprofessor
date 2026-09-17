@@ -1,17 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { deepGet, deepSet } from "@/lib/wizard/deep-set";
-import {
-  INCREMENT_STEPS,
-  getIncrementNextSlug,
-  getIncrementStepBySlug,
-} from "@/lib/diagnostico/increment-steps";
-import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
-import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
-import { logDebugError } from "@/lib/debug-error-log";
+import { deepSet } from "@/lib/wizard/deep-set";
+import { getIncrementNextSlug, getIncrementStepBySlug } from "@/lib/diagnostico/increment-steps";
+import { triggerGenerationStep } from "@/lib/ai-engine/trigger-generation-step";
 import type { Prisma } from "@/generated/prisma/client";
 
 export async function saveIncrementStep(slug: string, formData: FormData) {
@@ -23,7 +18,7 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
   const diagnostic = await db.diagnostic.findFirst({
     where: { userId: user.id, status: "CONCLUIDO" },
     orderBy: { createdAt: "desc" },
-    include: { rounds: { include: { possibilities: true } } },
+    include: { rounds: true },
   });
   if (!diagnostic) redirect("/");
   // Mesma checagem do page.tsx, repetida aqui porque a action pode ser
@@ -51,66 +46,26 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
     redirect(`/diagnostico/incremento/${next}`);
   }
 
-  // Última pergunta do incremento — dispara a regeneração final (rodada 5),
-  // com diagnóstico original + incremento + histórico completo de rejeições.
-  const updatedAnswers = incrementAnswers;
-  const incrementText = INCREMENT_STEPS.map((s) => {
-    const answer = deepGet(updatedAnswers, s.path);
-    return `${s.question} ${typeof answer === "string" && answer ? answer : "não informado"}`;
-  }).join("\n");
-
-  const baseInput = formatDiagnosticInput(diagnostic);
-  const diagnosticInput = `${baseInput}\n\nINCREMENTO DE DIAGNÓSTICO (perguntas adicionais, após 3 rodadas sem aprovação)\n${incrementText}`;
-
-  const rejectedTitles = diagnostic.rounds.flatMap((r) => r.possibilities.map((p) => p.titulo));
+  // Última pergunta do incremento — dispara a regeneração final. A fase
+  // PENDENTE da fila (run-generation-pipeline.ts) recalcula sozinha o texto
+  // do incremento a partir de diagnostic.incrementAnswers (já salvo acima)
+  // e o histórico de títulos rejeitados — não precisa receber nada disso
+  // aqui, já que ela só recebe o roundId.
   const roundsCount = diagnostic.rounds.length;
 
-  let generated;
-  try {
-    generated = await generatePossibilitiesOpenAI({ diagnosticInput, rejectedTitles });
-  } catch (err) {
-    console.error("Erro ao gerar possibilidades (incremento)", err);
-    await logDebugError("incremento:generatePossibilities", err);
-    redirect(
-      `/diagnostico/incremento/${slug}?error=${encodeURIComponent("Não foi possível gerar o novo conjunto agora. Tente de novo em instantes.")}`,
-    );
-  }
-
-  // Marca como usado assim que a IA responde de verdade — antes de criar a
-  // rodada, pra nunca deixar essa etapa disponível de novo, mesmo que o
-  // passo seguinte falhe por algum motivo raro.
+  // Marca como usado antes de criar a rodada, pra nunca deixar essa etapa
+  // disponível de novo, mesmo que a geração em segundo plano falhe.
   await db.diagnostic.update({ where: { id: diagnostic.id }, data: { incrementUsedAt: new Date() } });
 
   const newRound = await db.generationRound.create({
     data: {
       diagnosticId: diagnostic.id,
       roundNumber: roundsCount + 1,
-      notaDiversidade: generated.notaDiversidade,
-      avisoEconomico: generated.avisoEconomico,
-      dadosAusentesRelevantes: generated.dadosAusentesRelevantes,
-      metaFinanceiraUsada: generated.metaFinanceiraUsada as unknown as Prisma.InputJsonValue,
-      possibilities: {
-        create: generated.possibilities.map((p) => ({
-          papel: p.papel,
-          titulo: p.titulo,
-          subtitulo: p.subtitulo,
-          horizonteEconomico: p.horizonteEconomico,
-          nivelLastro: p.nivelLastro,
-          destaque: p.destaque,
-          comoFunciona: p.comoFunciona,
-          quemPagariaEComo: p.quemPagariaEComo,
-          porQueCombinaComVoce: p.porQueCombinaComVoce,
-          comoSeriaRotina: p.comoSeriaRotina,
-          primeiraValidacao: p.primeiraValidacao,
-          caminhoEconomico: p.caminhoEconomico,
-          pontoDeAtencao: p.pontoDeAtencao,
-          analiseInterna: p.analiseInterna as unknown as Prisma.InputJsonValue,
-          analiseConvergenciaComercial: p.analiseConvergenciaComercial as unknown as Prisma.InputJsonValue,
-          mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
-        })),
-      },
+      status: "PENDENTE",
     },
   });
+
+  after(() => triggerGenerationStep(newRound.id));
 
   redirect(`/diagnostico/possibilidades/${newRound.id}`);
 }

@@ -9,6 +9,7 @@ const BLOCK_TITLES: Record<number, string> = {
   3: "INTERESSES E MOBILIZAÇÃO",
   4: "FUTURO PROFISSIONAL",
   5: "BLOCO CONDICIONAL DA ROTA ESCOLHIDA",
+  6: "VIABILIDADE ECONÔMICA",
 };
 
 const INTENTION_LABELS: Record<string, string> = {
@@ -102,10 +103,10 @@ export function formatDiagnosticInput(
 
     const answer = formatAnswer(step, answers);
     if (step.type === "situation" || step.type === "matrix") {
-      lines.push(step.question);
+      lines.push(`[${step.slug}] ${step.question}`);
       lines.push(answer);
     } else {
-      lines.push(`${step.question} ${answer}`);
+      lines.push(`[${step.slug}] ${step.question} ${answer}`);
     }
   }
 

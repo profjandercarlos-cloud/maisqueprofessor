@@ -22,11 +22,12 @@ const HORIZONTE_LABELS: Record<HorizonteEconomico, string> = {
   CURTO_PRAZO: "Curto prazo",
   MEDIO_PRAZO: "Médio prazo",
   LONGO_PRAZO: "Longo prazo",
+  A_VALIDAR: "A validar",
 };
 
 const LASTRO_LABELS: Record<NivelLastro, string> = {
-  FORTE: "Lastro forte",
-  MODERADO: "Lastro moderado",
+  FORTE: "Base forte",
+  MODERADO: "Base moderada",
   EXPLORATORIO: "Exploratório",
 };
 
@@ -77,10 +78,15 @@ export default async function AdequacaoEntryPage({
           {meta.label}
         </span>
         <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
-          {HORIZONTE_LABELS[possibility.horizonteEconomico]}
+          Tempo para validar: {HORIZONTE_LABELS[possibility.tempoPrimeiraValidacao]}
         </span>
+        {possibility.horizonteRelevanciaFinanceira !== "A_VALIDAR" ? (
+          <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
+            Maturação financeira: {HORIZONTE_LABELS[possibility.horizonteRelevanciaFinanceira]}
+          </span>
+        ) : null}
         <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
-          {LASTRO_LABELS[possibility.nivelLastro]}
+          Base no seu histórico: {LASTRO_LABELS[possibility.baseNoHistorico]}
         </span>
       </div>
       <h1 className="mb-6 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
@@ -94,15 +100,9 @@ export default async function AdequacaoEntryPage({
       <div className="mb-8 flex flex-col gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Como funciona
+            A possibilidade
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.comoFunciona}</div>
-        </div>
-        <div>
-          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Quem pagaria e como
-          </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.quemPagariaEComo}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
@@ -112,25 +112,19 @@ export default async function AdequacaoEntryPage({
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Como seria sua rotina
+            Como pode gerar receita
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.comoSeriaRotina}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.comoGerarReceita}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Primeira validação
+            Como validar sem construir tudo
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.primeiraValidacao}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Caminho econômico
-          </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.caminhoEconomico}</div>
-        </div>
-        <div>
-          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Principal ponto de atenção
+            Ponto de atenção
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.pontoDeAtencao}</div>
         </div>

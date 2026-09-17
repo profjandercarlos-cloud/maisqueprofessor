@@ -7,7 +7,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { submitAdjustment } from "./actions";
 
 // Ver nota em diagnostico/concluido/page.tsx.
-export const maxDuration = 120;
+export const maxDuration = 300;
 
 export default async function AjustarConjuntoPage({
   params,

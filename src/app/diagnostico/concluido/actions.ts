@@ -1,12 +1,10 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
-import { generatePossibilitiesOpenAI } from "@/lib/ai-engine/generate-possibilities-openai";
-import { logDebugError } from "@/lib/debug-error-log";
-import type { Prisma } from "@/generated/prisma/client";
+import { triggerGenerationStep } from "@/lib/ai-engine/trigger-generation-step";
 
 export async function generateForActiveDiagnostic() {
   const user = await requireActiveAccess();
@@ -19,52 +17,19 @@ export async function generateForActiveDiagnostic() {
 
   const roundsCount = await db.generationRound.count({ where: { diagnosticId: diagnostic.id } });
 
-  let generated;
-  try {
-    generated = await generatePossibilitiesOpenAI({
-      diagnosticInput: formatDiagnosticInput(diagnostic),
-    });
-  } catch (err) {
-    // Loga o erro real (aparece nos Runtime Logs da Vercel) em vez de deixar
-    // a pessoa cair numa tela de erro genérica sem nenhuma pista do que
-    // aconteceu.
-    console.error("Erro ao gerar as 5 possibilidades", err);
-    await logDebugError("diagnostico/concluido:generatePossibilities", err);
-    redirect(
-      `/diagnostico/concluido?error=${encodeURIComponent("Não foi possível gerar suas possibilidades agora. Tente de novo em instantes.")}`,
-    );
-  }
-
+  // Cria a rodada já como PENDENTE (sem possibilidades ainda) e dispara a
+  // primeira fase da fila (gerar → validar → corrigir, se preciso), cada
+  // uma sua própria invocação — a pessoa nunca fica esperando uma
+  // requisição HTTP que pode levar vários minutos.
   const round = await db.generationRound.create({
     data: {
       diagnosticId: diagnostic.id,
       roundNumber: roundsCount + 1,
-      notaDiversidade: generated.notaDiversidade,
-      avisoEconomico: generated.avisoEconomico,
-      dadosAusentesRelevantes: generated.dadosAusentesRelevantes,
-      metaFinanceiraUsada: generated.metaFinanceiraUsada as unknown as Prisma.InputJsonValue,
-      possibilities: {
-        create: generated.possibilities.map((p) => ({
-          papel: p.papel,
-          titulo: p.titulo,
-          subtitulo: p.subtitulo,
-          horizonteEconomico: p.horizonteEconomico,
-          nivelLastro: p.nivelLastro,
-          destaque: p.destaque,
-          comoFunciona: p.comoFunciona,
-          quemPagariaEComo: p.quemPagariaEComo,
-          porQueCombinaComVoce: p.porQueCombinaComVoce,
-          comoSeriaRotina: p.comoSeriaRotina,
-          primeiraValidacao: p.primeiraValidacao,
-          caminhoEconomico: p.caminhoEconomico,
-          pontoDeAtencao: p.pontoDeAtencao,
-          analiseInterna: p.analiseInterna as unknown as Prisma.InputJsonValue,
-          analiseConvergenciaComercial: p.analiseConvergenciaComercial as unknown as Prisma.InputJsonValue,
-          mapaExecucao: p.mapaExecucao as unknown as Prisma.InputJsonValue,
-        })),
-      },
+      status: "PENDENTE",
     },
   });
+
+  after(() => triggerGenerationStep(round.id));
 
   redirect(`/diagnostico/possibilidades/${round.id}`);
 }

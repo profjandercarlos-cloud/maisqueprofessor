@@ -29,7 +29,7 @@ const NIVEL_EXECUCAO_MAP: Record<string, NivelExecucao> = {
 };
 import { calcularHorasNucleoSemana } from "@/lib/plano/formula";
 import { generateReportAndPlanOpenAI } from "@/lib/ai-engine/generate-report-plan-openai";
-import type { MapaExecucao } from "@/lib/ai-engine/generate-possibilities-openai";
+import { generateMapaExecucaoOpenAI, type MapaExecucao } from "@/lib/ai-engine/generate-mapa-execucao-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
@@ -49,15 +49,35 @@ export async function generatePlan(possibilityId: string) {
   if (!possibility || possibility.round.diagnostic.userId !== user.id) redirect("/");
   if (possibility.status === "REJEITADA") redirect("/");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
-  // Possibilidades geradas antes do Mapa de Execução existir não têm esse
-  // dado — não há como calcular duração/nível de execução sem ele.
-  if (!possibility.mapaExecucao) {
-    fail(
-      possibilityId,
-      "Esta possibilidade foi gerada numa versão anterior do sistema e não tem os dados necessários para montar o plano. Gere um novo diagnóstico para continuar.",
-    );
+
+  // O Mapa de Execução só é gerado agora, na primeira vez que o professor
+  // chega até aqui com esta possibilidade aprovada — antes disso ele é
+  // null (ver Possibility.mapaExecucao). As 4 possibilidades não escolhidas
+  // nunca pagam essa chamada.
+  let mapaExecucao = possibility.mapaExecucao as unknown as MapaExecucao | null;
+  if (!mapaExecucao) {
+    try {
+      mapaExecucao = await generateMapaExecucaoOpenAI({
+        diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
+        possibility: {
+          titulo: possibility.titulo,
+          comoFunciona: possibility.comoFunciona,
+          porQueCombinaComVoce: possibility.porQueCombinaComVoce,
+          comoGerarReceita: possibility.comoGerarReceita,
+          primeiraValidacao: possibility.primeiraValidacao,
+          pontoDeAtencao: possibility.pontoDeAtencao,
+        },
+      });
+    } catch (err) {
+      console.error("Erro ao gerar o Mapa de Execução", err);
+      await logDebugError("adequacao:generateMapaExecucao", err);
+      fail(possibilityId, "Não foi possível preparar sua possibilidade agora. Tente de novo em instantes.");
+    }
+    await db.possibility.update({
+      where: { id: possibility.id },
+      data: { mapaExecucao: mapaExecucao as unknown as Prisma.InputJsonValue },
+    });
   }
-  const mapaExecucao = possibility.mapaExecucao as unknown as MapaExecucao;
 
   const response = await getOrCreateAdequacaoResponse(possibilityId);
   const answers = response.answers as Record<string, unknown>;
@@ -92,11 +112,9 @@ export async function generatePlan(possibilityId: string) {
       possibility: {
         titulo: possibility.titulo,
         comoFunciona: possibility.comoFunciona,
-        quemPagariaEComo: possibility.quemPagariaEComo,
+        comoGerarReceita: possibility.comoGerarReceita,
         porQueCombinaComVoce: possibility.porQueCombinaComVoce,
-        comoSeriaRotina: possibility.comoSeriaRotina,
         primeiraValidacao: possibility.primeiraValidacao,
-        caminhoEconomico: possibility.caminhoEconomico,
         pontoDeAtencao: possibility.pontoDeAtencao,
       },
       mapaExecucao,
