@@ -9,7 +9,13 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
-  const next = searchParams.get("next") ?? "/definir-senha";
+  // Só aceita caminho relativo dentro do próprio site — mesma proteção já
+  // usada em login/actions.ts. Sem isso, um link real (token_hash válido,
+  // ex.: reenviado ou reutilizado de um e-mail legítimo) com
+  // ?next=https://site-falso.exemplo redirecionava a pessoa, já autenticada
+  // no domínio certo, pra fora do site logo depois da verificação.
+  const rawNext = searchParams.get("next") ?? "/definir-senha";
+  const next = rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : "/definir-senha";
 
   if (tokenHash && type) {
     const supabase = await createClient();

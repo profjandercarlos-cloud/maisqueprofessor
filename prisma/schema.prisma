@@ -103,6 +103,7 @@ model GenerationRound {
   rascunhoAtual Json? // rascunho do gerador (já mesclado com correção, se houver) — inclui as reservas por papel; consumido entre as fases da fila
   auditoriaAtual Json? // último resultado do auditor (status/manter/substituir/motivo) — consumido pela fase de correção
   correcaoTentada Boolean @default(false) // no máximo 1 correção direcionada; se a verificação final ainda reprovar, tenta reserva
+  claimedAt    DateTime? // lock otimista: setado atomicamente ANTES da chamada à OpenAI de cada fase (ver claimPhase em run-generation-pipeline.ts); expira sozinho depois de CLAIM_TIMEOUT_MS, permitindo retomar uma fase abandonada sem duplicar a chamada
   metaFinanceiraUsada Json? // valor_mensal (null quando o professor não respondeu) + natureza + prazo_desejado — só preenchido em CONCLUIDO
   avisoEconomico String? @db.Text // aviso fixo de que são hipóteses de construção/monetização, não promessa de renda — só preenchido em CONCLUIDO
   createdAt    DateTime   @default(now())

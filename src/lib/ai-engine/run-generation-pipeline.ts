@@ -31,16 +31,38 @@ import type { z } from "zod";
 
 type PossibilityDraft = z.infer<typeof possibilitySchema>;
 
-// Controle de concorrência otimista: cada fase pode, em tese, ser disparada
-// duas vezes em paralelo (a retomada de rodada travada — polling-wait.tsx —
-// dispara de novo se não vir atualização em 150s, e a geração já mediu até
-// ~96s, perto o bastante do limiar antigo de 90s pra uma invocação lenta
-// mas saudável coincidir com um retry). O status já lido no início de
-// runGenerationStep pode estar desatualizado quando a fase termina seu
-// trabalho pesado. Por isso a ESCRITA que fecha cada fase (não a leitura
-// inicial) é quem decide: só avança quem conseguir mudar o status a partir
-// do valor esperado. Quem perder a corrida encontra count !== 1 e para sem
-// duplicar nada nem disparar a próxima fase de novo.
+// A rota interna (api/internal/generation-step) tem maxDuration=120s — a
+// Vercel mata a função antes disso se ela ainda estiver rodando. Um lock
+// mais velho que isso só pode ser de uma invocação que já morreu (matada
+// pela plataforma ou por erro não tratado), nunca de uma ainda em curso —
+// por isso é seguro reivindicar de novo depois desse prazo.
+export const CLAIM_TIMEOUT_MS = 150_000;
+
+// Reivindica a fase ANTES de chamar a OpenAI (não só na gravação final) —
+// evita não só persistir duas vezes, mas também pagar duas vezes pela
+// chamada de IA quando duas invocações da mesma fase disparam em paralelo
+// (a retomada de rodada travada em polling-wait.tsx dispara de novo se não
+// vir atualização em 180s). Só avança quem conseguir mudar o status
+// esperado E encontrar claimedAt vazio ou expirado; quem perde a corrida
+// encontra count !== 1 e retorna sem chamar a OpenAI.
+export async function claimPhase(roundId: string, expectedStatus: GenerationRoundStatus): Promise<boolean> {
+  const result = await db.generationRound.updateMany({
+    where: {
+      id: roundId,
+      status: expectedStatus,
+      OR: [{ claimedAt: null }, { claimedAt: { lt: new Date(Date.now() - CLAIM_TIMEOUT_MS) } }],
+    },
+    data: { claimedAt: new Date() },
+  });
+  return result.count === 1;
+}
+
+// Controle de concorrência otimista na escrita que FECHA cada fase — além
+// do claimPhase acima (que já devia garantir exclusividade), esta segunda
+// checagem é defensiva: confirma de novo que o status ainda é o esperado
+// antes de gravar o resultado e limpa claimedAt pra fase seguinte poder
+// reivindicar do zero. Quem perder a corrida encontra count !== 1 e para
+// sem duplicar nada nem disparar a próxima fase de novo.
 async function claimTransition(
   roundId: string,
   fromStatus: GenerationRoundStatus,
@@ -48,7 +70,7 @@ async function claimTransition(
 ): Promise<boolean> {
   const result = await db.generationRound.updateMany({
     where: { id: roundId, status: fromStatus },
-    data,
+    data: { ...data, claimedAt: null },
   });
   return result.count === 1;
 }
@@ -61,6 +83,13 @@ export async function runGenerationStep(roundId: string): Promise<void> {
     });
     if (!round) return;
 
+    if (round.status !== "PENDENTE" && round.status !== "VALIDANDO" && round.status !== "CORRIGINDO") {
+      return; // fase já concluída/terminal (ou legado V3) — nada a fazer
+    }
+
+    const claimed = await claimPhase(roundId, round.status);
+    if (!claimed) return; // outra invocação já está processando esta fase agora
+
     switch (round.status) {
       case "PENDENTE":
         await runGeracao(roundId, round.diagnostic);
@@ -71,14 +100,11 @@ export async function runGenerationStep(roundId: string): Promise<void> {
       case "CORRIGINDO":
         await runCorrecao(roundId, round.diagnostic.id, round.rascunhoAtual, round.auditoriaAtual);
         break;
-      default:
-        // Fase já concluída/terminal (ou legado V3) — nada a fazer.
-        return;
     }
   } catch (err) {
     console.error("Erro numa fase da fila de geração", err);
     await logDebugError("run-generation-pipeline:erro", err);
-    await db.generationRound.update({ where: { id: roundId }, data: { status: "FALHOU" } }).catch(() => {});
+    await db.generationRound.update({ where: { id: roundId }, data: { status: "FALHOU", claimedAt: null } }).catch(() => {});
   }
 }
 
