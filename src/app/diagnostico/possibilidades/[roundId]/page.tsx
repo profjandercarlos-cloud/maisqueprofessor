@@ -81,6 +81,30 @@ export default async function PossibilitiesReviewPage({
         </div>
       ) : null}
 
+      {round.avisoEconomico ? (
+        <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+            <circle cx="8" cy="8" r="7" stroke="var(--role-2)" strokeWidth="1.4" />
+            <path d="M8 5v4M8 11v.1" stroke="var(--role-2)" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+          <span>{round.avisoEconomico}</span>
+        </div>
+      ) : null}
+
+      {round.dadosAusentesRelevantes.length > 0 ? (
+        <div className="mb-7 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
+          <p className="mb-1.5 font-semibold text-ink">O que ajudaria a refinar esta análise</p>
+          <ul className="flex flex-col gap-1">
+            {round.dadosAusentesRelevantes.map((item, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-role-2" />
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
       <PossibilityCards possibilities={round.possibilities} />
 
       {alreadyApproved ? (

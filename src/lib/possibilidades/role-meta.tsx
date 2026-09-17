@@ -5,8 +5,8 @@ export const ROLE_ORDER: PossibilityRole[] = [
   "ONDE_JA_E_FORTE",
   "PARA_ONDE_QUER_IR",
   "O_QUE_PODE_MOBILIZAR",
-  "COMO_QUER_TRABALHAR_E_CRESCER",
   "NAO_CONSIDERADA",
+  "MAIOR_CONVERGENCIA_COMERCIAL",
 ];
 
 export const ROLE_META: Record<
@@ -59,10 +59,10 @@ export const ROLE_META: Record<
       </svg>
     ),
   },
-  // Chave do enum preserva o nome original (evita migração) — o papel em si
-  // foi redefinido de "combina com o formato de trabalho desejado" para
-  // "desafio ligado a uma característica ainda não desenvolvida" (ver
-  // Etapa 6 do GENERATION_SYSTEM_PROMPT).
+  // Não é mais gerado (substituído por MAIOR_CONVERGENCIA_COMERCIAL) —
+  // mantido só porque o tipo Record<PossibilityRole, ...> exige uma
+  // entrada pra cada valor do enum, e remover o valor do enum no Postgres
+  // exigiria recriar o tipo.
   COMO_QUER_TRABALHAR_E_CRESCER: {
     label: "Um desafio de crescimento",
     subtitle: "Uma característica sua que ainda não é habilidade, mas que o esforço poderia transformar em uma.",
@@ -88,6 +88,22 @@ export const ROLE_META: Record<
           strokeLinejoin="round"
         />
         <circle cx="10" cy="10" r="2.2" stroke="currentColor" strokeWidth="1.4" />
+      </svg>
+    ),
+  },
+  MAIOR_CONVERGENCIA_COMERCIAL: {
+    label: "Maior convergência comercial",
+    subtitle: "A possibilidade com a convergência comercial relativa mais forte entre as candidatas analisadas.",
+    accentVar: "var(--role-6)",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+        <circle cx="10" cy="10" r="2" fill="currentColor" stroke="none" />
+        <path
+          d="M10 1.5v3.5M10 15v3.5M18.5 10H15M5 10H1.5M15.5 4.5l-2.5 2.5M7 10.5l-2.5 2.5M15.5 15.5l-2.5-2.5M7 9.5L4.5 7"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
       </svg>
     ),
   },

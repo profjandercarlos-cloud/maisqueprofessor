@@ -5,6 +5,30 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
 import { ROLE_META } from "@/lib/possibilidades/role-meta";
+import type { HorizonteEconomico, NivelLastro } from "@/generated/prisma/client";
+
+type AnaliseConvergenciaComercial = {
+  porQueSeDestaca: string;
+  horizontePrincipal: string;
+  justificativaHorizonte: string;
+  logicaParaMeta: string;
+  contaDeReferencia: string | null;
+  condicoesParaConfirmar: string[];
+  principalRiscoComercial: string;
+  nivelConfiancaComercial: string;
+};
+
+const HORIZONTE_LABELS: Record<HorizonteEconomico, string> = {
+  CURTO_PRAZO: "Curto prazo",
+  MEDIO_PRAZO: "Médio prazo",
+  LONGO_PRAZO: "Longo prazo",
+};
+
+const LASTRO_LABELS: Record<NivelLastro, string> = {
+  FORTE: "Lastro forte",
+  MODERADO: "Lastro moderado",
+  EXPLORATORIO: "Exploratório",
+};
 
 export default async function AdequacaoEntryPage({
   params,
@@ -27,6 +51,10 @@ export default async function AdequacaoEntryPage({
   }
 
   const resumeSlug = getResumeSlug(response.answers as Record<string, unknown>);
+  const convergencia = possibility.destaque
+    ? (possibility.analiseConvergenciaComercial as unknown as AnaliseConvergenciaComercial | null)
+    : null;
+  const meta = ROLE_META[possibility.papel];
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
@@ -41,12 +69,18 @@ export default async function AdequacaoEntryPage({
         <span
           className="inline-flex items-center gap-1.5 rounded-full py-[3px] pr-[9px] pl-2 font-mono text-[10px] tracking-[0.07em] uppercase"
           style={{
-            color: ROLE_META[possibility.papel].accentVar,
-            background: `color-mix(in srgb, ${ROLE_META[possibility.papel].accentVar} 13%, var(--tint-base))`,
+            color: meta.accentVar,
+            background: `color-mix(in srgb, ${meta.accentVar} 13%, var(--tint-base))`,
           }}
         >
-          {ROLE_META[possibility.papel].icon}
-          {ROLE_META[possibility.papel].label}
+          {meta.icon}
+          {meta.label}
+        </span>
+        <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
+          {HORIZONTE_LABELS[possibility.horizonteEconomico]}
+        </span>
+        <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
+          {LASTRO_LABELS[possibility.nivelLastro]}
         </span>
       </div>
       <h1 className="mb-6 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
@@ -60,21 +94,21 @@ export default async function AdequacaoEntryPage({
       <div className="mb-8 flex flex-col gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            O que você faria na prática
+            Como funciona
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.naPratica}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.comoFunciona}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            O que você entregaria
+            Quem pagaria e como
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.entregaPrincipal}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.quemPagariaEComo}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Quem pagaria e por quê
+            Por que combina com você
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.quemPagaria}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.porQueCombinaComVoce}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
@@ -84,38 +118,15 @@ export default async function AdequacaoEntryPage({
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Por que apareceu para você
+            Primeira validação
           </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.porQueApareceu}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.primeiraValidacao}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            O que você já traz e o que precisaria desenvolver
+            Caminho econômico
           </div>
-          <div className="mb-1.5 text-[12px] font-semibold text-ink">Você já traz</div>
-          <ul className="mb-3 flex flex-col gap-1">
-            {possibility.capacidadesAproveitaveis.map((item, i) => (
-              <li key={`c-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink">
-                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
-                {item}
-              </li>
-            ))}
-          </ul>
-          <div className="mb-1.5 text-[12px] font-semibold text-ink">Precisaria desenvolver</div>
-          <ul className="flex flex-col gap-1">
-            {possibility.aprendizagensPrioritarias.map((item, i) => (
-              <li key={`a-${i}`} className="flex items-start gap-2 text-[14px] leading-[1.55] text-ink-muted">
-                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-gold" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Primeira versão possível
-          </div>
-          <div className="text-[14px] leading-[1.55] text-ink">{possibility.primeiraVersaoPossivel}</div>
+          <div className="text-[14px] leading-[1.55] text-ink">{possibility.caminhoEconomico}</div>
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
@@ -123,6 +134,34 @@ export default async function AdequacaoEntryPage({
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.pontoDeAtencao}</div>
         </div>
+
+        {convergencia ? (
+          <div
+            className="rounded-[10px] border p-3.5"
+            style={{
+              borderColor: meta.accentVar,
+              background: `color-mix(in srgb, ${meta.accentVar} 8%, var(--tint-base))`,
+            }}
+          >
+            <div className="mb-1 font-mono text-[10px] tracking-[0.06em] uppercase" style={{ color: meta.accentVar }}>
+              Análise de convergência comercial
+            </div>
+            <div className="mb-2.5 text-[14px] leading-[1.55] text-ink">{convergencia.porQueSeDestaca}</div>
+            <div className="mb-1.5 text-[12px] font-semibold text-ink">Condições para confirmar</div>
+            <ul className="mb-2.5 flex flex-col gap-1">
+              {convergencia.condicoesParaConfirmar.map((item, i) => (
+                <li key={i} className="flex items-start gap-2 text-[13.5px] leading-[1.5] text-ink">
+                  <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full" style={{ background: meta.accentVar }} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="text-[13.5px] leading-[1.5] text-ink">
+              <span className="font-semibold">Principal risco comercial: </span>
+              {convergencia.principalRiscoComercial}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <p className="mb-4 max-w-[50ch] text-[14.5px] text-ink-muted">

@@ -257,14 +257,12 @@ export async function generateReportAndPlanOpenAI(params: {
   diagnosticInput: string;
   possibility: {
     titulo: string;
-    naPratica: string;
-    entregaPrincipal: string;
-    quemPagaria: string;
+    comoFunciona: string;
+    quemPagariaEComo: string;
+    porQueCombinaComVoce: string;
     comoSeriaRotina: string;
-    porQueApareceu: string;
-    capacidadesAproveitaveis: string[];
-    aprendizagensPrioritarias: string[];
-    primeiraVersaoPossivel: string;
+    primeiraValidacao: string;
+    caminhoEconomico: string;
     pontoDeAtencao: string;
   };
   mapaExecucao: MapaExecucao;
@@ -283,14 +281,12 @@ export async function generateReportAndPlanOpenAI(params: {
 
 POSSIBILIDADE APROVADA
 Título: ${params.possibility.titulo}
-Na prática: ${params.possibility.naPratica}
-O que entregaria: ${params.possibility.entregaPrincipal}
-Quem pagaria: ${params.possibility.quemPagaria}
+Como funciona: ${params.possibility.comoFunciona}
+Quem pagaria e como: ${params.possibility.quemPagariaEComo}
+Por que combina com a pessoa: ${params.possibility.porQueCombinaComVoce}
 Como seria a rotina: ${params.possibility.comoSeriaRotina}
-Por que apareceu: ${params.possibility.porQueApareceu}
-Capacidades já aproveitáveis: ${params.possibility.capacidadesAproveitaveis.join("; ")}
-Aprendizagens prioritárias: ${params.possibility.aprendizagensPrioritarias.join("; ")}
-Primeira versão possível: ${params.possibility.primeiraVersaoPossivel}
+Primeira validação: ${params.possibility.primeiraValidacao}
+Caminho econômico: ${params.possibility.caminhoEconomico}
 Principal ponto de atenção: ${params.possibility.pontoDeAtencao}
 
 MAPA DE EXECUÇÃO DA POSSIBILIDADE

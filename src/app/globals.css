@@ -31,8 +31,9 @@
   --role-1: #3f7a72; /* Onde você já é forte */
   --role-2: #a8763e; /* Para onde você quer ir */
   --role-3: #a14b3a; /* O que pode mobilizar você */
-  --role-4: #3d5a78; /* Como quer trabalhar e crescer */
+  --role-4: #3d5a78; /* Como quer trabalhar e crescer — não é mais gerado, mantido só por compatibilidade */
   --role-5: #6b3550; /* Uma possibilidade não considerada */
+  --role-6: #b8791a; /* Maior convergência comercial — cor de destaque, distinta das outras 5 */
 }
 
 :root[data-theme="dark"] {
@@ -55,6 +56,7 @@
   --role-3: #db8368;
   --role-4: #85a9cc;
   --role-5: #c081a0;
+  --role-6: #e8b563;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -78,6 +80,7 @@
     --role-3: #db8368;
     --role-4: #85a9cc;
     --role-5: #c081a0;
+    --role-6: #e8b563;
   }
 }
 
@@ -99,6 +102,7 @@
   --color-role-3: var(--role-3);
   --color-role-4: var(--role-4);
   --color-role-5: var(--role-5);
+  --color-role-6: var(--role-6);
 
   --radius-app: var(--radius);
 

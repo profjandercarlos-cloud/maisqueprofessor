@@ -7,8 +7,9 @@ export const PAPEL_LABELS: Record<PossibilityRole, string> = {
   ONDE_JA_E_FORTE: "Onde você já é forte",
   PARA_ONDE_QUER_IR: "Pra onde você quer ir",
   O_QUE_PODE_MOBILIZAR: "O que pode mobilizar você",
-  COMO_QUER_TRABALHAR_E_CRESCER: "Como quer trabalhar e crescer",
+  COMO_QUER_TRABALHAR_E_CRESCER: "Como quer trabalhar e crescer", // não é mais gerado
   NAO_CONSIDERADA: "A possibilidade que você não tinha considerado",
+  MAIOR_CONVERGENCIA_COMERCIAL: "Maior convergência comercial",
 };
 
 export function PapelIcon({ papel, className }: { papel: PossibilityRole; className?: string }) {
@@ -46,6 +47,13 @@ export function PapelIcon({ papel, className }: { papel: PossibilityRole; classN
       return (
         <svg viewBox="0 0 18 18" fill="currentColor" stroke="none" className={cls}>
           <path d="M9 2 L10.3 7.7 L16 9 L10.3 10.3 L9 16 L7.7 10.3 L2 9 L7.7 7.7 Z" />
+        </svg>
+      );
+    case "MAIOR_CONVERGENCIA_COMERCIAL":
+      return (
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" className={cls}>
+          <circle cx="9" cy="9" r="1.8" fill="currentColor" stroke="none" />
+          <path d="M9 1.5v3M9 13.5v3M16.5 9h-3M4.5 9h-3M14 4l-2.2 2.2M6.2 11.8L4 14M14 14l-2.2-2.2M6.2 6.2L4 4" />
         </svg>
       );
   }
