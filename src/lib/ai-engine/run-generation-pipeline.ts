@@ -26,7 +26,6 @@ import {
 import { auditPossibilitiesOpenAI, type AuditResult } from "./audit-possibilities-openai";
 import { correctPossibilitiesOpenAI } from "./correct-possibilities-openai";
 import { triggerGenerationStep } from "./trigger-generation-step";
-import { triggerMarketPresentationStep } from "./trigger-market-presentation-step";
 import { logDebugError } from "@/lib/debug-error-log";
 import type { z } from "zod";
 
@@ -366,9 +365,15 @@ async function persistApproved(roundId: string, diagnosticId: string, draft: Gen
     data: { status: "REJEITADA" },
   });
 
-  // Camada aditiva de apresentação de mercado (ver
-  // market-presentation-prompt.ts) — fase própria, HTTP separado, nunca
-  // bloqueia o round em si. Só quem realmente persistiu esta rodada
-  // dispara (claimed === true), evitando disparo duplicado.
-  await triggerMarketPresentationStep(roundId);
+  // O disparo da camada de apresentação de mercado NÃO acontece aqui de
+  // propósito — testado em produção e descartado: quando esta mesma fase já
+  // gastou tempo com correção pontual + promoção de reserva (várias
+  // chamadas de IA em sequência), o after() que envolve todo este fluxo é
+  // interrompido pela Vercel perto do teto de tempo antes de alcançar esta
+  // linha, sem lançar erro (o processo é só encerrado). Em vez de competir
+  // por esse mesmo orçamento, o disparo é inteiramente responsabilidade da
+  // tela de possibilidades (MarketPresentationRetry, ver
+  // diagnostico/possibilidades/[roundId]/page.tsx) — ela roda numa
+  // invocação nova, sempre que alguém vê a página, sem herdar nada do tempo
+  // já gasto aqui.
 }
