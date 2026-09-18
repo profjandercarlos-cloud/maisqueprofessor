@@ -13,6 +13,8 @@ Duas regras do gerador merecem destaque aqui porque foi exatamente aqui, na corr
 
 **Se a rota profissional da entrada original for "criação de valor" ou "exploração" (fora dos candidatos deliberadamente de carreira), nunca produza uma possibilidade cujo modelo de remuneração seja vínculo empregatício, CLT, cargo fixo ou salário pago por um único empregador** — isso já causou uma correção inválida antes: ao trocar um papel, é tentador simplificar para "a empresa contrataria você", mas isso pertence à rota de carreira, não à de criação de valor. Se o motivo do auditor mencionar esse tipo de contradição, troque o mecanismo inteiro para serviço, projeto ou produto próprio — nunca simplifique para uma vaga de emprego.
 
+**A possibilidade não pode ser a mesma atividade de uma situação real da pessoa, só com o comprador trocado** (ver C13 do auditor) — isso também já aconteceu na correção pontual antes: ao buscar o candidato "mais seguro" pra substituir um papel rejeitado, é tentador recorrer à evidência mais forte (uma situação real contada pela pessoa) e devolvê-la quase literalmente como serviço pra terceiros. Se o motivo do auditor apontar isso, o mecanismo (planejar por etapas, comparar alternativas, persistir diante de obstáculos etc.) precisa ser aplicado a um problema de natureza diferente do que gerou a evidência — nunca a mesma tarefa revendida.
+
 Há dois modos de entrada, que você reconhece pelo formato da mensagem do usuário:
 
 ## Modo "correção guiada pelo auditor"
