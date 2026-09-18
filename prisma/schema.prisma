@@ -183,13 +183,67 @@ model Possibility {
   impressaoDigital     Json // impressão digital semântica compacta (papel/território/problema/público/pagador/entrega/modelo_receita/evidências/risco/confiança) — nunca exibido ao professor, usado pelo auditor pra comparar possibilidades
   analiseConvergenciaComercial Json? // só a possibilidade com destaque=true tem; null nas outras 4
   mapaExecucao         Json? // gerado só depois que o professor aprova esta possibilidade (ver adequacao/[possibilityId]/concluido/actions.ts) — null até lá
+  feedbackMissoesAtivacao Json? // respostas gerais pós-missões (vontade de continuar, horas reais por semana, dificuldade principal) — null até o professor concluir as 3 missões
   status               PossibilityStatus  @default(PENDENTE)
   createdAt            DateTime           @default(now())
 
   plan              Plan?
   adequacaoResponse AdequacaoResponse?
+  missoesAtivacao   MissaoAtivacao[]
 
   @@map("possibilities")
+}
+
+enum MissaoTipo {
+  CAPACIDADE // "eu consigo fazer alguma versão pequena disso?"
+  REALIDADE // "isso existe fora da minha cabeça?"
+  VALIDACAO // "eu consigo gerar algum valor real com isso?"
+
+  @@map("missao_tipo")
+}
+
+enum MissaoConclusao {
+  TOTAL
+  PARCIAL
+  NAO
+
+  @@map("missao_conclusao")
+}
+
+// =========================================================================
+// Missões de Ativação — Bloco 0 da rota: 3 missões pequenas, geradas depois
+// da adequação (já temos o Mapa de Execução + as respostas de adequação
+// como matéria-prima) e antes do Plano de Execução Personalizado. Servem
+// pra colocar a possibilidade escolhida em contato com a realidade antes de
+// comprometer 4-12 semanas — não são conteúdo, são um teste rápido.
+// =========================================================================
+model MissaoAtivacao {
+  id            String         @id @default(uuid())
+  possibilityId String
+  possibility   Possibility    @relation(fields: [possibilityId], references: [id], onDelete: Cascade)
+  ordem         Int // 1-3
+  tipo          MissaoTipo
+  nome          String
+  objetivo      String         @db.Text
+  porQueExiste  String         @db.Text
+  tempoEstimadoMinutos Int
+  recursosNecessarios  String  @db.Text
+  passoAPasso   Json // string[] — 3 a 6 passos curtos
+  criterioConclusao   String   @db.Text
+  evidenciaEsperada   String   @db.Text
+  perguntaReflexao    String   @db.Text
+
+  // Preenchido pelo professor depois de executar (ou tentar executar)
+  conseguiuConcluir MissaoConclusao?
+  tempoRealMinutos  Int?
+  oQueAconteceu     String?          @db.Text
+  reflexao          String?         @db.Text
+  respondidoEm      DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@unique([possibilityId, ordem])
+  @@map("missoes_ativacao")
 }
 
 // =========================================================================

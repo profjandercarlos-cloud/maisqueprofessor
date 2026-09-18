@@ -47,18 +47,18 @@ export default async function AdequacaoConcluidoPage({
         {possibility.titulo}
       </h1>
       <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
-        Vamos usar sua possibilidade escolhida, seu ponto de partida e as condições que você informou para
-        montar seu Plano Personalizado de Transição — a duração e a profundidade se ajustam a você, produzindo
-        evidências reais sem ultrapassar sua disponibilidade.
+        Antes do seu Plano Personalizado de Transição, você vai passar por 3 Missões de Ativação — pequenos
+        testes reais dessa possibilidade. Os resultados delas calibram o plano; a duração e a profundidade se
+        ajustam a você, produzindo evidências reais sem ultrapassar sua disponibilidade.
       </p>
 
       <form action={action}>
         {error ? <p className="mb-4 text-sm text-role-3">{error}</p> : null}
         <SubmitButton
-          pendingText="Gerando seu plano... isso pode levar até 1 minuto, não recarregue a página"
+          pendingText="Preparando... isso pode levar até 1 minuto, não recarregue a página"
           className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
         >
-          Criar meu Plano Personalizado de Transição →
+          Continuar minha rota →
         </SubmitButton>
       </form>
     </div>

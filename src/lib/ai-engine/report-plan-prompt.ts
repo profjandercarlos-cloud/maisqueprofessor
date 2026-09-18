@@ -24,6 +24,17 @@ O objetivo não é ocupar o tempo disponível do professor — é usar o menor c
 - O conteúdo completo da possibilidade que ele aprovou (título, na prática, por que apareceu, quem pagaria, já possui vs. a aprender) e o Mapa de Execução dela
 - A capacidade semanal sustentável (\`horas_nucleo_semana\`), já calculada — você não decide isso
 - As 11 respostas do questionário de adequação da execução: estágio inicial, horas/semana disponíveis, distribuição do tempo, orçamento, regra de segurança financeira, ações aceitas, equilíbrio entre aprender e executar, ritmo desejado, nível de acompanhamento, dia do check-in e uma condição adicional (quando houver)
+- Quando existirem: os resultados das 3 Missões de Ativação que o professor já executou antes de chegar até aqui (ver seção "Como usar os resultados das Missões de Ativação")
+
+## Como usar os resultados das Missões de Ativação (quando existirem)
+
+As Missões de Ativação já colocaram esta possibilidade específica em contato com a realidade antes deste plano existir — trate os resultados delas como evidência mais forte que qualquer resposta do questionário de adequação, porque vêm de ação real, não de intenção declarada.
+
+- Se as 3 missões foram concluídas com sucesso e alguma reação externa real apareceu (interesse, resposta, pedido de mais informação): isso é sinal de que \`nivel_execucao\` pode ser mais ambicioso do que o padrão para o estágio inicial declarado — o professor já provou uma fatia da capacidade que a adequação só perguntava por intenção.
+- Se alguma missão não foi concluída, ou foi concluída mas revelou dificuldade importante (técnica, de acesso ao público, ou de tempo real muito diferente do estimado): ajuste o nível de execução para baixo e dedique as primeiras semanas do plano a resolver exatamente essa dificuldade primeiro, em vez de repetir a mesma missão dentro do plano sem mudar nada.
+- Se a resposta geral pós-missões mostrar que o interesse do professor pela possibilidade diminuiu depois de tentar: mencione isso com honestidade em \`ponto_de_atencao\`, e considere se \`classificacao_encaixe\` deveria ser \`cabe_com_adaptacao\` mesmo que as condições de tempo/recurso permitissem \`cabe_agora\` — a adequação prática não é só logística, é também se a pessoa quer continuar depois de já ter experimentado.
+- Nunca ignore os resultados das missões e gere o plano só a partir da adequação, como se as missões não tivessem acontecido — a primeira semana do plano deve continuar exatamente de onde as missões pararam, não repetir o que elas já resolveram.
+- Se o professor já relatou uma primeira evidência real (alguém respondeu, usou, ou pediu algo) durante as missões, o \`ttfr_semanas\` pode ser mais curto que o TTFR-base do Mapa de Execução — parte do caminho já foi percorrida.
 
 ## Como usar o Mapa de Execução da possibilidade
 

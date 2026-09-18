@@ -28,12 +28,23 @@ const NIVEL_EXECUCAO_MAP: Record<string, NivelExecucao> = {
   desenvolvimento: NivelExecucao.DESENVOLVIMENTO,
 };
 import { calcularHorasNucleoSemana } from "@/lib/plano/formula";
-import { generateReportAndPlanOpenAI } from "@/lib/ai-engine/generate-report-plan-openai";
+import {
+  generateReportAndPlanOpenAI,
+  type FeedbackMissoesAtivacao,
+  type MissaoAtivacaoResultado,
+} from "@/lib/ai-engine/generate-report-plan-openai";
 import { generateMapaExecucaoOpenAI, type MapaExecucao } from "@/lib/ai-engine/generate-mapa-execucao-openai";
+import { generateActivationMissionsOpenAI } from "@/lib/ai-engine/generate-activation-missions-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
+
+const MISSAO_TIPO_MAP: Record<string, "CAPACIDADE" | "REALIDADE" | "VALIDACAO"> = {
+  capacidade: "CAPACIDADE",
+  realidade: "REALIDADE",
+  validacao: "VALIDACAO",
+};
 
 function fail(possibilityId: string, message: string): never {
   redirect(`/adequacao/${possibilityId}/concluido?error=${encodeURIComponent(message)}`);
@@ -86,6 +97,86 @@ export async function generatePlan(possibilityId: string) {
     redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
   }
 
+  // Bloco 0 da rota: as 3 Missões de Ativação precisam existir e estar
+  // respondidas (mais o feedback geral) antes do Plano de Execução
+  // Personalizado ser gerado — ver src/app/adequacao/[possibilityId]/missoes.
+  // As respostas da missão são insumo real pro plano (ver
+  // generateReportAndPlanOpenAI), não só uma barreira de fricção.
+  const estagioInicialParaMissoes = answers.estagioInicial as EstagioInicial;
+  const acoesAceitasParaMissoes = (answers.acoesAceitas as string[] | undefined) ?? [];
+  const orcamentoParaMissoes = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
+  const regraFinanceiraParaMissoes = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
+  const distribuicaoTempoParaMissoes = answers.distribuicaoTempo as DistribuicaoTempo;
+
+  let missoes = await db.missaoAtivacao.findMany({
+    where: { possibilityId: possibility.id },
+    orderBy: { ordem: "asc" },
+  });
+
+  if (missoes.length === 0) {
+    let geradas;
+    try {
+      geradas = await generateActivationMissionsOpenAI({
+        diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
+        possibility: {
+          titulo: possibility.titulo,
+          comoFunciona: possibility.comoFunciona,
+          comoGerarReceita: possibility.comoGerarReceita,
+          porQueCombinaComVoce: possibility.porQueCombinaComVoce,
+          primeiraValidacao: possibility.primeiraValidacao,
+          pontoDeAtencao: possibility.pontoDeAtencao,
+        },
+        mapaExecucao,
+        estagioInicial: estagioInicialParaMissoes,
+        acoesAceitas: acoesAceitasParaMissoes as AcaoAceita[],
+        orcamentoFaixa: orcamentoParaMissoes,
+        regraSegurancaFinanceira: regraFinanceiraParaMissoes,
+        distribuicaoTempo: distribuicaoTempoParaMissoes,
+      });
+    } catch (err) {
+      console.error("Erro ao gerar Missões de Ativação", err);
+      await logDebugError("adequacao:generateActivationMissions", err);
+      fail(possibilityId, "Não foi possível preparar suas missões de ativação agora. Tente de novo em instantes.");
+    }
+    await db.missaoAtivacao.createMany({
+      data: geradas.missoes.map((m, index) => ({
+        possibilityId: possibility.id,
+        ordem: index + 1,
+        tipo: MISSAO_TIPO_MAP[m.tipo],
+        nome: m.nome,
+        objetivo: m.objetivo,
+        porQueExiste: m.por_que_existe,
+        tempoEstimadoMinutos: m.tempo_estimado_minutos,
+        recursosNecessarios: m.recursos_necessarios,
+        passoAPasso: m.passo_a_passo as Prisma.InputJsonValue,
+        criterioConclusao: m.criterio_conclusao,
+        evidenciaEsperada: m.evidencia_esperada,
+        perguntaReflexao: m.pergunta_reflexao,
+      })),
+    });
+    redirect(`/adequacao/${possibilityId}/missoes`);
+  }
+
+  const missoesIncompletas = missoes.some((m) => m.respondidoEm === null);
+  const currentPossibility = await db.possibility.findUnique({
+    where: { id: possibility.id },
+    select: { feedbackMissoesAtivacao: true },
+  });
+  if (missoesIncompletas || !currentPossibility?.feedbackMissoesAtivacao) {
+    redirect(`/adequacao/${possibilityId}/missoes`);
+  }
+
+  const feedbackMissoes = currentPossibility.feedbackMissoesAtivacao as unknown as FeedbackMissoesAtivacao;
+  const missoesResultado: MissaoAtivacaoResultado[] = missoes.map((m) => ({
+    ordem: m.ordem,
+    tipo: m.tipo,
+    nome: m.nome,
+    conseguiuConcluir: m.conseguiuConcluir,
+    tempoRealMinutos: m.tempoRealMinutos,
+    oQueAconteceu: m.oQueAconteceu,
+    reflexao: m.reflexao,
+  }));
+
   const existingPlanCount = await db.plan.count({ where: { userId: user.id } });
   if (existingPlanCount >= 5) {
     fail(possibilityId, "Você já tem 5 planos salvos — o máximo permitido. Remova um plano nas configurações antes de criar outro.");
@@ -128,6 +219,8 @@ export async function generatePlan(possibilityId: string) {
       equilibrioAprenderExecutar,
       ritmoDesejado,
       condicaoAdicionalExecucao,
+      missoesAtivacao: missoesResultado,
+      feedbackMissoesAtivacao: feedbackMissoes,
     });
   } catch (err) {
     console.error("Erro ao gerar relatório e plano", err);

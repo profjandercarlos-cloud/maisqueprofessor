@@ -253,6 +253,38 @@ Principais dependências: ${mapa.principaisDependencias.join("; ") || "nenhuma"}
 Primeiro resultado observável esperado: ${mapa.primeiroResultadoObservavel}`;
 }
 
+export type MissaoAtivacaoResultado = {
+  ordem: number;
+  tipo: string;
+  nome: string;
+  conseguiuConcluir: string | null; // TOTAL | PARCIAL | NAO
+  tempoRealMinutos: number | null;
+  oQueAconteceu: string | null;
+  reflexao: string | null;
+};
+
+export type FeedbackMissoesAtivacao = {
+  vontadeContinuar: string; // aumentou | igual | diminuiu
+  horasReaisPorSemana: number | null;
+  dificuldadePrincipal: string | null;
+};
+
+function formatMissoesAtivacao(
+  missoes: MissaoAtivacaoResultado[],
+  feedback: FeedbackMissoesAtivacao | null,
+): string {
+  if (missoes.length === 0) return "";
+  const missoesTexto = missoes
+    .map(
+      (m) => `Missão ${m.ordem} (${m.tipo}) — "${m.nome}": conseguiu concluir: ${m.conseguiuConcluir ?? "não respondido"}; tempo real: ${m.tempoRealMinutos ?? "não informado"} min; o que aconteceu: ${m.oQueAconteceu ?? "não informado"}; reflexão da pessoa: ${m.reflexao ?? "não informado"}`,
+    )
+    .join("\n");
+  const feedbackTexto = feedback
+    ? `\nDepois das 3 missões, a vontade de continuar explorando esta possibilidade: ${feedback.vontadeContinuar}. Horas reais por semana que a pessoa consegue dedicar, depois de experimentar: ${feedback.horasReaisPorSemana ?? "igual ao declarado na adequação"}. Principal dificuldade relatada: ${feedback.dificuldadePrincipal ?? "nenhuma relatada"}.`
+    : "";
+  return `\n\nRESULTADOS DAS MISSÕES DE ATIVAÇÃO (já executadas antes deste plano)\n${missoesTexto}${feedbackTexto}`;
+}
+
 export async function generateReportAndPlanOpenAI(params: {
   diagnosticInput: string;
   possibility: {
@@ -274,6 +306,8 @@ export async function generateReportAndPlanOpenAI(params: {
   equilibrioAprenderExecutar: EquilibrioAprenderExecutar;
   ritmoDesejado: RitmoDesejado;
   condicaoAdicionalExecucao?: string | null;
+  missoesAtivacao?: MissaoAtivacaoResultado[];
+  feedbackMissoesAtivacao?: FeedbackMissoesAtivacao | null;
 }): Promise<ReportAndPlan> {
   const userMessage = `${params.diagnosticInput}
 
@@ -301,7 +335,7 @@ Regra de segurança financeira: ${REGRA_FINANCEIRA_LABELS[params.regraSegurancaF
 Ações que a pessoa aceita realizar: ${params.acoesAceitas.map((a) => ACAO_LABELS[a]).join("; ")}
 Equilíbrio entre aprender e executar: ${EQUILIBRIO_LABELS[params.equilibrioAprenderExecutar]}
 Ritmo desejado: ${RITMO_LABELS[params.ritmoDesejado]}
-Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "nenhuma"}`;
+Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "nenhuma"}${formatMissoesAtivacao(params.missoesAtivacao ?? [], params.feedbackMissoesAtivacao ?? null)}`;
 
   // Uma única tentativa, de propósito: cada chamada já leva 30-45s, e a
   // Vercel mata a função aos 60s (teto do plano Hobby) — não sobra tempo
