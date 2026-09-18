@@ -33,13 +33,17 @@ Uma frase curta situando a possibilidade dentro de um campo que já existe — n
 
 ### 3. Cenário de referência (não previsão)
 
-Uma conta simples e transparente, com as premissas explícitas, mostrando em que patamar de clientes/preço essa possibilidade começaria a fazer sentido financeiramente:
+Uma conta simples e transparente, com as premissas explícitas, mostrando em que patamar de clientes/preço essa possibilidade começaria a fazer sentido financeiramente. A ordem destes passos importa e é proposital:
 
-- Parta de um número pequeno e plausível de clientes/usuários (não um cenário de sucesso extraordinário) e um preço compatível com o modelo de receita já definido na possibilidade (venda unitária, mensalidade, valor por projeto, taxa por intermediação etc.).
-- Desconte custos realistas e modestos do tipo de operação (ex.: hospedagem e ferramentas para um produto digital; nenhum custo relevante para um serviço prestado sozinho) — nunca custos inflados nem custos inventados sem relação com o tipo de entrega.
-- Chegue a um resultado líquido mensal de referência. Quando fizer sentido, compare esse patamar ao piso salarial nacional do magistério no Brasil (por volta de R$5.000 mensais) apenas como uma régua de tamanho que o professor já reconhece — nunca como uma promessa de que ele vai alcançá-lo.
-- Termine sempre com uma frase deixando claro que é um cenário de referência para entender a escala, não uma previsão de resultado.
-- Se a possibilidade genuinamente não permitir uma conta minimamente defensável (faltam âncoras de preço ou de custo plausíveis), não force um número — diga isso com honestidade em vez de inventar uma conta vazia.
+1. **Primeiro, e sem olhar para nenhuma régua de comparação**: decida o número de clientes/usuários e o preço mais realistas para o tipo de operação e o estágio dela (early-stage, poucos clientes, preço de validação) — plausível para ESTE modelo de receita e ESTE tipo de comprador especificamente, nunca um número escolhido por gerar um resultado redondo ou parecido com o de outra possibilidade.
+2. Desconte custos realistas e modestos do tipo de operação (ex.: hospedagem e ferramentas para um produto digital; nenhum custo relevante para um serviço prestado sozinho) — nunca custos inflados nem custos inventados sem relação com o tipo de entrega.
+3. Chegue a um resultado líquido mensal de referência — o que der, sem ajustar as premissas do passo 1 pra empurrar o resultado numa direção.
+4. **Só agora, depois de já ter o resultado**, se fizer sentido, compare esse patamar ao piso salarial nacional do magistério no Brasil (por volta de R$5.000 mensais) apenas como uma régua de tamanho que o professor já reconhece — nunca como uma promessa de que ele vai alcançá-lo, e sem reescrever as premissas do passo 1 pra aproximar o resultado dessa régua.
+5. Termine sempre com uma frase deixando claro que é um cenário de referência para entender a escala, não uma previsão de resultado.
+
+**É esperado e aceitável que o resultado fique bem abaixo ou bem acima de R$5.000** — possibilidades diferentes têm economias diferentes, e forçar todas a convergirem para perto dessa régua é exatamente o erro a evitar aqui. Se as 5 possibilidades de um mesmo conjunto vierem com resultados muito parecidos entre si, desconfie: relaxe as premissas de cada uma independentemente, sem pensar nas outras 4 nem na régua de comparação.
+
+Se a possibilidade genuinamente não permitir uma conta minimamente defensável (faltam âncoras de preço ou de custo plausíveis), não force um número — diga isso com honestidade em vez de inventar uma conta vazia.
 
 ### 4. Ponto de atenção reformulado como primeiro passo
 

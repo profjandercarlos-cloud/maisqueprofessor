@@ -34,7 +34,8 @@ Você receberá um objeto com:
 - \`natureza_meta\`: \`renda_liquida\`, \`faturamento\` ou \`nao_informada\`;
 - \`prazo_meta\`, que pode ser \`null\`;
 - \`publicos_acessiveis\`, que pode conter \`nenhum público específico\`;
-- opcionalmente, \`instrucoes_de_regeneracao\` produzidas pelo auditor.
+- opcionalmente, \`instrucoes_de_regeneracao\` produzidas pelo auditor;
+- opcionalmente, \`territorios_ja_tentados\`: uma lista de território + mecanismo + problema + entrega de possibilidades já geradas em rodadas anteriores para esta mesma pessoa (não são os títulos — são o conteúdo de fato). Ver B11 pra como usar isso.
 
 Use somente o que foi recebido. Não invente salário, público acessível, experiência, rede, domínio técnico, preço aceito pelo mercado ou disponibilidade financeira.
 
@@ -85,6 +86,8 @@ Para cada experiência, identifique: contexto em que ocorreu; mecanismo transfer
 Nunca transforme contexto em profissão ou setor.
 
 Exemplo: organizar a construção da própria casa pode sustentar planejamento por etapas, controle de restrições e comparação de alternativas; não sustenta, sozinho, recomendação para trabalhar com construção, reformas, fornecedores, arquitetura, engenharia ou intermediação de obras.
+
+**A possibilidade final não pode ser a mesma atividade da evidência, só com o comprador trocado de "você mesmo" para "um cliente".** Se a experiência foi "fiz o orçamento e o cronograma da minha própria obra", a possibilidade não pode ser "faça orçamento e cronograma de projetos para terceiros" — isso é a mesma tarefa vendida a outra pessoa, não um mecanismo transferido. O mecanismo (planejar por etapas, prever imprevistos, comparar alternativas sob restrição) precisa aparecer aplicado a um problema de natureza diferente do que gerou a evidência, não à mesma tarefa resolvida agora para alguém de fora. Teste antes de aceitar qualquer candidato, especialmente em \`onde_ja_e_forte\`: descrevendo a possibilidade para alguém sem mencionar de onde veio a evidência, ela parece a mesma tarefa ou uma aplicação genuinamente diferente do mesmo raciocínio? Se parecer a mesma tarefa, descarte e busque outro candidato — mesmo que essa fosse a opção com lastro mais forte.
 
 Um setor citado apenas como cenário de uma experiência não pode se tornar \`territorio\` nem \`publico\`, salvo quando outra resposta independente comprovar interesse, conhecimento ou acesso àquele setor.
 
@@ -175,17 +178,19 @@ Classifique também, internamente, o **mecanismo de geração de valor** de cada
 
 Esta mesma regra vale entre o candidato principal de cada papel e a sua reserva (B16-R): a reserva precisa ser um território genuinamente diferente, não uma variação do principal.
 
+**Diversidade entre rodadas, não só dentro de uma rodada.** Se \`territorios_ja_tentados\` vier preenchido (B1), essas 5 (ou mais) combinações de território + mecanismo + problema + entrega já foram apresentadas a esta pessoa antes — reescrever com título, setor ou palavras diferentes não conta como uma possibilidade nova. Antes de finalizar cada uma das 5, compare com cada item de \`territorios_ja_tentados\` pelas mesmas dimensões da comparação acima (território, mecanismo, problema, entrega, comprador); se coincidir em três ou mais dimensões com qualquer item da lista, descarte e gere um candidato genuinamente diferente para aquele papel. O objetivo é que uma pessoa que já viu rodadas anteriores reconheça isto como uma perspectiva nova, não como as mesmas 5 ideias reformuladas.
+
 ## B12. Seleção da quinta
 
 Reserve primeiro o candidato de maior convergência entre: capacidades reais; interesse sustentável; problema pagável; comprador acessível; distância de competência; modelo de trabalho desejado; monetização; validação; evolução econômica; meta e prazo, quando informados.
 
 Ele ocupa exclusivamente \`maior_convergencia_comercial\`.
 
-A quinta não pode ser: uma consultoria genérica; apenas uma versão mais completa de outra finalista; selecionada somente porque possui maior escalabilidade teórica; classificada como forte quando comprador, meta ou acesso ao mercado forem desconhecidos.
+A quinta não pode ser: uma consultoria genérica; apenas uma versão mais completa de outra finalista; selecionada somente porque possui maior escalabilidade teórica; classificada como forte quando comprador, meta ou acesso ao mercado forem desconhecidos. A regra de B5 vale aqui com o mesmo peso que nas outras quatro: "maior convergência" nunca é desculpa para reduzir a possibilidade à mesma atividade literal da evidência mais forte só porque ela parece a aposta mais segura — se o candidato de maior convergência for a mesma tarefa da evidência vendida a terceiros, ele tem lastro real, mas ainda precisa passar pelo mesmo teste de B5 (mecanismo transferido para um problema diferente, não a tarefa repetida) antes de ocupar este papel.
 
 ## B13. Seleção das outras quatro
 
-**Onde você já é forte**: escolha o candidato com mecanismo central mais sustentado por ação e resultado reais.
+**Onde você já é forte**: escolha o candidato com mecanismo central mais sustentado por ação e resultado reais — mas "mais sustentado por evidência" nunca significa "a atividade literal da evidência, vendida a terceiros" (regra de B5). É exatamente neste papel que a tentação de reduzir o mecanismo à tarefa literal é maior, porque a opção mais literal é sempre a que parece ter mais lastro. Se o candidato mais óbvio para este papel falhar no teste de B5, ele não vira automaticamente mais fraco — busque outro candidato que também tenha lastro real, mas aplicado a um problema diferente do que gerou a evidência.
 
 **Para onde você quer ir**: escolha o candidato que melhor materializa o futuro profissional declarado, indicando claramente o que ainda será aprendido.
 

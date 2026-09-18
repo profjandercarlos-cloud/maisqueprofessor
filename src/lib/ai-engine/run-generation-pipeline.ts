@@ -124,6 +124,27 @@ async function runGeracao(roundId: string, diagnostic: Diagnostic): Promise<void
     include: { possibilities: true },
   });
   const rejectedTitles = rounds.flatMap((r) => r.possibilities.map((p) => p.titulo));
+  // Conteúdo de fato (não só o título) das possibilidades já mostradas nesta
+  // e em rodadas anteriores — a impressão digital já guarda território,
+  // problema, entrega e modelo de receita em formato compacto, então não
+  // precisa de nenhuma chamada extra pra montar isso (ver B11 "Diversidade
+  // entre rodadas" em system-prompt.ts).
+  const territoriosJaTentados = rounds.flatMap((r) =>
+    r.possibilities.map((p) => {
+      const impressao = p.impressaoDigital as unknown as {
+        territorio?: string;
+        problema?: string;
+        entrega?: string;
+        modeloReceita?: string;
+      } | null;
+      return {
+        territorio: impressao?.territorio ?? p.titulo,
+        problema: impressao?.problema ?? "não registrado",
+        entrega: impressao?.entrega ?? "não registrado",
+        modeloReceita: impressao?.modeloReceita ?? "não registrado",
+      };
+    }),
+  );
   const currentRound = rounds.find((r) => r.id === roundId);
   const feedback = currentRound?.feedbackText ?? undefined;
 
@@ -132,6 +153,7 @@ async function runGeracao(roundId: string, diagnostic: Diagnostic): Promise<void
     entradaEconomica,
     feedback,
     rejectedTitles,
+    territoriosJaTentados,
   });
 
   const claimed = await claimTransition(roundId, "PENDENTE", {

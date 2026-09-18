@@ -22,6 +22,16 @@ export type GenerationContext = {
   // pontual (ver correct-possibilities-openai.ts).
   feedback?: string;
   rejectedTitles?: string[];
+  // Conteúdo de fato de possibilidades já geradas em rodadas anteriores
+  // (não os títulos) — impede a repetição semântica que rejectedTitles
+  // sozinho não pega, já que o gerador nunca reusa o título ao pé da letra
+  // (ver B11 "Diversidade entre rodadas" em system-prompt.ts).
+  territoriosJaTentados?: Array<{
+    territorio: string;
+    problema: string;
+    entrega: string;
+    modeloReceita: string;
+  }>;
 };
 
 export type ImpressaoDigital = {
@@ -354,6 +364,14 @@ function buildUserMessage(context: GenerationContext): string {
   }
   if (context.rejectedTitles && context.rejectedTitles.length > 0) {
     message += `\n\nPOSSIBILIDADES REJEITADAS ANTERIORMENTE (não repetir):\n${context.rejectedTitles.map((t) => `- ${t}`).join("\n")}`;
+  }
+  if (context.territoriosJaTentados && context.territoriosJaTentados.length > 0) {
+    message += `\n\nTERRITÓRIOS_JÁ_TENTADOS (conteúdo de rodadas anteriores para esta mesma pessoa — não repetir com nome diferente, ver B11):\n${context.territoriosJaTentados
+      .map(
+        (t, i) =>
+          `${i + 1}. território: ${t.territorio} | problema: ${t.problema} | entrega: ${t.entrega} | modelo de receita: ${t.modeloReceita}`,
+      )
+      .join("\n")}`;
   }
 
   return message;
