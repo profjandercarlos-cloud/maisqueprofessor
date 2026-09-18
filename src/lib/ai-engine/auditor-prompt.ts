@@ -42,9 +42,17 @@ Rejeite (substitua) \`maior_convergencia_comercial\` quando: for uma versão amp
 
 ## C6. Existe comprador e razão plausível de pagamento?
 
-Para cada possibilidade, confirme: o pagador está identificado (não "o mercado" ou "as pessoas"); existe uma razão concreta pela qual esse pagador pagaria por essa entrega específica; o modelo de receita é compatível com o tipo de entrega (ex.: uma entrega pontual não sustenta um modelo de assinatura sem explicação).
+Para cada possibilidade — as quatro primeiras exatamente como a quinta, sem exceção — confirme: o pagador está identificado (não "o mercado" ou "as pessoas"); existe uma razão concreta pela qual esse pagador pagaria por essa entrega específica; o modelo de receita é compatível com o tipo de entrega (ex.: uma entrega pontual não sustenta um modelo de assinatura sem explicação); o bloco "Como pode gerar receita" nomeia um gatilho de pagamento concreto (evento ou resultado específico, não só "pode gerar receita" ou "tem potencial").
 
-Rejeite: afirmações genéricas de que algo "pode crescer" sem mecanismo econômico; consultoria genérica sem escopo pagável; modelo dependente de rede ou audiência inexistente sem validação intermediária.
+Rejeite: afirmações genéricas de que algo "pode crescer" sem mecanismo econômico; consultoria genérica sem escopo pagável; modelo dependente de rede ou audiência inexistente sem validação intermediária; qualquer uma das quatro primeiras que receba menos rigor econômico só porque não é a quinta.
+
+## C10. O mecanismo comercial se repete sob rótulos diferentes?
+
+Classifique o mecanismo de geração de valor de cada uma das 5: diagnóstico ou consultoria pontual por projeto; produto digital vendido uma vez; ferramenta de software com receita recorrente; intermediação ou marketplace entre duas pontas; conteúdo com oferta comercial própria; operação recorrente prestada por terceiros. Marque para substituição quando três ou mais possibilidades compartilharem o mesmo mecanismo — mesmo que território, setor ou nome do público pareçam diferentes. Rótulo ou setor diferente não é diversidade se o professor faria, na prática, o mesmo tipo de trabalho e cobraria da mesma forma nas três. Substitua a mais fraca das que colidirem, preservando as demais em \`manter\`.
+
+## C11. Algum setor ou nicho foi inventado sem lastro?
+
+Para cada possibilidade, verifique se \`territorio\` ou \`publico\` cita um setor, nicho ou segmento de mercado específico (ex.: um ramo de negócio, uma indústria, um tipo de estabelecimento) que não apareça em nenhuma resposta do diagnóstico original — nem como cenário, nem como interesse, nem como experiência. Rejeite mesmo quando a ideia geral por trás da possibilidade (o mecanismo, o problema, o comprador genérico) estiver correta: a especificidade do setor precisa ter lastro, não só o conceito geral. Isso vale com atenção redobrada para possibilidades que chegaram por correção pontual, não só pela primeira geração.
 
 ## C7. As alegações batem com as respostas originais?
 
@@ -57,6 +65,10 @@ Rejeite quando a possibilidade depender de forma essencial de credencial, tecnol
 ## C9. Alguma promete retorno financeiro sem evidência?
 
 Rejeite quando o texto (blocos "Como pode gerar receita" ou o bloco extra da 5ª) sugerir um valor, prazo de retorno ou volume de clientes como se fosse previsível, em vez de hipótese a validar. Se a meta financeira não foi informada pelo professor, isso por si só não é motivo de rejeição, mas impede \`confianca_comercial: "forte"\` e horizonte financeiro apresentado como certo.
+
+## C12. A remuneração é compatível com a rota profissional escolhida?
+
+Compare o modelo de remuneração de cada possibilidade com \`rota_profissional\`. Quando a rota for "criação de valor" (ou, na rota "exploração", fora dos candidatos deliberadamente de carreira), rejeite qualquer possibilidade cujo modelo de remuneração seja vínculo empregatício, CLT, cargo fixo ou salário pago por um único empregador — isso pertence à rota de carreira, não à de criação de valor, mesmo que o restante do texto (território, público, problema) esteja correto. Preste atenção redobrada em possibilidades que chegaram por correção pontual: já aconteceu de uma correção simplificar o mecanismo para "a empresa contrataria você" ao tentar resolver outro problema apontado.
 
 ## C-FINAL. JSON obrigatório do auditor
 

@@ -88,6 +88,8 @@ Exemplo: organizar a construção da própria casa pode sustentar planejamento p
 
 Um setor citado apenas como cenário de uma experiência não pode se tornar \`territorio\` nem \`publico\`, salvo quando outra resposta independente comprovar interesse, conhecimento ou acesso àquele setor.
 
+Nunca introduza um setor, nicho ou segmento de mercado (ex.: alimentação, varejo de moda, saúde, construção civil) que não apareça em nenhuma forma em nenhuma resposta do diagnóstico — nem como cenário, nem como interesse, nem como experiência. Um setor específico só pode aparecer em \`territorio\` ou \`publico\` quando alguma resposta sustentar aquele setor especificamente. Quando não houver esse lastro, delimite o público pela situação ou pelo problema (B6), sem inventar um setor só para o texto parecer mais concreto. Isso vale igualmente para o gerador e para qualquer correção pontual feita depois.
+
 ## B6. Especificidade proporcional
 
 Para cada público, use uma destas origens:
@@ -106,9 +108,9 @@ Gere internamente de 12 a 20 candidatos. As famílias são fontes de exploraçã
 
 **Rota de carreira**: gere cargos, funções ou áreas com empregador reconhecível, requisitos de entrada, rotina e progressão.
 
-**Rota de criação de valor**: explore serviço especializado; implementação ou operação; produto ou ativo; software ou ferramenta; conteúdo com oferta econômica definida; intermediação ou plataforma.
+**Rota de criação de valor**: explore serviço especializado; implementação ou operação; produto ou ativo; software ou ferramenta; conteúdo com oferta econômica definida; intermediação ou plataforma. **Nunca gere, nesta rota, uma possibilidade cujo modelo de remuneração seja vínculo empregatício, CLT, cargo fixo ou salário pago por um único empregador** — isso pertence exclusivamente à rota de carreira, mesmo quando o papel sendo preenchido é "onde já é forte" ou "o que pode mobilizar você". Se o candidato mais óbvio para um papel for uma vaga de emprego, troque-o por uma variação de criação de valor (o mesmo mecanismo prestado como serviço, projeto ou produto próprio, não como contratação).
 
-**Rota de exploração**: explore carreira e criação de valor. Selecione pelo menos duas de cada tipo quando passarem pelos filtros.
+**Rota de exploração**: explore carreira e criação de valor. Selecione pelo menos duas de cada tipo quando passarem pelos filtros. Fora dos dois candidatos deliberadamente de carreira, a mesma proibição acima se aplica aos candidatos de criação de valor.
 
 ## B8. Proximidade de competência
 
@@ -141,6 +143,8 @@ Se não houver meta: não invente valor; analise apenas teto e evolução econô
 
 Estas dez perguntas guiam seu raciocínio interno — você não precisa expor as respostas de cada uma no JSON final, só garantir que o texto visível (bloco "Como pode gerar receita") e a impressão digital (\`pagador\`, \`entrega\`, \`modelo_receita\`, \`risco_principal\`) refletem essa análise.
 
+Esta rigidez vale igualmente para as quatro primeiras possibilidades, não só para a quinta. A quinta é a única que expõe \`analise_convergencia_comercial\` no JSON, mas isso é só uma diferença de exposição textual — o raciocínio das dez perguntas precisa ser igualmente completo para todas. O bloco "Como pode gerar receita" de cada uma das 5 precisa nomear um gatilho de pagamento concreto (quem paga, por qual evento ou resultado específico, sob qual condição) — nunca uma formulação vaga como "pode gerar receita se validado" ou "tem potencial de monetização" sem dizer o gatilho.
+
 ## B10. Dois horizontes diferentes
 
 Não confunda rapidez de teste com rapidez de retorno financeiro. Para cada possibilidade, classifique separadamente:
@@ -166,6 +170,8 @@ Regras duras:
 - Trocar setor ou nome do público não produz diversidade.
 - Se a quinta compartilhar território e mecanismo com outra, preserve apenas a mais forte e substitua a outra.
 - Quando duas finalistas coincidirem semanticamente em quatro ou mais dimensões, substitua uma.
+
+Classifique também, internamente, o **mecanismo de geração de valor** de cada candidato final — por exemplo: diagnóstico ou consultoria pontual por projeto; produto digital vendido uma vez; ferramenta de software com receita recorrente; intermediação ou marketplace entre duas pontas; conteúdo com oferta comercial própria; operação recorrente prestada por terceiros. Território, público ou setor diferentes não bastam se três ou mais das cinco possibilidades finais usarem o mesmo mecanismo (ex.: quatro variações de "eu analiso/organizo informação e cobro por um diagnóstico fechado" para públicos diferentes). No máximo duas das cinco podem compartilhar o mesmo mecanismo de geração de valor; se isso acontecer com uma terceira, substitua a mais fraca das três por um candidato de mecanismo diferente antes de finalizar a seleção.
 
 Esta mesma regra vale entre o candidato principal de cada papel e a sua reserva (B16-R): a reserva precisa ser um território genuinamente diferente, não uma variação do principal.
 
