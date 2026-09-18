@@ -21,6 +21,25 @@ type AnaliseConvergenciaComercial = {
   nivelConfiancaComercial: string;
 };
 
+// Camada de apresentação de mercado — ADITIVA, gerada em fase própria depois
+// que o round já está pronto (ver market-presentation-prompt.ts). Pode ser
+// null (fase ainda não rodou, falhou, ou foi desligada) — a tela sempre
+// funciona sem isso.
+type AnaliseMercadoAmpliada = {
+  nome_de_mercado: string | null;
+  reconhecimento_mercado: string;
+  compradores_nomeados: string[];
+  cenario_referencia: {
+    aplica: boolean;
+    premissas: string;
+    custos_estimados: string;
+    resultado_liquido_estimado: string;
+    comparacao_piso_magisterio: string | null;
+    aviso: string;
+  };
+  ponto_de_atencao_reformulado: string;
+};
+
 type PossibilityData = {
   id: string;
   papel: PossibilityRole;
@@ -36,6 +55,7 @@ type PossibilityData = {
   primeiraValidacao: string; // bloco 4 — "Como validar sem construir tudo"
   pontoDeAtencao: string; // bloco 5 — "Ponto de atenção"
   analiseConvergenciaComercial: unknown;
+  analiseMercadoAmpliada: unknown;
   status: PossibilityStatus;
 };
 
@@ -66,6 +86,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
         const convergencia = p.destaque
           ? (p.analiseConvergenciaComercial as AnaliseConvergenciaComercial | null)
           : null;
+        const mercado = p.analiseMercadoAmpliada as AnaliseMercadoAmpliada | null;
         return (
           <article
             key={p.id}
@@ -169,6 +190,55 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     </div>
                     <div className="text-[14px] leading-[1.55] text-ink">{p.pontoDeAtencao}</div>
                   </div>
+
+                  {mercado ? (
+                    <div className="rounded-[10px] border border-line bg-badge-bg p-3.5">
+                      <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-badge-text uppercase">
+                        Conexão com o mercado real
+                      </div>
+                      {mercado.nome_de_mercado ? (
+                        <div className="mb-1.5 text-[14px] leading-[1.55] font-semibold text-ink">
+                          {mercado.nome_de_mercado}
+                        </div>
+                      ) : null}
+                      <div className="mb-2 text-[13.5px] leading-[1.5] text-ink">
+                        {mercado.reconhecimento_mercado}
+                      </div>
+                      <div className="mb-1.5 text-[12px] font-semibold text-ink">Quem compraria</div>
+                      <ul className="mb-2.5 flex flex-col gap-1">
+                        {mercado.compradores_nomeados.map((item, i) => (
+                          <li key={i} className="flex items-start gap-2 text-[13.5px] leading-[1.5] text-ink">
+                            <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-badge-text" />
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                      {mercado.cenario_referencia.aplica ? (
+                        <div className="rounded-lg bg-paper p-3">
+                          <div className="mb-1 text-[12px] font-semibold text-ink">
+                            Cenário de referência (não é previsão)
+                          </div>
+                          <div className="text-[13.5px] leading-[1.5] text-ink-muted">
+                            {mercado.cenario_referencia.premissas}
+                          </div>
+                          <div className="mt-1 text-[13.5px] leading-[1.5] text-ink-muted">
+                            Custos estimados: {mercado.cenario_referencia.custos_estimados}
+                          </div>
+                          <div className="mt-1 text-[13.5px] leading-[1.5] font-semibold text-ink">
+                            {mercado.cenario_referencia.resultado_liquido_estimado}
+                          </div>
+                          {mercado.cenario_referencia.comparacao_piso_magisterio ? (
+                            <div className="mt-1 text-[13.5px] leading-[1.5] text-ink-muted">
+                              {mercado.cenario_referencia.comparacao_piso_magisterio}
+                            </div>
+                          ) : null}
+                          <div className="mt-1.5 text-[11.5px] text-ink-muted italic">
+                            {mercado.cenario_referencia.aviso}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   {convergencia ? (
                     <div

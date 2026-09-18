@@ -26,6 +26,7 @@ import {
 import { auditPossibilitiesOpenAI, type AuditResult } from "./audit-possibilities-openai";
 import { correctPossibilitiesOpenAI } from "./correct-possibilities-openai";
 import { triggerGenerationStep } from "./trigger-generation-step";
+import { triggerMarketPresentationStep } from "./trigger-market-presentation-step";
 import { logDebugError } from "@/lib/debug-error-log";
 import type { z } from "zod";
 
@@ -364,4 +365,10 @@ async function persistApproved(roundId: string, diagnosticId: string, draft: Gen
     where: { round: { diagnosticId, id: { not: roundId } }, status: "PENDENTE" },
     data: { status: "REJEITADA" },
   });
+
+  // Camada aditiva de apresentação de mercado (ver
+  // market-presentation-prompt.ts) — fase própria, HTTP separado, nunca
+  // bloqueia o round em si. Só quem realmente persistiu esta rodada
+  // dispara (claimed === true), evitando disparo duplicado.
+  await triggerMarketPresentationStep(roundId);
 }

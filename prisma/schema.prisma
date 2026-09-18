@@ -184,6 +184,7 @@ model Possibility {
   analiseConvergenciaComercial Json? // só a possibilidade com destaque=true tem; null nas outras 4
   mapaExecucao         Json? // gerado só depois que o professor aprova esta possibilidade (ver adequacao/[possibilityId]/concluido/actions.ts) — null até lá
   feedbackMissoesAtivacao Json? // respostas gerais pós-missões (vontade de continuar, horas reais por semana, dificuldade principal) — null até o professor concluir as 3 missões
+  analiseMercadoAmpliada Json? // camada de apresentação ADITIVA — nome de mercado real, compradores nomeados, cenário de referência (preço x volume x custo) e ponto de atenção reformulado como primeiro passo. Gerada 1x pra todas as 5 do round, em fase própria e não bloqueante (ver trigger-market-presentation-step.ts), sem tocar no motor de geração/auditoria/correção. Null até a fase rodar (ou se ela falhar/for desligada) — a tela sempre funciona sem isso, é 100% reversível: pra desligar, basta parar de chamar a fase.
   status               PossibilityStatus  @default(PENDENTE)
   createdAt            DateTime           @default(now())
 
