@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { PossibilityCards } from "./possibility-cards";
 import { PollingWait } from "./polling-wait";
+import { MarketPresentationRetry } from "./market-presentation-retry";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
 
@@ -128,6 +129,13 @@ export default async function PossibilitiesReviewPage({
         </div>
       ) : null}
 
+      <MarketPresentationRetry
+        roundId={round.id}
+        needsRetry={
+          round.possibilities.length === 5 &&
+          round.possibilities.some((p) => p.analiseMercadoAmpliada === null)
+        }
+      />
       <PossibilityCards possibilities={round.possibilities} />
 
       {alreadyApproved ? (
