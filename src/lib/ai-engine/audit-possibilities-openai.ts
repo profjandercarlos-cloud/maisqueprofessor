@@ -1,4 +1,4 @@
-// Auditor semântico V4 — segunda chamada de IA, independente do gerador, que
+// Auditor semântico V5 "macro nicho" — segunda chamada de IA, independente do gerador, que
 // decide papel por papel se o rascunho pode ser aprovado ou precisa de
 // correção pontual (ver run-generation-pipeline.ts). Espelha a seção
 // C-FINAL do prompt do auditor (auditor-prompt.ts). Reaproveitado também
@@ -57,19 +57,19 @@ export async function auditPossibilitiesOpenAI(params: {
   const userMessage = `ENTRADA ORIGINAL COMPLETA
 ${params.entrada}
 
-RASCUNHO DO GERADOR V4 (verificação ${params.tentativa})
+RASCUNHO DO GERADOR V5 (verificação ${params.tentativa})
 ${JSON.stringify(params.rascunho)}`;
 
   const completion = await openai.chat.completions.create({
     model: OPENAI_GENERATION_MODEL,
-    max_completion_tokens: 4000,
+    max_completion_tokens: 6000,
     messages: [
       { role: "system", content: AUDITOR_SYSTEM_PROMPT },
       { role: "user", content: userMessage },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: { name: "auditoria_v4", strict: true, schema: JSON_SCHEMA },
+      json_schema: { name: "auditoria_v5", strict: true, schema: JSON_SCHEMA },
     },
   });
 

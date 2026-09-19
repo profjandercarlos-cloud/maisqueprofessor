@@ -1,11 +1,16 @@
-// Motor V4 das 5 possibilidades — produz um RASCUNHO. Só é persistido
-// depois de aprovado (ou corrigido pontualmente e reaprovado) pelo auditor
-// semântico (ver audit-possibilities-openai.ts, correct-possibilities-openai.ts
-// e run-generation-pipeline.ts). Usa saída estruturada da OpenAI
-// (json_schema strict), que garante JSON válido por construção. Diferença
-// central pro V3: sem mapa_execucao (gerado só depois da escolha do
-// professor, ver generate-mapa-execucao-openai.ts) e com impressão digital
-// compacta no lugar da antiga análise interna extensa.
+// Motor V5 "macro nicho" das 5 possibilidades — produz um RASCUNHO. Só é
+// persistido depois de aprovado (ou corrigido pontualmente e reaprovado)
+// pelo auditor semântico (ver audit-possibilities-openai.ts,
+// correct-possibilities-openai.ts e run-generation-pipeline.ts). Usa saída
+// estruturada da OpenAI (json_schema strict).
+//
+// Diferença central pro V4: identifica o macro nicho da pessoa antes das 5
+// possibilidades, e cada possibilidade já nasce com conexão de mercado real
+// + trajetória financeira de 1/3/5 anos embutidas (a antiga camada
+// "analiseMercadoAmpliada", gerada numa fase separada depois, não é mais
+// necessária — ver nota no schema.prisma). `comoGerarReceita`/`comoValidar`
+// continuam existindo como resumos internos curtos, pra não quebrar Mapa de
+// Execução / Missões de Ativação / Plano, que ainda leem esses campos.
 import { z } from "zod";
 import type { PossibilityRole } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
@@ -16,16 +21,8 @@ import { logDebugError } from "@/lib/debug-error-log";
 export type GenerationContext = {
   diagnosticInput: string;
   entradaEconomica: EntradaEconomica;
-  // Feedback do PROFESSOR sobre o conjunto anterior (fluxo de "ajustar
-  // conjunto") — não tem mais "instrução de regeneração do auditor" aqui:
-  // no V4, uma rejeição do auditor nunca volta pro gerador, só pro corretor
-  // pontual (ver correct-possibilities-openai.ts).
   feedback?: string;
   rejectedTitles?: string[];
-  // Conteúdo de fato de possibilidades já geradas em rodadas anteriores
-  // (não os títulos) — impede a repetição semântica que rejectedTitles
-  // sozinho não pega, já que o gerador nunca reusa o título ao pé da letra
-  // (ver B11 "Diversidade entre rodadas" em system-prompt.ts).
   territoriosJaTentados?: Array<{
     territorio: string;
     problema: string;
@@ -47,15 +44,37 @@ export type ImpressaoDigital = {
   confiancaComercial: string;
 };
 
-export type AnaliseConvergenciaComercial = {
-  porQueSeDestaca: string;
-  horizontePrincipal: string;
-  justificativaHorizonte: string;
-  logicaParaMeta: string;
-  contaDeReferencia: string | null;
-  condicoesParaConfirmar: string[];
-  principalRiscoComercial: string;
-  nivelConfiancaComercial: string;
+export type ConexaoMundoReal = {
+  nomeDeMercado: string | null;
+  reconhecimentoMercado: string;
+  compradoresNomeados: string[];
+};
+
+export type MarcoTemporalFinanceiro = {
+  premissas: string;
+  resultadoLiquidoEstimado: string;
+};
+
+export type TrajetoriaFinanceira = {
+  cenarioInicial: MarcoTemporalFinanceiro;
+  ano1: MarcoTemporalFinanceiro;
+  ano3: MarcoTemporalFinanceiro;
+  ano5: MarcoTemporalFinanceiro;
+  logicaDeCrescimento: string;
+  riscoEstrutural: string;
+  aviso: string;
+};
+
+export type TempoDedicacao = {
+  inicial: string;
+  ano3: string;
+  ano5: string;
+};
+
+export type MacroNicho = {
+  nome: string;
+  explicacao: string;
+  nichoSecundario: string | null;
 };
 
 export type GeneratedPossibility = {
@@ -66,13 +85,19 @@ export type GeneratedPossibility = {
   tempoPrimeiraValidacao: "CURTO_PRAZO" | "MEDIO_PRAZO" | "LONGO_PRAZO";
   horizonteRelevanciaFinanceira: "CURTO_PRAZO" | "MEDIO_PRAZO" | "LONGO_PRAZO" | "A_VALIDAR";
   destaque: boolean;
-  comoFunciona: string; // bloco 1 — "A possibilidade"
-  comoGerarReceita: string; // bloco 3 — "Como pode gerar receita"
-  porQueCombinaComVoce: string; // bloco 2 — "Por que combina com você"
-  primeiraValidacao: string; // bloco 4 — "Como validar sem construir tudo"
-  pontoDeAtencao: string; // bloco 5 — "Ponto de atenção"
+  comoFunciona: string; // bloco 1 — "A possibilidade" (já com exemplo concreto embutido)
+  comoGerarReceita: string; // resumo interno curto — usado por Mapa de Execução/Missões/Plano
+  porQueCombinaComVoce: string;
+  primeiraValidacao: string; // resumo interno curto ("como validar")
+  pontoDeAtencao: string;
+  dominioAplicacao: string;
+  mecanismoComercialClasse: string;
+  profundidade: string;
   impressaoDigital: ImpressaoDigital;
-  analiseConvergenciaComercial: AnaliseConvergenciaComercial | null;
+  conexaoMundoReal: ConexaoMundoReal;
+  trajetoriaFinanceira: TrajetoriaFinanceira;
+  tempoDedicacao: TempoDedicacao;
+  analiseConvergenciaComercial: null; // não é mais usado no V5 — destaque financeiro vive em trajetoriaFinanceira
 };
 
 export type Reserva = {
@@ -94,6 +119,8 @@ export type MetaFinanceiraUsada = {
 
 export type GeneratedPossibilitiesResult = {
   versaoMotor: string;
+  macroNicho: MacroNicho;
+  premissasFinanceirasGerais: string;
   possibilities: GeneratedPossibility[];
   reservas: Reserva[];
   avisoEconomico: string;
@@ -105,7 +132,10 @@ const ROLE_MAP: Record<string, PossibilityRole> = {
   para_onde_quer_ir: "PARA_ONDE_QUER_IR",
   o_que_pode_mobilizar: "O_QUE_PODE_MOBILIZAR",
   nao_considerada: "NAO_CONSIDERADA",
-  maior_convergencia_comercial: "MAIOR_CONVERGENCIA_COMERCIAL",
+  // O papel manteve o mesmo valor de enum no banco (evita migração/risco) —
+  // só o nome exibido pro professor mudou, via `rotulo_papel` (texto livre
+  // já gerado pelo próprio modelo, não o enum).
+  maior_chance_sucesso_financeiro: "MAIOR_CONVERGENCIA_COMERCIAL",
 };
 const PAPEL_VALUES = Object.keys(ROLE_MAP) as [string, ...string[]];
 
@@ -129,6 +159,17 @@ const HORIZONTE_OU_A_VALIDAR_MAP: Record<string, "CURTO_PRAZO" | "MEDIO_PRAZO" |
 };
 const HORIZONTE_OU_A_VALIDAR_VALUES = Object.keys(HORIZONTE_OU_A_VALIDAR_MAP) as [string, ...string[]];
 
+const MECANISMO_COMERCIAL_VALUES = [
+  "servico_projeto",
+  "produto_digital",
+  "software_recorrente",
+  "intermediacao",
+  "operacao_recorrente",
+  "conteudo",
+] as const;
+
+const PROFUNDIDADE_VALUES = ["diagnostico_pontual", "acompanhamento_recorrente", "uso_autonomo"] as const;
+
 const impressaoDigitalSchema = z.object({
   papel: z.enum(PAPEL_VALUES),
   territorio: z.string().min(1),
@@ -142,15 +183,31 @@ const impressaoDigitalSchema = z.object({
   confianca_comercial: z.enum(LASTRO_VALUES),
 });
 
-const analiseConvergenciaComercialSchema = z.object({
-  por_que_se_destaca: z.string().min(1),
-  horizonte_principal: z.enum(HORIZONTE_OU_A_VALIDAR_VALUES),
-  justificativa_horizonte: z.string().min(1),
-  logica_para_meta: z.string().min(1),
-  conta_de_referencia: z.string().nullable(),
-  condicoes_para_confirmar: z.array(z.string().min(1)),
-  principal_risco_comercial: z.string().min(1),
-  nivel_confianca_comercial: z.enum(LASTRO_VALUES),
+const conexaoMundoRealSchema = z.object({
+  nome_de_mercado: z.string().nullable(),
+  reconhecimento_mercado: z.string().min(1),
+  compradores_nomeados: z.array(z.string().min(1)).min(1).max(5),
+});
+
+const marcoTemporalSchema = z.object({
+  premissas: z.string().min(1),
+  resultado_liquido_estimado: z.string().min(1),
+});
+
+const trajetoriaFinanceiraSchema = z.object({
+  cenario_inicial: marcoTemporalSchema,
+  ano_1: marcoTemporalSchema,
+  ano_3: marcoTemporalSchema,
+  ano_5: marcoTemporalSchema,
+  logica_de_crescimento: z.string().min(1),
+  risco_estrutural: z.string().min(1),
+  aviso: z.string().min(1),
+});
+
+const tempoDedicacaoSchema = z.object({
+  inicial: z.string().min(1),
+  ano_3: z.string().min(1),
+  ano_5: z.string().min(1),
 });
 
 export const possibilitySchema = z.object({
@@ -168,8 +225,14 @@ export const possibilitySchema = z.object({
   como_gerar_receita: z.string().min(1),
   como_validar: z.string().min(1),
   ponto_de_atencao: z.string().min(1),
+  dominio_aplicacao: z.string().min(1),
+  mecanismo_comercial_classe: z.enum(MECANISMO_COMERCIAL_VALUES),
+  profundidade: z.enum(PROFUNDIDADE_VALUES),
   impressao_digital: impressaoDigitalSchema,
-  analise_convergencia_comercial: analiseConvergenciaComercialSchema.nullable(),
+  conexao_mundo_real: conexaoMundoRealSchema,
+  trajetoria_financeira: trajetoriaFinanceiraSchema,
+  tempo_dedicacao: tempoDedicacaoSchema,
+  analise_convergencia_comercial: z.null(),
 });
 
 const reservaSchema = z.object({
@@ -189,8 +252,16 @@ const metaFinanceiraUsadaSchema = z.object({
   prazo_desejado: z.string().nullable(),
 });
 
+const macroNichoSchema = z.object({
+  nome: z.string().min(1),
+  explicacao: z.string().min(1),
+  nicho_secundario: z.string().nullable(),
+});
+
 const responseSchema = z.object({
   versao_motor: z.string().min(1),
+  macro_nicho: macroNichoSchema,
+  premissas_financeiras_gerais: z.string().min(1),
   meta_financeira_usada: metaFinanceiraUsadaSchema,
   possibilidades: z.array(possibilitySchema).length(5),
   reservas: z.array(reservaSchema).length(5),
@@ -226,28 +297,50 @@ const IMPRESSAO_DIGITAL_JSON_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const ANALISE_CONVERGENCIA_COMERCIAL_JSON_SCHEMA = {
-  type: ["object", "null"],
+const CONEXAO_MUNDO_REAL_JSON_SCHEMA = {
+  type: "object",
   properties: {
-    por_que_se_destaca: { type: "string" },
-    horizonte_principal: { type: "string", enum: HORIZONTE_OU_A_VALIDAR_VALUES },
-    justificativa_horizonte: { type: "string" },
-    logica_para_meta: { type: "string" },
-    conta_de_referencia: { type: ["string", "null"] },
-    condicoes_para_confirmar: { type: "array", items: { type: "string" } },
-    principal_risco_comercial: { type: "string" },
-    nivel_confianca_comercial: { type: "string", enum: LASTRO_VALUES },
+    nome_de_mercado: { type: ["string", "null"] },
+    reconhecimento_mercado: { type: "string" },
+    compradores_nomeados: { type: "array", items: { type: "string" } },
   },
-  required: [
-    "por_que_se_destaca",
-    "horizonte_principal",
-    "justificativa_horizonte",
-    "logica_para_meta",
-    "conta_de_referencia",
-    "condicoes_para_confirmar",
-    "principal_risco_comercial",
-    "nivel_confianca_comercial",
-  ],
+  required: ["nome_de_mercado", "reconhecimento_mercado", "compradores_nomeados"],
+  additionalProperties: false,
+} as const;
+
+const MARCO_TEMPORAL_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    premissas: { type: "string", description: "Conta em base MENSAL (volume mensal × preço, custos mensais) — nunca some 12 meses." },
+    resultado_liquido_estimado: { type: "string", description: "Resultado líquido MENSAL estimado para este marco — nunca um total anual." },
+  },
+  required: ["premissas", "resultado_liquido_estimado"],
+  additionalProperties: false,
+} as const;
+
+const TRAJETORIA_FINANCEIRA_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    cenario_inicial: MARCO_TEMPORAL_JSON_SCHEMA,
+    ano_1: MARCO_TEMPORAL_JSON_SCHEMA,
+    ano_3: MARCO_TEMPORAL_JSON_SCHEMA,
+    ano_5: MARCO_TEMPORAL_JSON_SCHEMA,
+    logica_de_crescimento: { type: "string" },
+    risco_estrutural: { type: "string" },
+    aviso: { type: "string" },
+  },
+  required: ["cenario_inicial", "ano_1", "ano_3", "ano_5", "logica_de_crescimento", "risco_estrutural", "aviso"],
+  additionalProperties: false,
+} as const;
+
+const TEMPO_DEDICACAO_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    inicial: { type: "string" },
+    ano_3: { type: "string" },
+    ano_5: { type: "string" },
+  },
+  required: ["inicial", "ano_3", "ano_5"],
   additionalProperties: false,
 } as const;
 
@@ -266,8 +359,14 @@ export const POSSIBILITY_JSON_SCHEMA_PROPERTIES = {
   como_gerar_receita: { type: "string" },
   como_validar: { type: "string" },
   ponto_de_atencao: { type: "string" },
+  dominio_aplicacao: { type: "string" },
+  mecanismo_comercial_classe: { type: "string", enum: MECANISMO_COMERCIAL_VALUES },
+  profundidade: { type: "string", enum: PROFUNDIDADE_VALUES },
   impressao_digital: IMPRESSAO_DIGITAL_JSON_SCHEMA,
-  analise_convergencia_comercial: ANALISE_CONVERGENCIA_COMERCIAL_JSON_SCHEMA,
+  conexao_mundo_real: CONEXAO_MUNDO_REAL_JSON_SCHEMA,
+  trajetoria_financeira: TRAJETORIA_FINANCEIRA_JSON_SCHEMA,
+  tempo_dedicacao: TEMPO_DEDICACAO_JSON_SCHEMA,
+  analise_convergencia_comercial: { type: "null" },
 } as const;
 
 export const POSSIBILITY_JSON_SCHEMA_REQUIRED = [
@@ -285,7 +384,13 @@ export const POSSIBILITY_JSON_SCHEMA_REQUIRED = [
   "como_gerar_receita",
   "como_validar",
   "ponto_de_atencao",
+  "dominio_aplicacao",
+  "mecanismo_comercial_classe",
+  "profundidade",
   "impressao_digital",
+  "conexao_mundo_real",
+  "trajetoria_financeira",
+  "tempo_dedicacao",
   "analise_convergencia_comercial",
 ] as const;
 
@@ -305,10 +410,23 @@ const RESERVA_JSON_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+const MACRO_NICHO_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    nome: { type: "string" },
+    explicacao: { type: "string" },
+    nicho_secundario: { type: ["string", "null"] },
+  },
+  required: ["nome", "explicacao", "nicho_secundario"],
+  additionalProperties: false,
+} as const;
+
 const JSON_SCHEMA = {
   type: "object",
   properties: {
     versao_motor: { type: "string" },
+    macro_nicho: MACRO_NICHO_JSON_SCHEMA,
+    premissas_financeiras_gerais: { type: "string" },
     meta_financeira_usada: {
       type: "object",
       properties: {
@@ -331,7 +449,15 @@ const JSON_SCHEMA = {
     reservas: { type: "array", items: RESERVA_JSON_SCHEMA },
     aviso_economico: { type: "string" },
   },
-  required: ["versao_motor", "meta_financeira_usada", "possibilidades", "reservas", "aviso_economico"],
+  required: [
+    "versao_motor",
+    "macro_nicho",
+    "premissas_financeiras_gerais",
+    "meta_financeira_usada",
+    "possibilidades",
+    "reservas",
+    "aviso_economico",
+  ],
   additionalProperties: false,
 } as const;
 
@@ -366,7 +492,7 @@ function buildUserMessage(context: GenerationContext): string {
     message += `\n\nPOSSIBILIDADES REJEITADAS ANTERIORMENTE (não repetir):\n${context.rejectedTitles.map((t) => `- ${t}`).join("\n")}`;
   }
   if (context.territoriosJaTentados && context.territoriosJaTentados.length > 0) {
-    message += `\n\nTERRITÓRIOS_JÁ_TENTADOS (conteúdo de rodadas anteriores para esta mesma pessoa — não repetir com nome diferente, ver B11):\n${context.territoriosJaTentados
+    message += `\n\nTERRITÓRIOS_JÁ_TENTADOS (conteúdo de rodadas anteriores para esta mesma pessoa — não repetir com nome diferente, ver B10):\n${context.territoriosJaTentados
       .map(
         (t, i) =>
           `${i + 1}. território: ${t.territorio} | problema: ${t.problema} | entrega: ${t.entrega} | modelo de receita: ${t.modeloReceita}`,
@@ -381,8 +507,7 @@ export type GeneratorDraft = z.infer<typeof responseSchema>;
 
 // Extrai todos os identificadores [slug] presentes no texto formatado do
 // diagnóstico — usado pra conferir que as evidências citadas pela impressão
-// digital de cada possibilidade realmente existem na entrada (checagem
-// determinística que antes vivia, em parte, no auditor).
+// digital de cada possibilidade realmente existem na entrada.
 function extractSlugsFromDiagnosticInput(diagnosticInput: string): Set<string> {
   const matches = diagnosticInput.matchAll(/\[([a-z0-9-]+)\]/g);
   return new Set(Array.from(matches, (m) => m[1]));
@@ -404,14 +529,14 @@ function checkWordCount(label: string, text: string, min: number, max: number, t
 export async function generatePossibilitiesOpenAI(context: GenerationContext): Promise<GeneratorDraft> {
   const completion = await openai.chat.completions.create({
     model: OPENAI_GENERATION_MODEL,
-    max_completion_tokens: 12000,
+    max_completion_tokens: 20000,
     messages: [
       { role: "system", content: GENERATION_SYSTEM_PROMPT },
       { role: "user", content: buildUserMessage(context) },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: { name: "possibilidades_v4", strict: true, schema: JSON_SCHEMA },
+      json_schema: { name: "possibilidades_v5", strict: true, schema: JSON_SCHEMA },
     },
   });
 
@@ -431,18 +556,10 @@ export async function generatePossibilitiesOpenAI(context: GenerationContext): P
     throw new Error("O modelo retornou uma quantidade de possibilidades em destaque diferente de 1.");
   }
   const destaqueEhQuinta = parsed.possibilidades.every(
-    (p) => p.destaque === (p.papel === "maior_convergencia_comercial"),
+    (p) => p.destaque === (p.papel === "maior_chance_sucesso_financeiro"),
   );
   if (!destaqueEhQuinta) {
-    throw new Error("A possibilidade em destaque não é a de maior convergência comercial.");
-  }
-  const convergenciaOk = parsed.possibilidades.every((p) =>
-    p.papel === "maior_convergencia_comercial"
-      ? p.analise_convergencia_comercial !== null
-      : p.analise_convergencia_comercial === null,
-  );
-  if (!convergenciaOk) {
-    throw new Error("analise_convergencia_comercial deve ser nula nas 4 primeiras e preenchida só na 5ª.");
+    throw new Error("A possibilidade em destaque não é a de maior chance de sucesso financeiro.");
   }
 
   const reservaRoles = new Set(parsed.reservas.map((r) => r.papel));
@@ -463,11 +580,9 @@ export async function generatePossibilitiesOpenAI(context: GenerationContext): P
       ).catch(() => {});
     }
 
-    checkWordCount(`${p.papel}:a_possibilidade`, p.a_possibilidade, 30, 45, 15);
-    checkWordCount(`${p.papel}:por_que_combina_com_voce`, p.por_que_combina_com_voce, 25, 35, 15);
     checkWordCount(`${p.papel}:como_gerar_receita`, p.como_gerar_receita, 30, 45, 15);
     checkWordCount(`${p.papel}:como_validar`, p.como_validar, 25, 40, 15);
-    checkWordCount(`${p.papel}:ponto_de_atencao`, p.ponto_de_atencao, 15, 25, 15);
+    checkWordCount(`${p.papel}:por_que_combina_com_voce`, p.por_que_combina_com_voce, 25, 45, 15);
   }
 
   return parsed;
@@ -491,6 +606,9 @@ export function mapPossibilityToGenerated(p: z.infer<typeof possibilitySchema>):
     porQueCombinaComVoce: p.por_que_combina_com_voce,
     primeiraValidacao: p.como_validar,
     pontoDeAtencao: p.ponto_de_atencao,
+    dominioAplicacao: p.dominio_aplicacao,
+    mecanismoComercialClasse: p.mecanismo_comercial_classe,
+    profundidade: p.profundidade,
     impressaoDigital: {
       papel: p.impressao_digital.papel,
       territorio: p.impressao_digital.territorio,
@@ -503,24 +621,50 @@ export function mapPossibilityToGenerated(p: z.infer<typeof possibilitySchema>):
       riscoPrincipal: p.impressao_digital.risco_principal,
       confiancaComercial: p.impressao_digital.confianca_comercial,
     },
-    analiseConvergenciaComercial: p.analise_convergencia_comercial
-      ? {
-          porQueSeDestaca: p.analise_convergencia_comercial.por_que_se_destaca,
-          horizontePrincipal: p.analise_convergencia_comercial.horizonte_principal,
-          justificativaHorizonte: p.analise_convergencia_comercial.justificativa_horizonte,
-          logicaParaMeta: p.analise_convergencia_comercial.logica_para_meta,
-          contaDeReferencia: p.analise_convergencia_comercial.conta_de_referencia,
-          condicoesParaConfirmar: p.analise_convergencia_comercial.condicoes_para_confirmar,
-          principalRiscoComercial: p.analise_convergencia_comercial.principal_risco_comercial,
-          nivelConfiancaComercial: p.analise_convergencia_comercial.nivel_confianca_comercial,
-        }
-      : null,
+    conexaoMundoReal: {
+      nomeDeMercado: p.conexao_mundo_real.nome_de_mercado,
+      reconhecimentoMercado: p.conexao_mundo_real.reconhecimento_mercado,
+      compradoresNomeados: p.conexao_mundo_real.compradores_nomeados,
+    },
+    trajetoriaFinanceira: {
+      cenarioInicial: {
+        premissas: p.trajetoria_financeira.cenario_inicial.premissas,
+        resultadoLiquidoEstimado: p.trajetoria_financeira.cenario_inicial.resultado_liquido_estimado,
+      },
+      ano1: {
+        premissas: p.trajetoria_financeira.ano_1.premissas,
+        resultadoLiquidoEstimado: p.trajetoria_financeira.ano_1.resultado_liquido_estimado,
+      },
+      ano3: {
+        premissas: p.trajetoria_financeira.ano_3.premissas,
+        resultadoLiquidoEstimado: p.trajetoria_financeira.ano_3.resultado_liquido_estimado,
+      },
+      ano5: {
+        premissas: p.trajetoria_financeira.ano_5.premissas,
+        resultadoLiquidoEstimado: p.trajetoria_financeira.ano_5.resultado_liquido_estimado,
+      },
+      logicaDeCrescimento: p.trajetoria_financeira.logica_de_crescimento,
+      riscoEstrutural: p.trajetoria_financeira.risco_estrutural,
+      aviso: p.trajetoria_financeira.aviso,
+    },
+    tempoDedicacao: {
+      inicial: p.tempo_dedicacao.inicial,
+      ano3: p.tempo_dedicacao.ano_3,
+      ano5: p.tempo_dedicacao.ano_5,
+    },
+    analiseConvergenciaComercial: null,
   };
 }
 
 export function mapDraftToResult(draft: GeneratorDraft): GeneratedPossibilitiesResult {
   return {
     versaoMotor: draft.versao_motor,
+    macroNicho: {
+      nome: draft.macro_nicho.nome,
+      explicacao: draft.macro_nicho.explicacao,
+      nichoSecundario: draft.macro_nicho.nicho_secundario,
+    },
+    premissasFinanceirasGerais: draft.premissas_financeiras_gerais,
     possibilities: draft.possibilidades.map(mapPossibilityToGenerated),
     reservas: draft.reservas.map((r) => ({
       papel: ROLE_MAP[r.papel],

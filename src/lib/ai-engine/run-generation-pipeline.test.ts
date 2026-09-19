@@ -45,8 +45,12 @@ const ROLE_SNAKE: Record<PossibilityRole, string> = {
   PARA_ONDE_QUER_IR: "para_onde_quer_ir",
   O_QUE_PODE_MOBILIZAR: "o_que_pode_mobilizar",
   NAO_CONSIDERADA: "nao_considerada",
-  MAIOR_CONVERGENCIA_COMERCIAL: "maior_convergencia_comercial",
+  // Enum do banco continua MAIOR_CONVERGENCIA_COMERCIAL (evita migração) —
+  // só o rótulo snake_case do JSON do gerador mudou pro V5 "macro nicho".
+  MAIOR_CONVERGENCIA_COMERCIAL: "maior_chance_sucesso_financeiro",
 } as Record<PossibilityRole, string>;
+
+const MARCO_TEMPORAL_TESTE = { premissas: "Premissas de teste.", resultado_liquido_estimado: "R$ 1.000" };
 
 function buildMockPossibility(ordem: number, papel: PossibilityRole) {
   const destaque = papel === "MAIOR_CONVERGENCIA_COMERCIAL";
@@ -65,6 +69,9 @@ function buildMockPossibility(ordem: number, papel: PossibilityRole) {
     como_gerar_receita: "Texto de teste. ".repeat(6),
     como_validar: "Texto de teste. ".repeat(5),
     ponto_de_atencao: "Texto de teste breve.",
+    dominio_aplicacao: "domínio de teste",
+    mecanismo_comercial_classe: "servico_projeto",
+    profundidade: "diagnostico_pontual",
     impressao_digital: {
       papel: ROLE_SNAKE[papel],
       territorio: `território ${ordem}`,
@@ -77,24 +84,30 @@ function buildMockPossibility(ordem: number, papel: PossibilityRole) {
       risco_principal: "risco de teste",
       confianca_comercial: "moderada",
     },
-    analise_convergencia_comercial: destaque
-      ? {
-          por_que_se_destaca: "Texto de teste. ".repeat(5),
-          horizonte_principal: "medio_prazo",
-          justificativa_horizonte: "Texto de teste.",
-          logica_para_meta: "Texto de teste.",
-          conta_de_referencia: null,
-          condicoes_para_confirmar: ["condição de teste"],
-          principal_risco_comercial: "risco de teste",
-          nivel_confianca_comercial: "moderada",
-        }
-      : null,
+    conexao_mundo_real: {
+      nome_de_mercado: "mercado de teste",
+      reconhecimento_mercado: "Reconhecimento de teste.",
+      compradores_nomeados: ["comprador de teste"],
+    },
+    trajetoria_financeira: {
+      cenario_inicial: MARCO_TEMPORAL_TESTE,
+      ano_1: MARCO_TEMPORAL_TESTE,
+      ano_3: MARCO_TEMPORAL_TESTE,
+      ano_5: MARCO_TEMPORAL_TESTE,
+      logica_de_crescimento: "Lógica de teste.",
+      risco_estrutural: "Risco estrutural de teste.",
+      aviso: "Hipótese de referência, não previsão.",
+    },
+    tempo_dedicacao: { inicial: "10h/semana", ano_3: "20h/semana", ano_5: "20h/semana" },
+    analise_convergencia_comercial: null,
   };
 }
 
 function buildMockDraft() {
   return {
-    versao_motor: "v4-teste",
+    versao_motor: "v5-teste",
+    macro_nicho: { nome: "Nicho de teste", explicacao: "Explicação de teste.", nicho_secundario: null },
+    premissas_financeiras_gerais: "Premissas gerais de teste.",
     meta_financeira_usada: { valor_mensal: null, natureza: "nao_informada", prazo_desejado: null },
     possibilidades: ROLES.map((papel, i) => buildMockPossibility(i + 1, papel)),
     reservas: ROLES.map((papel, i) => ({

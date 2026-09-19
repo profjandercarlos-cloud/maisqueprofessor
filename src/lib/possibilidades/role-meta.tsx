@@ -92,8 +92,8 @@ export const ROLE_META: Record<
     ),
   },
   MAIOR_CONVERGENCIA_COMERCIAL: {
-    label: "Maior convergência comercial",
-    subtitle: "A possibilidade com a convergência comercial relativa mais forte entre as candidatas analisadas.",
+    label: "Maior chance de sucesso financeiro",
+    subtitle: "No cenário de 5 anos, a que projeta o maior resultado entre as 5 — não é a mais rápida, é a de maior potencial de longo prazo.",
     accentVar: "var(--role-6)",
     icon: (
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">

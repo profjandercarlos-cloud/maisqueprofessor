@@ -106,6 +106,8 @@ model GenerationRound {
   claimedAt    DateTime? // lock otimista: setado atomicamente ANTES da chamada à OpenAI de cada fase (ver claimPhase em run-generation-pipeline.ts); expira sozinho depois de CLAIM_TIMEOUT_MS, permitindo retomar uma fase abandonada sem duplicar a chamada
   metaFinanceiraUsada Json? // valor_mensal (null quando o professor não respondeu) + natureza + prazo_desejado — só preenchido em CONCLUIDO
   avisoEconomico String? @db.Text // aviso fixo de que são hipóteses de construção/monetização, não promessa de renda — só preenchido em CONCLUIDO
+  macroNicho Json? // nome, explicacao (com pelo menos 3 evidências citadas), nichoSecundario — identificado ANTES das 5 possibilidades (ver system-prompt.ts), exibido pro professor antes dos cards. Motor "macro nicho" (2026-09) — null em rodadas geradas antes dessa mudança.
+  premissasFinanceirasGerais String? @db.Text // aviso único sobre as premissas usadas na trajetória financeira das 5 (meta/público/disponibilidade não informados etc.) — evita repetir o mesmo aviso em cada possibilidade
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt // usado pra detectar rodada travada entre fases (ver polling-wait.tsx)
 
@@ -184,7 +186,13 @@ model Possibility {
   analiseConvergenciaComercial Json? // só a possibilidade com destaque=true tem; null nas outras 4
   mapaExecucao         Json? // gerado só depois que o professor aprova esta possibilidade (ver adequacao/[possibilityId]/concluido/actions.ts) — null até lá
   feedbackMissoesAtivacao Json? // respostas gerais pós-missões (vontade de continuar, horas reais por semana, dificuldade principal) — null até o professor concluir as 3 missões
-  analiseMercadoAmpliada Json? // camada de apresentação ADITIVA — nome de mercado real, compradores nomeados, cenário de referência (preço x volume x custo) e ponto de atenção reformulado como primeiro passo. Gerada 1x pra todas as 5 do round, em fase própria e não bloqueante (ver trigger-market-presentation-step.ts), sem tocar no motor de geração/auditoria/correção. Null até a fase rodar (ou se ela falhar/for desligada) — a tela sempre funciona sem isso, é 100% reversível: pra desligar, basta parar de chamar a fase.
+  analiseMercadoAmpliada Json? // camada aditiva antiga (pré macro-nicho) — mantida só por compatibilidade com rodadas geradas antes de 2026-09; o motor novo já embute conexão com mercado + trajetória financeira direto na geração (ver campos abaixo), então essa fase separada não é mais disparada.
+  dominioAplicacao     String? // eixo 1 de diversidade: pra que tipo de comprador o macro nicho é aplicado nesta possibilidade
+  mecanismoComercialClasse String? // eixo 2: servico_projeto | produto_digital | software_recorrente | intermediacao | operacao_recorrente | conteudo
+  profundidade         String? // eixo 3: diagnostico_pontual | acompanhamento_recorrente | uso_autonomo
+  conexaoMundoReal     Json? // nomeDeMercado (pode ser null se genuinamente não existir), reconhecimentoMercado, compradoresNomeados[]
+  trajetoriaFinanceira Json? // cenarioInicial/ano1/ano3/ano5 (cada um: premissas + resultadoLiquidoEstimado), logicaDeCrescimento, riscoEstrutural, aviso
+  tempoDedicacao       Json? // horas/semana aproximadas: inicial, ano3, ano5
   status               PossibilityStatus  @default(PENDENTE)
   createdAt            DateTime           @default(now())
 

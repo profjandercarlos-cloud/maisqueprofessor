@@ -100,14 +100,14 @@ Gere o objeto de possibilidade completo pra essa ordem, expandindo a reserva aci
 export async function correctPossibilitiesOpenAI(params: CorrectorParams): Promise<CorrectedDraft> {
   const completion = await openai.chat.completions.create({
     model: OPENAI_GENERATION_MODEL,
-    max_completion_tokens: 6000,
+    max_completion_tokens: 10000,
     messages: [
       { role: "system", content: CORRECTOR_SYSTEM_PROMPT },
       { role: "user", content: buildUserMessage(params) },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: { name: "correcao_v4", strict: true, schema: JSON_SCHEMA },
+      json_schema: { name: "correcao_v5", strict: true, schema: JSON_SCHEMA },
     },
   });
 

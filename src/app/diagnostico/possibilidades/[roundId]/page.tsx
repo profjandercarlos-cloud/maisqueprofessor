@@ -6,6 +6,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { PossibilityCards } from "./possibility-cards";
 import { PollingWait } from "./polling-wait";
 import { MarketPresentationRetry } from "./market-presentation-retry";
+import { MacroNichoReport } from "./macro-nicho-report";
 
 const MAX_ADJUSTMENT_ROUNDS = 3;
 
@@ -129,13 +130,21 @@ export default async function PossibilitiesReviewPage({
         </div>
       ) : null}
 
-      <MarketPresentationRetry
-        roundId={round.id}
-        needsRetry={
-          round.possibilities.length === 5 &&
-          round.possibilities.some((p) => p.analiseMercadoAmpliada === null)
-        }
-      />
+      <MacroNichoReport macroNicho={round.macroNicho} premissasFinanceirasGerais={round.premissasFinanceirasGerais} />
+
+      {!round.macroNicho ? (
+        // Retomada da antiga camada aditiva de mercado — só relevante pra
+        // rodadas geradas antes do motor "macro nicho" (2026-09), que já
+        // embute conexão com mercado + trajetória financeira na própria
+        // geração e não depende mais dessa fase separada.
+        <MarketPresentationRetry
+          roundId={round.id}
+          needsRetry={
+            round.possibilities.length === 5 &&
+            round.possibilities.some((p) => p.analiseMercadoAmpliada === null)
+          }
+        />
+      ) : null}
       <PossibilityCards possibilities={round.possibilities} />
 
       {alreadyApproved ? (
