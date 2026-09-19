@@ -46,13 +46,14 @@ export default async function AjustarConjuntoPage({
         O que você quer manter, e o que você quer trocar?
       </h1>
       <p className="mb-6 text-[14.5px] text-ink-muted">
-        Esta é sua única rodada de ajuste — capriche nas respostas que vêm a seguir, elas moldam diretamente as
-        possibilidades novas. As que você marcar para manter continuam exatamente como estão.
+        Esta é sua única rodada de ajuste. Capriche nas respostas que vêm a seguir, elas moldam diretamente as
+        possibilidades novas. <strong className="font-semibold text-ink">Marque a caixa só nas que você quer
+        trocar.</strong> As que você deixar sem marcar continuam exatamente como estão.
       </p>
 
       {podeTrocar.length === 0 ? (
         <div className="rounded-lg border border-line bg-paper-raised px-4 py-3.5 text-[14px] text-ink-muted">
-          Todas as suas possibilidades atuais já têm um plano criado — não há o que ajustar aqui.
+          Todas as suas possibilidades atuais já têm um plano criado. Não há o que ajustar aqui.
         </div>
       ) : (
         <form action={action} className="flex flex-col gap-4">
@@ -67,13 +68,16 @@ export default async function AjustarConjuntoPage({
                     travada ? "border-line bg-badge-bg opacity-70" : "cursor-pointer border-line bg-paper hover:border-petrol"
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    name="trocar"
-                    value={p.papel}
-                    disabled={travada}
-                    className="mt-1 h-4 w-4 shrink-0"
-                  />
+                  <span className="mt-1 flex shrink-0 flex-col items-center gap-1">
+                    <input type="checkbox" name="trocar" value={p.papel} disabled={travada} className="h-4 w-4" />
+                    {!travada ? (
+                      <span className="text-center font-mono text-[9px] leading-tight tracking-[0.04em] text-ink-muted uppercase">
+                        Trocar
+                        <br />
+                        esta
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="min-w-0 flex-1">
                     <span
                       className="mb-1 inline-block rounded-full px-2 py-[2px] font-mono text-[10px] tracking-[0.06em] uppercase"
@@ -85,7 +89,7 @@ export default async function AjustarConjuntoPage({
                     <span className="block text-[13px] text-ink-muted">{p.subtitulo}</span>
                     {travada ? (
                       <span className="mt-1 block text-[12px] font-medium text-ink-muted">
-                        Já tem um plano criado — mantida automaticamente.
+                        Já tem um plano criado. Mantida automaticamente.
                       </span>
                     ) : null}
                   </span>
