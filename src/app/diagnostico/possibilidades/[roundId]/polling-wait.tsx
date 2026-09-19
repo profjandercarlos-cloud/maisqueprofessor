@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { retryGenerationStep } from "./retry-actions";
 
 const POLL_INTERVAL_MS = 12000;
-const GIVE_UP_AFTER_MS = 6 * 60 * 1000;
+// Um conjunto que passa por correção pode encadear até 4-5 fases (geração,
+// auditoria, uma ou mais correções em lote, nova auditoria) — medido um
+// caso real levando ~8min no total, mesmo com cada fase individualmente
+// saudável. 6 minutos aqui já mostrava "demorando demais" numa geração que
+// terminava certinho pouco depois, sem nenhum problema real.
+const GIVE_UP_AFTER_MS = 15 * 60 * 1000;
 // Sem atualização por mais que isso → tenta redisparar a fase. Fica bem
 // acima do pior tempo de uma fase saudável já medido (~96s pra geração)
 // pra não competir em corrida com uma fase lenta, porém viva — o pipeline
