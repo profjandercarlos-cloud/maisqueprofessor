@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { CORRECTOR_SYSTEM_PROMPT } from "./corrector-prompt";
+import { logAiUsage } from "./log-ai-usage";
 import {
   possibilitySchema,
   POSSIBILITY_JSON_SCHEMA_PROPERTIES,
@@ -110,6 +111,7 @@ export async function correctPossibilitiesOpenAI(params: CorrectorParams): Promi
       json_schema: { name: "correcao_v5", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("correct-possibilities", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {

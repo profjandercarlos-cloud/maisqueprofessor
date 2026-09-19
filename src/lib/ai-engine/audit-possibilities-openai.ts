@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { AUDITOR_SYSTEM_PROMPT } from "./auditor-prompt";
+import { logAiUsage } from "./log-ai-usage";
 
 // "motivo" é um array de { ordem, motivos } — não um dicionário esparso
 // (ex.: { "4": [...] }) porque o modo strict da OpenAI exige que TODO campo
@@ -72,6 +73,7 @@ ${JSON.stringify(params.rascunho)}`;
       json_schema: { name: "auditoria_v5", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("audit-possibilities", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {

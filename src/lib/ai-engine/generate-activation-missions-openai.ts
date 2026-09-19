@@ -12,6 +12,7 @@ import type {
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { ACTIVATION_MISSIONS_SYSTEM_PROMPT } from "./activation-missions-prompt";
 import type { MapaExecucao } from "./generate-mapa-execucao-openai";
+import { logAiUsage } from "./log-ai-usage";
 
 const MISSAO_TIPO_VALUES = ["capacidade", "realidade", "validacao"] as const;
 
@@ -173,6 +174,7 @@ Distribuição do tempo na semana: ${DISTRIBUICAO_LABELS[params.distribuicaoTemp
       json_schema: { name: "missoes_ativacao", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("generate-activation-missions", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {

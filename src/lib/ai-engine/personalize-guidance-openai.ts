@@ -1,5 +1,6 @@
 import { openai } from "./openai-client";
 import { PERSONALIZATION_SYSTEM_PROMPT, buildPersonalizationUserMessage } from "./personalization-prompt";
+import { logAiUsage } from "./log-ai-usage";
 
 // "Luna" — nível rápido/econômico da família GPT-5.6. Reescrita restrita de
 // tom (não gera conselho novo), tarefa leve — não precisa do modelo maior.
@@ -18,6 +19,7 @@ export async function personalizeGuidanceOpenAI(params: {
       { role: "user", content: buildPersonalizationUserMessage(params) },
     ],
   });
+  await logAiUsage("personalize-guidance", PERSONALIZATION_MODEL, completion.usage);
 
   const text = completion.choices[0]?.message?.content?.trim();
   return text || params.baseTipText;

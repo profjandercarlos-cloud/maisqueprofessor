@@ -11,6 +11,8 @@ import {
   getIncrementStepBySlug,
   getIncrementStepIndex,
   TOTAL_INCREMENT_STEPS,
+  getSelecaoAjuste,
+  buildContextualQ1,
 } from "@/lib/diagnostico/increment-steps";
 import { saveIncrementStep } from "./actions";
 
@@ -47,6 +49,29 @@ export default async function IncrementStepPage({
   const progressPct = Math.round(((index + 1) / TOTAL_INCREMENT_STEPS) * 100);
   const action = saveIncrementStep.bind(null, slug);
 
+  // Ajuste seletivo (2026-09): a 1ª pergunta cita os títulos reais das
+  // possibilidades mantidas/trocadas, em vez da versão genérica sobre "as
+  // cinco" — só se esta rodada de perguntas veio da tela de seleção.
+  let question = step.question;
+  if (slug === "incremento-1") {
+    const selecao = getSelecaoAjuste(diagnostic.incrementAnswers);
+    if (selecao) {
+      const roundSelecao = await db.generationRound.findUnique({
+        where: { id: selecao.roundId },
+        include: { possibilities: true },
+      });
+      if (roundSelecao) {
+        const titulosTrocar = roundSelecao.possibilities
+          .filter((p) => selecao.papeisTrocar.includes(p.papel))
+          .map((p) => p.titulo);
+        const titulosManter = roundSelecao.possibilities
+          .filter((p) => !selecao.papeisTrocar.includes(p.papel))
+          .map((p) => p.titulo);
+        question = buildContextualQ1(titulosManter, titulosTrocar);
+      }
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel={`PERGUNTA EXTRA ${index + 1}/${TOTAL_INCREMENT_STEPS}`} />
@@ -60,7 +85,7 @@ export default async function IncrementStepPage({
 
       <form action={action} className="flex flex-col gap-6">
         <h1 className="font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
-          {step.question}
+          {question}
         </h1>
 
         <StepFields step={step} currentValue={currentValue} />

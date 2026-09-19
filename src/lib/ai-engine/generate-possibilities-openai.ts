@@ -12,11 +12,12 @@
 // continuam existindo como resumos internos curtos, pra não quebrar Mapa de
 // Execução / Missões de Ativação / Plano, que ainda leem esses campos.
 import { z } from "zod";
-import type { PossibilityRole } from "@/generated/prisma/client";
+import type { Possibility, PossibilityRole } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { GENERATION_SYSTEM_PROMPT } from "./system-prompt";
 import type { EntradaEconomica } from "./build-generation-input";
 import { logDebugError } from "@/lib/debug-error-log";
+import { logAiUsage } from "./log-ai-usage";
 
 export type GenerationContext = {
   diagnosticInput: string;
@@ -127,7 +128,7 @@ export type GeneratedPossibilitiesResult = {
   metaFinanceiraUsada: MetaFinanceiraUsada;
 };
 
-const ROLE_MAP: Record<string, PossibilityRole> = {
+export const ROLE_MAP: Record<string, PossibilityRole> = {
   onde_ja_e_forte: "ONDE_JA_E_FORTE",
   para_onde_quer_ir: "PARA_ONDE_QUER_IR",
   o_que_pode_mobilizar: "O_QUE_PODE_MOBILIZAR",
@@ -158,6 +159,13 @@ const HORIZONTE_OU_A_VALIDAR_MAP: Record<string, "CURTO_PRAZO" | "MEDIO_PRAZO" |
   a_validar: "A_VALIDAR",
 };
 const HORIZONTE_OU_A_VALIDAR_VALUES = Object.keys(HORIZONTE_OU_A_VALIDAR_MAP) as [string, ...string[]];
+
+function inverso<T extends string>(map: Record<string, T>): Record<T, string> {
+  return Object.fromEntries(Object.entries(map).map(([k, v]) => [v, k])) as Record<T, string>;
+}
+const LASTRO_MAP_INVERSO = inverso(LASTRO_MAP);
+const HORIZONTE_MAP_INVERSO = inverso(HORIZONTE_MAP);
+const HORIZONTE_OU_A_VALIDAR_MAP_INVERSO = inverso(HORIZONTE_OU_A_VALIDAR_MAP);
 
 const MECANISMO_COMERCIAL_VALUES = [
   "servico_projeto",
@@ -539,6 +547,7 @@ export async function generatePossibilitiesOpenAI(context: GenerationContext): P
       json_schema: { name: "possibilidades_v5", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("generate-possibilities", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {
@@ -653,6 +662,104 @@ export function mapPossibilityToGenerated(p: z.infer<typeof possibilitySchema>):
       ano5: p.tempo_dedicacao.ano_5,
     },
     analiseConvergenciaComercial: null,
+  };
+}
+
+const ROLE_MAP_INVERSO_PARA_ORDEM: Record<string, number> = Object.fromEntries(
+  PAPEL_VALUES.map((snake, i) => [ROLE_MAP[snake], i + 1]),
+);
+
+// Inverso de mapPossibilityToGenerated — reconstrói o formato do rascunho
+// (snake_case, o que a IA produz e o que o corretor espera em `mantidas`) a
+// partir de uma Possibility já persistida no banco. Usado pelo ajuste
+// seletivo (run-generation-pipeline.ts:startSelectiveAdjustment) pra
+// garantir que "mantidas" sempre reflita o que está de fato salvo, mesmo se
+// o `rascunhoAtual` da rodada tiver ficado desatualizado por uma correção
+// anterior que não chegou a ser persistida (ex.: falha no meio da promoção
+// de reserva). `rotulo_papel` não é persistido em lugar nenhum (nunca é lido
+// depois da geração — a UI usa o rótulo fixo de role-meta.tsx), então
+// reaproveita o título como placeholder inofensivo.
+export function mapPossibilityRowToDraft(p: Possibility): z.infer<typeof possibilitySchema> {
+  const papelSnake = PAPEL_VALUES.find((snake) => ROLE_MAP[snake] === p.papel);
+  if (!papelSnake) throw new Error(`Papel desconhecido ao reconstruir rascunho: ${p.papel}`);
+
+  const impressao = p.impressaoDigital as unknown as {
+    papel: string;
+    territorio: string;
+    problema: string;
+    publico: string;
+    pagador: string;
+    entrega: string;
+    modeloReceita: string;
+    evidencias: string[];
+    riscoPrincipal: string;
+    confiancaComercial: string;
+  };
+  const conexao = p.conexaoMundoReal as unknown as {
+    nomeDeMercado: string | null;
+    reconhecimentoMercado: string;
+    compradoresNomeados: string[];
+  };
+  const trajetoria = p.trajetoriaFinanceira as unknown as {
+    cenarioInicial: { premissas: string; resultadoLiquidoEstimado: string };
+    ano1: { premissas: string; resultadoLiquidoEstimado: string };
+    ano3: { premissas: string; resultadoLiquidoEstimado: string };
+    ano5: { premissas: string; resultadoLiquidoEstimado: string };
+    logicaDeCrescimento: string;
+    riscoEstrutural: string;
+    aviso: string;
+  };
+  const tempo = p.tempoDedicacao as unknown as { inicial: string; ano3: string; ano5: string };
+
+  return {
+    ordem: ROLE_MAP_INVERSO_PARA_ORDEM[p.papel],
+    papel: papelSnake,
+    rotulo_papel: p.titulo,
+    destaque: p.destaque,
+    titulo: p.titulo,
+    subtitulo: p.subtitulo,
+    base_no_historico: LASTRO_MAP_INVERSO[p.baseNoHistorico],
+    tempo_primeira_validacao: (HORIZONTE_MAP_INVERSO as Record<string, string>)[p.tempoPrimeiraValidacao],
+    horizonte_relevancia_financeira: HORIZONTE_OU_A_VALIDAR_MAP_INVERSO[p.horizonteRelevanciaFinanceira],
+    a_possibilidade: p.comoFunciona,
+    por_que_combina_com_voce: p.porQueCombinaComVoce,
+    como_gerar_receita: p.comoGerarReceita,
+    como_validar: p.primeiraValidacao,
+    ponto_de_atencao: p.pontoDeAtencao,
+    dominio_aplicacao: p.dominioAplicacao ?? "",
+    mecanismo_comercial_classe: p.mecanismoComercialClasse as z.infer<typeof possibilitySchema>["mecanismo_comercial_classe"],
+    profundidade: p.profundidade as z.infer<typeof possibilitySchema>["profundidade"],
+    impressao_digital: {
+      papel: impressao.papel,
+      territorio: impressao.territorio,
+      problema: impressao.problema,
+      publico: impressao.publico,
+      pagador: impressao.pagador,
+      entrega: impressao.entrega,
+      modelo_receita: impressao.modeloReceita,
+      evidencias: impressao.evidencias,
+      risco_principal: impressao.riscoPrincipal,
+      confianca_comercial: impressao.confiancaComercial as z.infer<typeof possibilitySchema>["impressao_digital"]["confianca_comercial"],
+    },
+    conexao_mundo_real: {
+      nome_de_mercado: conexao.nomeDeMercado,
+      reconhecimento_mercado: conexao.reconhecimentoMercado,
+      compradores_nomeados: conexao.compradoresNomeados,
+    },
+    trajetoria_financeira: {
+      cenario_inicial: {
+        premissas: trajetoria.cenarioInicial.premissas,
+        resultado_liquido_estimado: trajetoria.cenarioInicial.resultadoLiquidoEstimado,
+      },
+      ano_1: { premissas: trajetoria.ano1.premissas, resultado_liquido_estimado: trajetoria.ano1.resultadoLiquidoEstimado },
+      ano_3: { premissas: trajetoria.ano3.premissas, resultado_liquido_estimado: trajetoria.ano3.resultadoLiquidoEstimado },
+      ano_5: { premissas: trajetoria.ano5.premissas, resultado_liquido_estimado: trajetoria.ano5.resultadoLiquidoEstimado },
+      logica_de_crescimento: trajetoria.logicaDeCrescimento,
+      risco_estrutural: trajetoria.riscoEstrutural,
+      aviso: trajetoria.aviso,
+    },
+    tempo_dedicacao: { inicial: tempo.inicial, ano_3: tempo.ano3, ano_5: tempo.ano5 },
+    analise_convergencia_comercial: null,
   };
 }
 

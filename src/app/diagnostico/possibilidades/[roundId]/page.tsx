@@ -161,11 +161,12 @@ export default async function PossibilitiesReviewPage({
           <div>
             <p className="text-[14px] font-semibold text-ink">Nenhuma delas conversa o suficiente com você?</p>
             <p className="text-[12.5px] text-ink-muted">
-              Você tem uma rodada de ajuste — algumas perguntas extras ajudam a mirar melhor as próximas cinco.
+              Você tem uma rodada de ajuste — escolha o que mantém e o que troca, e responda algumas perguntas
+              extras pra mirar melhor.
             </p>
           </div>
           <Link
-            href="/diagnostico/incremento/incremento-1"
+            href={`/diagnostico/possibilidades/${round.id}/ajustar`}
             className="text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
           >
             Ajustar conjunto →

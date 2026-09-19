@@ -12,15 +12,17 @@
 // promover a reserva daquele papel (sem nova auditoria, pra não entrar em
 // loop) antes de desistir (FALHOU).
 import { db } from "@/lib/db";
-import type { Diagnostic, GenerationRoundStatus, Prisma } from "@/generated/prisma/client";
+import type { Diagnostic, GenerationRoundStatus, PossibilityRole, Prisma } from "@/generated/prisma/client";
 import { formatDiagnosticInput } from "./format-diagnostic-input";
 import { buildEntradaEconomica } from "./build-generation-input";
-import { buildIncrementoTexto } from "@/lib/diagnostico/increment-steps";
+import { buildIncrementoTexto, buildContextualQ1, getSelecaoAjuste } from "@/lib/diagnostico/increment-steps";
 import {
   generatePossibilitiesOpenAI,
   buildEntradaTexto,
   mapPossibilityToGenerated,
+  mapPossibilityRowToDraft,
   possibilitySchema,
+  ROLE_MAP,
   type GeneratorDraft,
 } from "./generate-possibilities-openai";
 import { auditPossibilitiesOpenAI, type AuditResult } from "./audit-possibilities-openai";
@@ -30,6 +32,14 @@ import { logDebugError } from "@/lib/debug-error-log";
 import type { z } from "zod";
 
 type PossibilityDraft = z.infer<typeof possibilitySchema>;
+
+// Inverso de ROLE_MAP (enum PossibilityRole → papel snake_case do rascunho) —
+// usado só pelo ajuste seletivo, que recebe os papéis a trocar como enum
+// (mesmo valor de Possibility.papel) mas precisa cruzar com `ordem` dentro
+// do rascunho JSON, que usa a chave snake_case.
+const ROLE_MAP_INVERSO: Record<string, string> = Object.fromEntries(
+  Object.entries(ROLE_MAP).map(([snake, enumValue]) => [enumValue, snake]),
+);
 
 // A rota interna (api/internal/generation-step) tem maxDuration=120s — a
 // Vercel mata a função antes disso se ela ainda estiver rodando. Um lock
@@ -95,7 +105,13 @@ export async function runGenerationStep(roundId: string): Promise<void> {
         await runGeracao(roundId, round.diagnostic);
         break;
       case "VALIDANDO":
-        await runValidacao(roundId, round.diagnostic.id, round.rascunhoAtual, round.correcaoTentada);
+        await runValidacao(
+          roundId,
+          round.diagnostic.id,
+          round.rascunhoAtual,
+          round.correcaoTentada,
+          round.papeisSeletivosTrocar as unknown as string[] | null,
+        );
         break;
       case "CORRIGINDO":
         await runCorrecao(roundId, round.diagnostic.id, round.rascunhoAtual, round.auditoriaAtual);
@@ -109,13 +125,130 @@ export async function runGenerationStep(roundId: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Ajuste seletivo — a pessoa escolhe manter algumas das 5 possibilidades e
+// trocar só as outras (em vez de refazer o conjunto inteiro). Reaproveita o
+// rascunho já salvo desta mesma rodada (que já tem o macro nicho, as 5
+// possibilidades completas e as reservas — nada disso é apagado quando a
+// rodada chega a CONCLUIDO) e semeia uma auditoria sintética que já chega
+// pronta em CORRIGINDO, pulando a 1ª auditoria automática (o motivo da troca
+// aqui não é semântico, é a escolha explícita da pessoa). Dali em diante é
+// exatamente o mesmo pipeline de sempre: corrige só os papéis marcados,
+// audita o resultado (com a trava de papeisSeletivosTrocar em runValidacao
+// garantindo que nenhum papel mantido seja tocado, nem por sugestão do
+// auditor), e só then persiste — reaproveitando também a promoção de reserva
+// como rede de segurança se a correção falhar de novo.
+export async function startSelectiveAdjustment(roundId: string, papeisTrocarEnumBruto: string[]): Promise<void> {
+  const round = await db.generationRound.findUniqueOrThrow({
+    where: { id: roundId },
+    include: { possibilities: true },
+  });
+  const draftBase = round.rascunhoAtual as unknown as GeneratorDraft | null;
+  if (!draftBase || round.possibilities.length !== 5) {
+    throw new Error(`Round ${roundId} sem rascunhoAtual/possibilidades completas — não é possível fazer ajuste seletivo.`);
+  }
+  // Reconstrói `possibilidades` a partir das Possibility já persistidas (a
+  // fonte da verdade), não do rascunhoAtual salvo — que pode ter ficado
+  // desatualizado se uma correção anterior gerou conteúdo novo mas falhou
+  // antes de persistir (ex.: erro de API no meio da promoção de reserva).
+  // Os campos de nível de rodada (reservas, macro nicho etc.) continuam
+  // vindo do rascunho, já que nunca são reescritos por uma correção.
+  const draft: GeneratorDraft = {
+    ...draftBase,
+    possibilidades: round.possibilities.map(mapPossibilityRowToDraft),
+  };
+
+  // Defesa contra corrida: a seleção foi validada contra planos existentes
+  // na hora de salvar (ver possibilidades/[roundId]/ajustar/actions.ts), mas
+  // um Plano pode ter sido criado depois disso e antes desta execução (ex.:
+  // a pessoa concluiu a adequação de uma possibilidade numa aba enquanto
+  // respondia as perguntas do ajuste seletivo em outra). Reconfirma agora,
+  // no momento em que a troca de fato vai acontecer.
+  const travadasAgora = await db.possibility.findMany({
+    where: { roundId, plan: { isNot: null } },
+    select: { papel: true },
+  });
+  const papeisTravados = new Set<string>(travadasAgora.map((p) => p.papel));
+  const papeisTrocarEnum = papeisTrocarEnumBruto.filter((p) => !papeisTravados.has(p));
+  if (papeisTrocarEnum.length !== papeisTrocarEnumBruto.length) {
+    await logDebugError(
+      "run-generation-pipeline:ajuste-seletivo-corrida-plano",
+      new Error(`Round ${roundId}: papel(is) com plano criado depois da seleção — removido(s) da troca antes de executar.`),
+    );
+  }
+  if (papeisTrocarEnum.length === 0) {
+    throw new Error(`Round ${roundId}: todos os papéis selecionados pra troca já têm plano — nada a fazer.`);
+  }
+
+  const papeisSnakeTrocar = new Set(papeisTrocarEnum.map((p) => ROLE_MAP_INVERSO[p]));
+  const ordensSubstituir = draft.possibilidades.filter((p) => papeisSnakeTrocar.has(p.papel)).map((p) => p.ordem);
+  const ordensManter = draft.possibilidades.map((p) => p.ordem).filter((ordem) => !ordensSubstituir.includes(ordem));
+  if (ordensManter.length === 0) {
+    throw new Error(
+      `Round ${roundId}: ajuste seletivo pedido sem nenhuma possibilidade mantida — isso deveria ter caído no fluxo de regeneração completa, não aqui.`,
+    );
+  }
+
+  const auditoriaSintetica: AuditResult = {
+    status: "corrigir",
+    manter: ordensManter,
+    substituir: ordensSubstituir,
+    motivo: ordensSubstituir.map((ordem) => ({
+      ordem,
+      motivos: [
+        "Ajuste seletivo pedido pela própria pessoa — ver as respostas dela na seção INCREMENTO DE DIAGNÓSTICO da entrada, sobre especificamente o que não conversou nesta possibilidade.",
+      ],
+    })),
+  };
+
+  await db.generationRound.update({
+    where: { id: roundId },
+    data: {
+      rascunhoAtual: draft as unknown as Prisma.InputJsonValue,
+      auditoriaAtual: auditoriaSintetica as unknown as Prisma.InputJsonValue,
+      papeisSeletivosTrocar: papeisTrocarEnum as unknown as Prisma.InputJsonValue,
+      correcaoTentada: false,
+      status: "CORRIGINDO",
+      claimedAt: null,
+    },
+  });
+
+  await triggerGenerationStep(roundId);
+}
+
+// Monta a entrada completa do diagnóstico, incluindo o bloco de incremento
+// quando existir — com a 1ª pergunta contextualizada com os títulos reais
+// das possibilidades mantidas/trocadas, se esta rodada veio de um ajuste
+// seletivo (ver possibilidades/[roundId]/ajustar). Usado pelas 3 fases.
+async function buildDiagnosticInputCompleto(diagnostic: Diagnostic): Promise<string> {
+  const baseDiagnosticInput = formatDiagnosticInput(diagnostic);
+  if (!diagnostic.incrementAnswers) return baseDiagnosticInput;
+
+  let q1Override: string | undefined;
+  const selecao = getSelecaoAjuste(diagnostic.incrementAnswers);
+  if (selecao) {
+    const roundSelecao = await db.generationRound.findUnique({
+      where: { id: selecao.roundId },
+      include: { possibilities: true },
+    });
+    if (roundSelecao) {
+      const titulosTrocar = roundSelecao.possibilities
+        .filter((p) => selecao.papeisTrocar.includes(p.papel))
+        .map((p) => p.titulo);
+      const titulosManter = roundSelecao.possibilities
+        .filter((p) => !selecao.papeisTrocar.includes(p.papel))
+        .map((p) => p.titulo);
+      q1Override = buildContextualQ1(titulosManter, titulosTrocar);
+    }
+  }
+
+  return `${baseDiagnosticInput}\n\nINCREMENTO DE DIAGNÓSTICO (perguntas adicionais, após rodadas sem aprovação)\n${buildIncrementoTexto(diagnostic.incrementAnswers, q1Override)}`;
+}
+
+// ---------------------------------------------------------------------------
 // Fase PENDENTE — gera o rascunho completo.
 // ---------------------------------------------------------------------------
 async function runGeracao(roundId: string, diagnostic: Diagnostic): Promise<void> {
-  const baseDiagnosticInput = formatDiagnosticInput(diagnostic);
-  const diagnosticInput = diagnostic.incrementAnswers
-    ? `${baseDiagnosticInput}\n\nINCREMENTO DE DIAGNÓSTICO (perguntas adicionais, após rodadas sem aprovação)\n${buildIncrementoTexto(diagnostic.incrementAnswers)}`
-    : baseDiagnosticInput;
+  const diagnosticInput = await buildDiagnosticInputCompleto(diagnostic);
 
   const entradaEconomica = buildEntradaEconomica(diagnostic);
 
@@ -173,6 +306,7 @@ async function runValidacao(
   diagnosticId: string,
   rascunhoRaw: Prisma.JsonValue | null,
   correcaoTentada: boolean,
+  papeisSeletivosTrocar: string[] | null,
 ): Promise<void> {
   const draft = rascunhoRaw as unknown as GeneratorDraft | null;
   if (!draft) {
@@ -180,10 +314,7 @@ async function runValidacao(
   }
 
   const diagnostic = await db.diagnostic.findUniqueOrThrow({ where: { id: diagnosticId } });
-  const baseDiagnosticInput = formatDiagnosticInput(diagnostic);
-  const diagnosticInput = diagnostic.incrementAnswers
-    ? `${baseDiagnosticInput}\n\nINCREMENTO DE DIAGNÓSTICO (perguntas adicionais, após rodadas sem aprovação)\n${buildIncrementoTexto(diagnostic.incrementAnswers)}`
-    : baseDiagnosticInput;
+  const diagnosticInput = await buildDiagnosticInputCompleto(diagnostic);
   const entradaEconomica = buildEntradaEconomica(diagnostic);
   const entradaTexto = buildEntradaTexto(diagnosticInput, entradaEconomica);
 
@@ -192,6 +323,30 @@ async function runValidacao(
     rascunho: draft,
     tentativa: correcaoTentada ? 2 : 1,
   });
+
+  // Ajuste seletivo: nenhum papel fora dos marcados pela própria pessoa pode
+  // ser substituído, nem por sugestão do auditor — defesa em profundidade,
+  // já que uma possibilidade mantida pode ter um Plano de verdade atrelado.
+  // Qualquer ordem fora da lista permitida é forçada de volta pra "manter".
+  if (papeisSeletivosTrocar && papeisSeletivosTrocar.length > 0) {
+    const papeisSnakePermitidos = new Set(papeisSeletivosTrocar.map((p) => ROLE_MAP_INVERSO[p]));
+    const ordensPermitidas = new Set(
+      draft.possibilidades.filter((p) => papeisSnakePermitidos.has(p.papel)).map((p) => p.ordem),
+    );
+    const substituirFiltrado = auditoria.substituir.filter((ordem) => ordensPermitidas.has(ordem));
+    if (substituirFiltrado.length !== auditoria.substituir.length) {
+      await logDebugError(
+        "run-generation-pipeline:ajuste-seletivo-bloqueou-auditor",
+        new Error(
+          `Round ${roundId}: auditor tentou substituir ordem(ns) fora do ajuste seletivo permitido — bloqueado.`,
+        ),
+      );
+    }
+    auditoria.substituir = substituirFiltrado;
+    auditoria.manter = draft.possibilidades.map((p) => p.ordem).filter((ordem) => !substituirFiltrado.includes(ordem));
+    auditoria.motivo = auditoria.motivo.filter((m) => substituirFiltrado.includes(m.ordem));
+    auditoria.status = substituirFiltrado.length === 0 ? "aprovar" : "corrigir";
+  }
 
   if (auditoria.status === "aprovar") {
     await persistApproved(roundId, diagnosticId, draft);
@@ -232,10 +387,7 @@ async function runCorrecao(
   }
 
   const diagnostic = await db.diagnostic.findUniqueOrThrow({ where: { id: diagnosticId } });
-  const baseDiagnosticInput = formatDiagnosticInput(diagnostic);
-  const diagnosticInput = diagnostic.incrementAnswers
-    ? `${baseDiagnosticInput}\n\nINCREMENTO DE DIAGNÓSTICO (perguntas adicionais, após rodadas sem aprovação)\n${buildIncrementoTexto(diagnostic.incrementAnswers)}`
-    : baseDiagnosticInput;
+  const diagnosticInput = await buildDiagnosticInputCompleto(diagnostic);
   const entradaEconomica = buildEntradaEconomica(diagnostic);
   const entradaTexto = buildEntradaTexto(diagnosticInput, entradaEconomica);
 
@@ -359,36 +511,55 @@ async function persistApproved(roundId: string, diagnosticId: string, draft: Gen
   if (!claimed) return; // outra invocação concorrente já persistiu esta rodada
 
   const possibilidades = draft.possibilidades.map(mapPossibilityToGenerated);
+  const possibilityCreateData = possibilidades.map((p) => ({
+    papel: p.papel,
+    titulo: p.titulo,
+    subtitulo: p.subtitulo,
+    tempoPrimeiraValidacao: p.tempoPrimeiraValidacao,
+    horizonteRelevanciaFinanceira: p.horizonteRelevanciaFinanceira,
+    baseNoHistorico: p.baseNoHistorico,
+    destaque: p.destaque,
+    comoFunciona: p.comoFunciona,
+    comoGerarReceita: p.comoGerarReceita,
+    porQueCombinaComVoce: p.porQueCombinaComVoce,
+    primeiraValidacao: p.primeiraValidacao,
+    pontoDeAtencao: p.pontoDeAtencao,
+    dominioAplicacao: p.dominioAplicacao,
+    mecanismoComercialClasse: p.mecanismoComercialClasse,
+    profundidade: p.profundidade,
+    impressaoDigital: p.impressaoDigital as unknown as Prisma.InputJsonValue,
+    conexaoMundoReal: p.conexaoMundoReal as unknown as Prisma.InputJsonValue,
+    trajetoriaFinanceira: p.trajetoriaFinanceira as unknown as Prisma.InputJsonValue,
+    tempoDedicacao: p.tempoDedicacao as unknown as Prisma.InputJsonValue,
+    analiseConvergenciaComercial: p.analiseConvergenciaComercial as unknown as Prisma.InputJsonValue,
+  }));
 
-  await db.generationRound.update({
+  const roundInfo = await db.generationRound.findUniqueOrThrow({
     where: { id: roundId },
-    data: {
-      possibilities: {
-        create: possibilidades.map((p) => ({
-          papel: p.papel,
-          titulo: p.titulo,
-          subtitulo: p.subtitulo,
-          tempoPrimeiraValidacao: p.tempoPrimeiraValidacao,
-          horizonteRelevanciaFinanceira: p.horizonteRelevanciaFinanceira,
-          baseNoHistorico: p.baseNoHistorico,
-          destaque: p.destaque,
-          comoFunciona: p.comoFunciona,
-          comoGerarReceita: p.comoGerarReceita,
-          porQueCombinaComVoce: p.porQueCombinaComVoce,
-          primeiraValidacao: p.primeiraValidacao,
-          pontoDeAtencao: p.pontoDeAtencao,
-          dominioAplicacao: p.dominioAplicacao,
-          mecanismoComercialClasse: p.mecanismoComercialClasse,
-          profundidade: p.profundidade,
-          impressaoDigital: p.impressaoDigital as unknown as Prisma.InputJsonValue,
-          conexaoMundoReal: p.conexaoMundoReal as unknown as Prisma.InputJsonValue,
-          trajetoriaFinanceira: p.trajetoriaFinanceira as unknown as Prisma.InputJsonValue,
-          tempoDedicacao: p.tempoDedicacao as unknown as Prisma.InputJsonValue,
-          analiseConvergenciaComercial: p.analiseConvergenciaComercial as unknown as Prisma.InputJsonValue,
-        })),
-      },
-    },
+    select: { papeisSeletivosTrocar: true },
   });
+  const papeisSeletivosTrocar = roundInfo.papeisSeletivosTrocar as unknown as string[] | null;
+
+  if (papeisSeletivosTrocar && papeisSeletivosTrocar.length > 0) {
+    // Ajuste seletivo: NUNCA toca nas possibilidades mantidas (uma delas pode
+    // ter um Plano de verdade atrelado) — apaga e recria só os papéis
+    // marcados pra troca, filtrando o create pelo mesmo critério.
+    const papeisEnum = papeisSeletivosTrocar as PossibilityRole[];
+    await db.possibility.deleteMany({ where: { roundId, papel: { in: papeisEnum } } });
+    await db.generationRound.update({
+      where: { id: roundId },
+      data: {
+        possibilities: {
+          create: possibilityCreateData.filter((p) => papeisSeletivosTrocar.includes(p.papel)),
+        },
+      },
+    });
+  } else {
+    await db.generationRound.update({
+      where: { id: roundId },
+      data: { possibilities: { create: possibilityCreateData } },
+    });
+  }
 
   // Sucesso desta rodada — fecha as possibilidades ainda PENDENTE de
   // qualquer OUTRA rodada do mesmo diagnóstico (substitui o antigo

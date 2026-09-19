@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { MAPA_EXECUCAO_SYSTEM_PROMPT } from "./generate-mapa-execucao-prompt";
+import { logAiUsage } from "./log-ai-usage";
 
 export type MapaExecucao = {
   objetivoPrincipal: string;
@@ -104,6 +105,7 @@ Ponto de atenção: ${params.possibility.pontoDeAtencao}`;
       json_schema: { name: "mapa_execucao_v4", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("generate-mapa-execucao", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {

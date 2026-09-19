@@ -108,6 +108,7 @@ model GenerationRound {
   avisoEconomico String? @db.Text // aviso fixo de que são hipóteses de construção/monetização, não promessa de renda — só preenchido em CONCLUIDO
   macroNicho Json? // nome, explicacao (com pelo menos 3 evidências citadas), nichoSecundario — identificado ANTES das 5 possibilidades (ver system-prompt.ts), exibido pro professor antes dos cards. Motor "macro nicho" (2026-09) — null em rodadas geradas antes dessa mudança.
   premissasFinanceirasGerais String? @db.Text // aviso único sobre as premissas usadas na trajetória financeira das 5 (meta/público/disponibilidade não informados etc.) — evita repetir o mesmo aviso em cada possibilidade
+  papeisSeletivosTrocar Json? // ajuste seletivo (2026-09): array de PossibilityRole (enum) marcados pra troca pela própria pessoa — setado só quando esta rodada está sendo reprocessada em modo seletivo (mantém as demais intocadas); null em toda rodada normal
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt // usado pra detectar rodada travada entre fases (ver polling-wait.tsx)
 
@@ -674,4 +675,22 @@ model DebugErrorLog {
   createdAt DateTime @default(now())
 
   @@map("debug_error_logs")
+}
+
+// Registro de tokens de cada chamada real à OpenAI (2026-09) — pra ter custo
+// por chamada/por tipo medido de verdade, em vez de estimado por proporção
+// do painel de billing. `reasoningTokens` só vem preenchido em modelos de
+// raciocínio (família GPT-5.6) — é o subconjunto de completionTokens gasto
+// "pensando", nunca aparece no conteúdo da resposta, mas é cobrado.
+model AiUsageLog {
+  id               String   @id @default(uuid())
+  callSite         String // ex.: "generate-possibilities", "audit-possibilities", "correct-possibilities"
+  model            String
+  promptTokens     Int
+  completionTokens Int
+  reasoningTokens  Int?
+  totalTokens      Int
+  createdAt        DateTime @default(now())
+
+  @@map("ai_usage_logs")
 }

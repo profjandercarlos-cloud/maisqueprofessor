@@ -15,6 +15,7 @@ import type {
 } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { REPORT_PLAN_SYSTEM_PROMPT } from "./report-plan-prompt";
+import { logAiUsage } from "./log-ai-usage";
 import {
   calcularDuracaoSemanas,
   DURACAO_MAX_SEMANAS,
@@ -358,6 +359,7 @@ Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "n
       json_schema: { name: "relatorio_e_plano", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("generate-report-plan", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {

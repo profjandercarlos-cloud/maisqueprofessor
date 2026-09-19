@@ -105,13 +105,39 @@ export function getIncrementPrevSlug(slug: string): string | null {
 
 export const TOTAL_INCREMENT_STEPS = INCREMENT_STEPS.length;
 
+export type SelecaoAjuste = { roundId: string; papeisTrocar: string[] };
+
+export function getSelecaoAjuste(incrementAnswers: unknown): SelecaoAjuste | null {
+  const selecao = (incrementAnswers as Record<string, unknown> | null)?.selecaoAjuste as SelecaoAjuste | undefined;
+  return selecao && selecao.roundId && Array.isArray(selecao.papeisTrocar) ? selecao : null;
+}
+
+function listarComE(itens: string[]): string {
+  if (itens.length === 0) return "";
+  if (itens.length === 1) return itens[0];
+  return `${itens.slice(0, -1).join(", ")} e ${itens[itens.length - 1]}`;
+}
+
+// Ajuste seletivo (2026-09): quando a pessoa escolheu manter algumas
+// possibilidades e trocar só outras (ver possibilidades/[roundId]/ajustar),
+// a 1ª pergunta do incremento passa a citar os títulos reais em vez de
+// ficar genérica sobre "as cinco" — pede especificidade por possibilidade
+// sem precisar de um conjunto de perguntas por papel.
+export function buildContextualQ1(titulosManter: string[], titulosTrocar: string[]): string {
+  const parteManter = titulosManter.length > 0 ? `Você decidiu manter ${listarComE(titulosManter)} e trocar ${listarComE(titulosTrocar)}.` : `Você decidiu trocar ${listarComE(titulosTrocar)}.`;
+  return `${parteManter} Pra cada uma que você quer trocar, o que especificamente não conversou com você — foi o tipo de trabalho, o público, a forma de ganhar dinheiro, ou outra coisa?`;
+}
+
 // Formata as respostas do incremento como um bloco de texto extra, apenso
 // ao final da entrada do diagnóstico — reaproveitado pela fase PENDENTE da
 // fila de geração (run-generation-pipeline.ts), já que essa fase só recebe
-// o roundId e recalcula tudo a partir do banco.
-export function buildIncrementoTexto(incrementAnswers: unknown): string {
+// o roundId e recalcula tudo a partir do banco. `q1Override` substitui a 1ª
+// pergunta genérica pela versão contextualizada do ajuste seletivo, quando
+// há uma.
+export function buildIncrementoTexto(incrementAnswers: unknown, q1Override?: string): string {
   return INCREMENT_STEPS.map((s) => {
     const answer = deepGet(incrementAnswers as Record<string, unknown> | null, s.path);
-    return `${s.question} ${typeof answer === "string" && answer ? answer : "não informado"}`;
+    const question = s.slug === "incremento-1" && q1Override ? q1Override : s.question;
+    return `${question} ${typeof answer === "string" && answer ? answer : "não informado"}`;
   }).join("\n");
 }

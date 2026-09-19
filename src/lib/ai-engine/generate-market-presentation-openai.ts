@@ -5,6 +5,7 @@
 import { z } from "zod";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { MARKET_PRESENTATION_SYSTEM_PROMPT } from "./market-presentation-prompt";
+import { logAiUsage } from "./log-ai-usage";
 
 const cenarioReferenciaSchema = z.object({
   aplica: z.boolean(),
@@ -119,6 +120,7 @@ ${params.possibilidades.map(formatPossibilidade).join("\n\n")}`;
       json_schema: { name: "apresentacao_mercado", strict: true, schema: JSON_SCHEMA },
     },
   });
+  await logAiUsage("generate-market-presentation", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {

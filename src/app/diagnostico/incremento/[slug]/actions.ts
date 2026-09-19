@@ -5,8 +5,9 @@ import { after } from "next/server";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { deepSet } from "@/lib/wizard/deep-set";
-import { getIncrementNextSlug, getIncrementStepBySlug } from "@/lib/diagnostico/increment-steps";
+import { getIncrementNextSlug, getIncrementStepBySlug, getSelecaoAjuste } from "@/lib/diagnostico/increment-steps";
 import { triggerGenerationStep } from "@/lib/ai-engine/trigger-generation-step";
+import { startSelectiveAdjustment } from "@/lib/ai-engine/run-generation-pipeline";
 import type { Prisma } from "@/generated/prisma/client";
 
 export async function saveIncrementStep(slug: string, formData: FormData) {
@@ -53,9 +54,21 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
   // aqui, já que ela só recebe o roundId.
   const roundsCount = diagnostic.rounds.length;
 
-  // Marca como usado antes de criar a rodada, pra nunca deixar essa etapa
-  // disponível de novo, mesmo que a geração em segundo plano falhe.
+  // Marca como usado antes de disparar a geração, pra nunca deixar essa
+  // etapa disponível de novo, mesmo que a geração em segundo plano falhe.
   await db.diagnostic.update({ where: { id: diagnostic.id }, data: { incrementUsedAt: new Date() } });
+
+  // Ajuste seletivo (2026-09): se a pessoa veio da tela de seleção (marcou
+  // manter algumas possibilidades e trocar só outras), reaproveita a MESMA
+  // rodada em vez de criar uma nova — startSelectiveAdjustment garante que
+  // as mantidas nunca são tocadas. Sem seleção (ou trocando todas, sem
+  // nenhuma mantida), é a regeneração completa de sempre: rodada nova,
+  // macro nicho recalculado do zero.
+  const selecao = getSelecaoAjuste(diagnostic.incrementAnswers);
+  if (selecao) {
+    after(() => startSelectiveAdjustment(selecao.roundId, selecao.papeisTrocar));
+    redirect(`/diagnostico/possibilidades/${selecao.roundId}`);
+  }
 
   const newRound = await db.generationRound.create({
     data: {
