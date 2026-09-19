@@ -44,7 +44,7 @@ export default async function PossibilitiesReviewPage({
             Cinco possibilidades a caminho.
           </h1>
           <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
-            Estamos analisando suas respostas com cuidado. Não feche esta página — ela vai se
+            Estamos analisando suas respostas com cuidado. Não feche esta página, ela vai se
             atualizar sozinha assim que estiver pronta.
           </p>
         </div>
@@ -62,7 +62,7 @@ export default async function PossibilitiesReviewPage({
             Não conseguimos gerar suas possibilidades agora.
           </h1>
           <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
-            Algo deu errado durante a geração. Você pode tentar novamente — nada do que você
+            Algo deu errado durante a geração. Você pode tentar novamente, nada do que você
             respondeu foi perdido.
           </p>
         </div>
@@ -93,7 +93,7 @@ export default async function PossibilitiesReviewPage({
           Uma delas <em className="text-gold not-italic italic">é sua</em>.
         </h1>
         <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
-          Cada uma nasce de um ângulo diferente do que você respondeu — não são cinco variações da
+          Cada uma nasce de um ângulo diferente do que você respondeu, não são cinco variações da
           mesma ideia. Abra e veja o que reconhece em você.
         </p>
       </div>
@@ -119,7 +119,7 @@ export default async function PossibilitiesReviewPage({
           </svg>
           <span>
             Isto não é um ranking. Observe o que desperta reconhecimento em cada uma e reaja com
-            sinceridade — isso ajuda a refinar as próximas.
+            sinceridade, isso ajuda a refinar as próximas.
           </span>
         </div>
       ) : null}
@@ -159,10 +159,10 @@ export default async function PossibilitiesReviewPage({
       ) : canAdjust ? (
         <footer className="mt-9 flex flex-col items-start justify-between gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px] sm:flex-row sm:items-center">
           <div>
-            <p className="text-[14px] font-semibold text-ink">Nenhuma delas conversa o suficiente com você?</p>
+            <p className="text-[14px] font-semibold text-ink">Quer ajustar alguma dessas possibilidades?</p>
             <p className="text-[12.5px] text-ink-muted">
-              Você tem uma rodada de ajuste — escolha o que mantém e o que troca, e responda algumas perguntas
-              extras pra mirar melhor.
+              Você tem uma rodada de ajuste. Escolha quais possibilidades quer manter e quais possibilidades quer
+              trocar, e responda algumas perguntas extras para essa troca ser mais certeira.
             </p>
           </div>
           <Link
