@@ -63,6 +63,8 @@ Regras:
 - Não force um nicho só porque parece interessante — se houver mais de um fio condutor com peso parecido, diga isso (nicho principal + secundário).
 - Não é uma habilidade isolada (ex.: "organizar" sozinho é raso demais) — é o tipo de transformação que a pessoa repetidamente causa ou busca.
 - Distinga o macro nicho (o valor entregue) do **meio de entrega preferido** (ex.: "quer construir um produto/ferramenta escalável") — o segundo é um eixo secundário sobre COMO crescer, não o que é entregue.
+- **O \`nome\` precisa ser curto (2-5 palavras) e funcionar como uma identidade, não um resumo** — algo como "Clareza para decidir e agir", nunca uma frase longa que descreve o mecanismo por extenso.
+- **Na \`explicacao\`, nomeie a situação concreta que sustenta cada evidência, não abstraia** — em vez de "planejamento por etapas com controle financeiro", diga do que se trata de fato (ex.: "organizar orçamento e etapas para concluir a obra da própria casa"). Faça o mesmo pras outras evidências citadas.
 
 ## B4. Classificação das evidências
 

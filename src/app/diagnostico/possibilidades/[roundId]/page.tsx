@@ -8,7 +8,12 @@ import { PollingWait } from "./polling-wait";
 import { MarketPresentationRetry } from "./market-presentation-retry";
 import { MacroNichoReport } from "./macro-nicho-report";
 
-const MAX_ADJUSTMENT_ROUNDS = 3;
+// Reduzido de 3 rodadas de ajuste (caixa de texto livre) para uma única
+// rodada de ajuste (motor "Sol" custa ~2x mais que o anterior) — compensado
+// fazendo dessa única rodada o fluxo de perguntas estruturadas do
+// incremento (mais denso), não mais um último recurso após 3 tentativas
+// rasas. Gating é via diagnostic.incrementUsedAt: uma vez usado, não há mais
+// ajuste disponível. Ver diagnostico/incremento/[slug].
 
 export default async function PossibilitiesReviewPage({
   params,
@@ -71,8 +76,7 @@ export default async function PossibilitiesReviewPage({
     );
   }
 
-  const adjustmentsUsed = round.roundNumber - 1;
-  const adjustmentsRemaining = Math.max(0, MAX_ADJUSTMENT_ROUNDS - adjustmentsUsed);
+  const canAdjust = !round.diagnostic.incrementUsedAt;
   const alreadyApproved = round.possibilities.some((p) => p.status === "APROVADA");
 
   return (
@@ -152,36 +156,28 @@ export default async function PossibilitiesReviewPage({
           <p className="text-[14px] font-semibold text-ink">Possibilidade aprovada.</p>
           <p className="text-[12.5px] text-ink-muted">Vamos seguir para o próximo passo.</p>
         </footer>
-      ) : adjustmentsRemaining > 0 ? (
+      ) : canAdjust ? (
         <footer className="mt-9 flex flex-col items-start justify-between gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px] sm:flex-row sm:items-center">
           <div>
             <p className="text-[14px] font-semibold text-ink">Nenhuma delas conversa o suficiente com você?</p>
             <p className="text-[12.5px] text-ink-muted">
-              Você pode ajustar o conjunto — restam {adjustmentsRemaining}{" "}
-              {adjustmentsRemaining === 1 ? "rodada" : "rodadas"}.
-            </p>
-          </div>
-          <Link
-            href={`/diagnostico/possibilidades/${round.id}/ajustar`}
-            className="text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
-          >
-            Ajustar conjunto →
-          </Link>
-        </footer>
-      ) : (
-        <footer className="mt-9 flex flex-col items-start justify-between gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px] sm:flex-row sm:items-center">
-          <div>
-            <p className="text-[14px] font-semibold text-ink">Ainda nenhuma delas é a sua?</p>
-            <p className="text-[12.5px] text-ink-muted">
-              As rodadas de ajuste acabaram — algumas perguntas extras podem ajudar a fechar isso.
+              Você tem uma rodada de ajuste — algumas perguntas extras ajudam a mirar melhor as próximas cinco.
             </p>
           </div>
           <Link
             href="/diagnostico/incremento/incremento-1"
             className="text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
           >
-            Responder perguntas extras →
+            Ajustar conjunto →
           </Link>
+        </footer>
+      ) : (
+        <footer className="mt-9 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px]">
+          <p className="text-[14px] font-semibold text-ink">Ainda nenhuma delas é a sua?</p>
+          <p className="text-[12.5px] text-ink-muted">
+            Sua rodada de ajuste já foi usada. Se nenhuma das cinco atuais fizer sentido, entre em contato pelo
+            suporte.
+          </p>
         </footer>
       )}
     </div>

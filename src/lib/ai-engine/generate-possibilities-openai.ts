@@ -413,8 +413,8 @@ const RESERVA_JSON_SCHEMA = {
 const MACRO_NICHO_JSON_SCHEMA = {
   type: "object",
   properties: {
-    nome: { type: "string" },
-    explicacao: { type: "string" },
+    nome: { type: "string", description: "Nome curto (2-5 palavras), como uma identidade — nunca uma frase longa descrevendo o mecanismo." },
+    explicacao: { type: "string", description: "Cite a situação concreta de cada evidência pelo nome, não abstraia (ex.: \"a obra da própria casa\", não \"planejamento com controle financeiro\")." },
     nicho_secundario: { type: ["string", "null"] },
   },
   required: ["nome", "explicacao", "nicho_secundario"],
