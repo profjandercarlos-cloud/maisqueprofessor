@@ -120,7 +120,7 @@ export const INCREMENT_STEPS = [
     slug: "incremento-10",
     block: 8,
     type: "single-select",
-    question: "O que deve pesar mais nas próximas cinco: o que você já sabe fazer, ou o que você quer aprender?",
+    question: "Nas possibilidades que forem geradas agora, o que deve pesar mais: o que você já sabe fazer, ou o que você quer aprender?",
     options: [
       { value: "so_saber_fazer", label: "Sobretudo o que já sei fazer." },
       { value: "mais_saber_fazer", label: "Um pouco mais o que já sei, mas com abertura pra aprender." },

@@ -137,6 +137,15 @@ export async function runGenerationStep(roundId: string): Promise<void> {
 // garantindo que nenhum papel mantido seja tocado, nem por sugestão do
 // auditor), e só then persiste — reaproveitando também a promoção de reserva
 // como rede de segurança se a correção falhar de novo.
+//
+// Só grava no banco (status → CORRIGINDO) — NUNCA dispara a fase sozinha.
+// Precisa ser chamada com `await` direto na Server Action, antes do
+// redirect, pra a página de destino já enxergar o status novo assim que
+// carregar; quem chama decide como disparar `triggerGenerationStep` (via
+// `after()`, sem bloquear o redirect). Antes desta função também disparar a
+// fase, o redirect acontecia antes do `after()` rodar, e a pessoa caía na
+// tela vendo as possibilidades antigas por alguns segundos, achando que
+// nada tinha acontecido.
 export async function startSelectiveAdjustment(roundId: string, papeisTrocarEnumBruto: string[]): Promise<void> {
   const round = await db.generationRound.findUniqueOrThrow({
     where: { id: roundId },
@@ -211,8 +220,6 @@ export async function startSelectiveAdjustment(roundId: string, papeisTrocarEnum
       claimedAt: null,
     },
   });
-
-  await triggerGenerationStep(roundId);
 }
 
 // Monta a entrada completa do diagnóstico, incluindo o bloco de incremento

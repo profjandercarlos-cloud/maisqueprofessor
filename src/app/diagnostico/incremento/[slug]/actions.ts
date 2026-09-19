@@ -99,7 +99,13 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
   // macro nicho recalculado do zero.
   const selecao = getSelecaoAjuste(diagnostic.incrementAnswers);
   if (selecao) {
-    after(() => startSelectiveAdjustment(selecao.roundId, selecao.papeisTrocar));
+    // startSelectiveAdjustment só grava no banco (status → CORRIGINDO) —
+    // precisa ser aguardada ANTES do redirect, senão a página de destino
+    // carrega vendo o status antigo (CONCLUIDO) por alguns segundos e
+    // mostra as possibilidades de antes, parecendo que nada aconteceu. Só
+    // o disparo de fato (chamada HTTP) fica em segundo plano.
+    await startSelectiveAdjustment(selecao.roundId, selecao.papeisTrocar);
+    after(() => triggerGenerationStep(selecao.roundId));
     redirect(`/diagnostico/possibilidades/${selecao.roundId}`);
   }
 
