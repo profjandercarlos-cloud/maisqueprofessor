@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { deepSet } from "@/lib/wizard/deep-set";
+import { otherDetailPath } from "@/lib/wizard/step-types";
 import { getIncrementNextSlug, getIncrementStepBySlug, getSelecaoAjuste } from "@/lib/diagnostico/increment-steps";
 import { triggerGenerationStep } from "@/lib/ai-engine/trigger-generation-step";
 import { startSelectiveAdjustment } from "@/lib/ai-engine/run-generation-pipeline";
@@ -12,7 +13,7 @@ import type { Prisma } from "@/generated/prisma/client";
 
 export async function saveIncrementStep(slug: string, formData: FormData) {
   const step = getIncrementStepBySlug(slug);
-  if (!step || step.type !== "textarea") redirect("/diagnostico/incremento/incremento-1");
+  if (!step) redirect("/diagnostico/incremento/incremento-1");
 
   const user = await requireActiveAccess();
 
@@ -26,21 +27,53 @@ export async function saveIncrementStep(slug: string, formData: FormData) {
   // chamada diretamente — só uma execução do incremento por diagnóstico.
   if (diagnostic.incrementUsedAt) redirect("/");
 
-  const value = String(formData.get("value") ?? "").trim();
-  if (!value) {
-    redirect(`/diagnostico/incremento/${slug}?error=${encodeURIComponent("Este campo é obrigatório.")}`);
-  }
+  let answers = diagnostic.incrementAnswers as Record<string, unknown>;
+  let errorMessage: string | null = null;
 
-  const incrementAnswers = deepSet(
-    diagnostic.incrementAnswers as Record<string, unknown>,
-    step.path,
-    value,
-  );
+  switch (step.type) {
+    case "textarea": {
+      const value = String(formData.get("value") ?? "").trim();
+      answers = deepSet(answers, step.path, value);
+      if (!value) errorMessage = "Este campo é obrigatório.";
+      break;
+    }
+    case "single-select": {
+      const path = step.path;
+      const allowOther = step.allowOther;
+      const value = String(formData.get("value") ?? "");
+      if (allowOther) {
+        const detail = String(formData.get("outro_detalhe") ?? "").trim();
+        answers = deepSet(answers, otherDetailPath(path), detail);
+      }
+      answers = deepSet(answers, path, value);
+      if (!value) errorMessage = "Selecione uma opção.";
+      break;
+    }
+    case "multi-select": {
+      const path = step.path;
+      const allowOther = step.allowOther;
+      const values = formData.getAll("value").map(String);
+      answers = deepSet(answers, path, values);
+      if (allowOther) {
+        const detail = String(formData.get("outro_detalhe") ?? "").trim();
+        answers = deepSet(answers, otherDetailPath(path), detail);
+      }
+      const min = step.minSelect ?? 0;
+      const max = step.maxSelect ?? Infinity;
+      if (values.length < min) errorMessage = `Selecione pelo menos ${min}.`;
+      else if (values.length > max) errorMessage = `Selecione no máximo ${max}.`;
+      break;
+    }
+  }
 
   await db.diagnostic.update({
     where: { id: diagnostic.id },
-    data: { incrementAnswers: incrementAnswers as Prisma.InputJsonValue },
+    data: { incrementAnswers: answers as Prisma.InputJsonValue },
   });
+
+  if (errorMessage) {
+    redirect(`/diagnostico/incremento/${slug}?error=${encodeURIComponent(errorMessage)}`);
+  }
 
   const next = getIncrementNextSlug(slug);
   if (next) {

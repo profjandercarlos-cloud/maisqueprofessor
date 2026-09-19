@@ -4,6 +4,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { db } from "@/lib/db";
 import { deepGet } from "@/lib/wizard/deep-set";
+import { otherDetailPath } from "@/lib/wizard/step-types";
 import { StepFields } from "@/components/wizard-step-fields";
 import { StepErrorBanner } from "@/components/step-error-banner";
 import {
@@ -44,6 +45,10 @@ export default async function IncrementStepPage({
   if (diagnostic.incrementUsedAt) redirect("/");
 
   const currentValue = deepGet(diagnostic.incrementAnswers as Record<string, unknown>, step.path);
+  const otherDetailValue =
+    (step.type === "single-select" || step.type === "multi-select") && step.allowOther
+      ? deepGet(diagnostic.incrementAnswers as Record<string, unknown>, otherDetailPath(step.path))
+      : undefined;
   const index = getIncrementStepIndex(slug);
   const prevSlug = getIncrementPrevSlug(slug);
   const progressPct = Math.round(((index + 1) / TOTAL_INCREMENT_STEPS) * 100);
@@ -88,7 +93,7 @@ export default async function IncrementStepPage({
           {question}
         </h1>
 
-        <StepFields step={step} currentValue={currentValue} />
+        <StepFields step={step} currentValue={currentValue} otherDetailValue={otherDetailValue} />
 
         {error ? <StepErrorBanner error={error} /> : null}
 
