@@ -9,7 +9,7 @@ export const INCREMENT_STEPS = [
     block: 8,
     type: "textarea",
     question:
-      "Das cinco possibilidades que você viu, o que mais te afastou delas — foi o tipo de trabalho, o público, a forma de ganhar dinheiro, ou outra coisa?",
+      "Das cinco possibilidades que você viu, o que mais te afastou delas? Foi o tipo de trabalho, o público, a forma de ganhar dinheiro, ou outra coisa?",
     path: ["incremento", "q1"],
   },
   {
@@ -39,7 +39,7 @@ export const INCREMENT_STEPS = [
     block: 8,
     type: "textarea",
     question:
-      "Qual foi a última vez que alguém te agradeceu por algo que você fez além da sua obrigação — o que era?",
+      "Qual foi a última vez que alguém te agradeceu por algo que você fez além da sua obrigação? O que era?",
     path: ["incremento", "q5"],
   },
   {
@@ -62,7 +62,7 @@ export const INCREMENT_STEPS = [
     block: 8,
     type: "textarea",
     question:
-      'Existe algum tipo de trabalho que você já descartou por achar "não é pra mim" — qual, e por quê?',
+      'Existe algum tipo de trabalho que você já descartou por achar "não é pra mim"? Qual, e por quê?',
     path: ["incremento", "q8"],
   },
   {
@@ -125,7 +125,7 @@ function listarComE(itens: string[]): string {
 // sem precisar de um conjunto de perguntas por papel.
 export function buildContextualQ1(titulosManter: string[], titulosTrocar: string[]): string {
   const parteManter = titulosManter.length > 0 ? `Você decidiu manter ${listarComE(titulosManter)} e trocar ${listarComE(titulosTrocar)}.` : `Você decidiu trocar ${listarComE(titulosTrocar)}.`;
-  return `${parteManter} Pra cada uma que você quer trocar, o que especificamente não conversou com você — foi o tipo de trabalho, o público, a forma de ganhar dinheiro, ou outra coisa?`;
+  return `${parteManter} Pra cada uma que você quer trocar, o que especificamente não conversou com você? Foi o tipo de trabalho, o público, a forma de ganhar dinheiro, ou outra coisa?`;
 }
 
 // Formata as respostas do incremento como um bloco de texto extra, apenso

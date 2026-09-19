@@ -18,7 +18,7 @@ const STATUS_TEXT: Record<string, string> = {
   PENDENTE: "Gerando suas possibilidades…",
   GERANDO: "Gerando as cinco possibilidades…",
   VALIDANDO: "Revisando a seleção…",
-  CORRIGINDO: "Ajustando uma possibilidade…",
+  CORRIGINDO: "Ajustando as possibilidades marcadas…",
   PROCESSANDO: "Gerando suas possibilidades…",
 };
 
@@ -81,7 +81,7 @@ export function PollingWait({
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-petrol" />
       <p className="text-[14px] font-semibold text-ink">{STATUS_TEXT[status] ?? "Gerando suas possibilidades…"}</p>
       <p className="max-w-[38ch] text-[13px] text-ink-muted">
-        Isso pode levar alguns minutos — estamos construindo e revisando cada possibilidade com
+        Isso pode levar alguns minutos. Estamos construindo e revisando cada possibilidade com
         cuidado antes de mostrar a você.
       </p>
     </div>

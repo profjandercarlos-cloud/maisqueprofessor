@@ -391,7 +391,6 @@ async function runCorrecao(
   const entradaEconomica = buildEntradaEconomica(diagnostic);
   const entradaTexto = buildEntradaTexto(diagnosticInput, entradaEconomica);
 
-  const mantidas = draft.possibilidades.filter((p) => auditoria.manter.includes(p.ordem));
   const papeisSubstituir = auditoria.substituir.map((ordem) => {
     const original = draft.possibilidades.find((p) => p.ordem === ordem);
     return {
@@ -401,14 +400,45 @@ async function runCorrecao(
     };
   });
 
+  // Corrige no máximo 2 papéis por chamada — corrigir 4 de uma vez levou
+  // 133s num teste real (medido direto, sem o teto da rota), estourando o
+  // maxDuration=120s da invocação HTTP e travando a rodada em produção sem
+  // erro nenhum (a Vercel mata a função no meio). Em lotes de 2 (~40-70s
+  // medido), sobra sempre uma rodada de folga segura. Se sobrar mais que um
+  // lote, esta fase se retrigger sozinha pro próximo, sem passar por
+  // VALIDANDO ainda — as ainda-não-corrigidas deste ciclo entram como
+  // "mantidas" só pra esta chamada, pra não colidir território com elas.
+  const CORRECAO_LOTE_MAX = 2;
+  const lote = papeisSubstituir.slice(0, CORRECAO_LOTE_MAX);
+  const loteRestante = papeisSubstituir.slice(CORRECAO_LOTE_MAX);
+  const mantidasParaLote = draft.possibilidades.filter(
+    (p) => auditoria.manter.includes(p.ordem) || loteRestante.some((r) => r.ordem === p.ordem),
+  );
+
   const correcao = await correctPossibilitiesOpenAI({
     entradaTexto,
-    mantidas,
+    mantidas: mantidasParaLote,
     modo: "auditor",
-    papeisSubstituir,
+    papeisSubstituir: lote,
   });
 
   const novoDraft = mergeCorrigidas(draft, correcao.possibilidades_corrigidas);
+
+  if (loteRestante.length > 0) {
+    const auditoriaRestante: AuditResult = {
+      status: "corrigir",
+      manter: [...auditoria.manter, ...lote.map((l) => l.ordem)],
+      substituir: loteRestante.map((l) => l.ordem),
+      motivo: auditoria.motivo.filter((m) => loteRestante.some((l) => l.ordem === m.ordem)),
+    };
+    const claimadoLote = await claimTransition(roundId, "CORRIGINDO", {
+      rascunhoAtual: novoDraft as unknown as Prisma.InputJsonValue,
+      auditoriaAtual: auditoriaRestante as unknown as Prisma.InputJsonValue,
+    });
+    if (!claimadoLote) return; // outra invocação concorrente já avançou esta rodada
+    await triggerGenerationStep(roundId);
+    return;
+  }
 
   const claimed = await claimTransition(roundId, "CORRIGINDO", {
     rascunhoAtual: novoDraft as unknown as Prisma.InputJsonValue,
