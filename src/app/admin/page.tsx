@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format-date";
 import { grantAccessManually, reprocessTransaction } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -151,12 +152,12 @@ export default async function AdminDashboardPage({
                     </p>
                   </div>
                   <form action={reprocessTransaction.bind(null, "/admin", tx.id)}>
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Reprocessando..."
                       className="rounded-lg border border-petrol px-3.5 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
                     >
                       Reprocessar →
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               );
@@ -192,12 +193,12 @@ export default async function AdminDashboardPage({
               className="w-full rounded-lg border border-line bg-paper px-3.5 py-2 text-[14.5px] text-ink outline-none focus:border-petrol"
             />
           </div>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Concedendo..."
             className="rounded-lg bg-gold px-5 py-2 text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
           >
             Conceder / renovar 1 ano →
-          </button>
+          </SubmitButton>
         </form>
       </section>
 

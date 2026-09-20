@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { deleteAccount } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export function DeleteAccountForm({ email, error }: { email: string; error?: string }) {
   const [confirming, setConfirming] = useState(false);
@@ -40,13 +41,13 @@ export function DeleteAccountForm({ email, error }: { email: string; error?: str
       />
       {error && !errorDismissed ? <p className="text-sm text-role-3">{error}</p> : null}
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Excluindo..."
           disabled={!matches}
           className="rounded-lg bg-role-3 px-4 py-2 text-[13px] font-semibold text-paper disabled:cursor-not-allowed disabled:opacity-40"
         >
           Excluir permanentemente
-        </button>
+        </SubmitButton>
         <button
           type="button"
           onClick={() => setConfirming(false)}

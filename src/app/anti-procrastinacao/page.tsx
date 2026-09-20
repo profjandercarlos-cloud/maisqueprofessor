@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { ANTI_PROCRASTINACAO_ITENS } from "@/lib/anti-procrastinacao/itens";
 import { salvarRespostas } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function AntiProcrastinacaoPage({
   searchParams,
@@ -99,12 +100,12 @@ export default async function AntiProcrastinacaoPage({
               </div>
             ))}
 
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Salvando..."
               className="self-start rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
             >
               Salvar
-            </button>
+            </SubmitButton>
           </form>
 
           {itensRespondidos.length > 0 ? (

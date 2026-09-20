@@ -9,6 +9,7 @@ import type {
   PossibilityStatus,
 } from "@/generated/prisma/client";
 import { approvePossibility } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 type ConexaoMundoReal = {
   nomeDeMercado: string | null;
@@ -358,12 +359,12 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     </p>
                   ) : (
                     <form action={approvePossibility.bind(null, p.id)}>
-                      <button
-                        type="submit"
+                      <SubmitButton
+                        pendingText="Confirmando..."
                         className="mt-[18px] rounded-lg bg-gold px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
                       >
                         Quero explorar esta possibilidade →
-                      </button>
+                      </SubmitButton>
                     </form>
                   )}
                 </div>

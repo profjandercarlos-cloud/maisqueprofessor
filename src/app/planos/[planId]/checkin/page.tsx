@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
 import { submitCheckin } from "./actions";
 import { StepErrorBanner } from "@/components/step-error-banner";
+import { SubmitButton } from "@/components/submit-button";
 
 const optionCardClass =
   "flex cursor-pointer items-start gap-3 rounded-lg border border-line bg-paper px-4 py-3 text-[14.5px] text-ink transition-colors has-[:checked]:border-petrol has-[:checked]:bg-gold-soft";
@@ -83,12 +84,12 @@ export default async function CheckinPage({
 
         {error ? <StepErrorBanner error={error} /> : null}
 
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Enviando..."
           className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
         >
           Confirmar check-in →
-        </button>
+        </SubmitButton>
       </form>
     </div>
   );

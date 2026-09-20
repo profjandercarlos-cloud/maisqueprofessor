@@ -22,6 +22,7 @@ import {
   deleteAgendaEntrySeriesFromHere,
   extendAllAgendaSeries,
 } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 const TIME_LABEL_COL = "56px";
 const HEADER_ROW = "34px";
@@ -79,12 +80,12 @@ export default async function AgendaPage({
           </p>
         </div>
         <form action={extendAllAgendaSeries}>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Estendendo..."
             className="rounded-lg border border-line px-3.5 py-2 text-[12.5px] font-semibold text-ink-muted transition-colors hover:border-petrol hover:text-petrol"
           >
             Estender repetições por mais 52 semanas
-          </button>
+          </SubmitButton>
         </form>
       </div>
 
@@ -183,12 +184,12 @@ export default async function AgendaPage({
             </label>
           </div>
 
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Salvando..."
             className="self-start rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Salvar
-          </button>
+          </SubmitButton>
         </form>
       </details>
 
@@ -281,30 +282,30 @@ export default async function AgendaPage({
             {hasFutureSet.has(editingEntry.seriesId) ? (
               <>
                 <form action={deleteAgendaEntryThisWeek.bind(null, editingEntry.id)}>
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Excluindo..."
                     className="rounded-full border border-line px-3 py-1 text-[12px] font-semibold text-ink-muted hover:border-petrol hover:text-petrol"
                   >
                     Excluir só esta semana
-                  </button>
+                  </SubmitButton>
                 </form>
                 <form action={deleteAgendaEntrySeriesFromHere.bind(null, editingEntry.id)}>
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Excluindo..."
                     className="rounded-full border border-role-3 px-3 py-1 text-[12px] font-semibold text-role-3"
                   >
                     Excluir esta semana e as seguintes
-                  </button>
+                  </SubmitButton>
                 </form>
               </>
             ) : (
               <form action={deleteAgendaEntryThisWeek.bind(null, editingEntry.id)}>
-                <button
-                  type="submit"
+                <SubmitButton
+                  pendingText="Excluindo..."
                   className="rounded-full border border-role-3 px-3 py-1 text-[12px] font-semibold text-role-3"
                 >
                   Excluir
-                </button>
+                </SubmitButton>
               </form>
             )}
             <a
@@ -354,12 +355,12 @@ export default async function AgendaPage({
                 className="rounded-lg border border-line bg-paper px-2 py-1.5 text-[13px] text-ink"
               />
             </label>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Duplicando..."
               className="rounded-lg border border-petrol px-3.5 py-2 text-[13px] font-semibold text-petrol hover:bg-gold-soft"
             >
               Duplicar
-            </button>
+            </SubmitButton>
           </form>
         </div>
       ) : null}

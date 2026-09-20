@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { formatDate, formatDateTime } from "@/lib/format-date";
 import { grantAccessManually, revokeAccessManually, toggleAdmin } from "../../actions";
+import { SubmitButton } from "@/components/submit-button";
 
 const fieldLabel = "text-[12.5px] text-ink-muted";
 const fieldValue = "text-[15px] text-ink";
@@ -78,32 +79,32 @@ export default async function AdminUserDetailPage({
           <form action={grantAccessManually.bind(null, returnTo)}>
             <input type="hidden" name="email" value={user.email} />
             <input type="hidden" name="name" value={user.name} />
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Concedendo..."
               className="rounded-lg bg-gold px-4 py-2 text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
             >
               Conceder / renovar 1 ano
-            </button>
+            </SubmitButton>
           </form>
 
           {!isRevoked ? (
             <form action={revokeAccessManually.bind(null, returnTo, user.email)}>
-              <button
-                type="submit"
+              <SubmitButton
+                pendingText="Revogando..."
                 className="rounded-lg border border-role-3 px-4 py-2 text-[13.5px] font-semibold text-role-3 transition-colors hover:bg-paper"
               >
                 Revogar acesso
-              </button>
+              </SubmitButton>
             </form>
           ) : null}
 
           <form action={toggleAdmin.bind(null, returnTo, user.id, !user.isAdmin)}>
-            <button
-              type="submit"
+            <SubmitButton
+              pendingText="Atualizando..."
               className="rounded-lg border border-line px-4 py-2 text-[13.5px] font-semibold text-ink transition-colors hover:border-petrol hover:text-petrol"
             >
               {user.isAdmin ? "Remover privilégio de admin" : "Tornar administrador"}
-            </button>
+            </SubmitButton>
           </form>
         </div>
       </section>

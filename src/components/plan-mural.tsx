@@ -7,6 +7,7 @@ import {
 } from "@/app/planos/[planId]/task-actions";
 import { submitCheckin } from "@/app/planos/[planId]/checkin/actions";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
+import { SubmitButton } from "@/components/submit-button";
 import { formatDate } from "@/lib/format-date";
 import type { PlanTask, PlanWeek } from "@/generated/prisma/client";
 
@@ -128,12 +129,12 @@ export function PlanMural({
               {task.status === "PENDENTE" && !isExpanded ? (
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   <form action={markTaskComplete.bind(null, returnTo, task.id)}>
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Marcando..."
                       className="rounded-full border border-petrol px-3 py-1 text-[12px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
                     >
                       Marcar completo
-                    </button>
+                    </SubmitButton>
                   </form>
                   <a
                     href={`/?parcial=${task.id}#tarefa-${task.id}`}
@@ -142,12 +143,12 @@ export function PlanMural({
                     Marcar parcial
                   </a>
                   <form action={pushTaskToPool.bind(null, returnTo, task.id)}>
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Movendo..."
                       className="rounded-full px-3 py-1 text-[12px] font-medium text-ink-muted hover:text-ink"
                     >
                       Tirar dessa semana
-                    </button>
+                    </SubmitButton>
                   </form>
                 </div>
               ) : null}
@@ -177,12 +178,12 @@ export function PlanMural({
                       />
                       h
                     </label>
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Confirmando..."
                       className="rounded-full bg-gold px-3.5 py-1.5 text-[12px] font-semibold text-paper hover:opacity-90"
                     >
                       Confirmar parcial
-                    </button>
+                    </SubmitButton>
                     <a href="/" className="text-[12px] font-medium text-ink-muted hover:text-ink">
                       Cancelar
                     </a>
@@ -233,12 +234,12 @@ export function PlanMural({
               className="w-16 rounded-lg border border-line bg-paper px-2 py-2 text-[13.5px] text-ink outline-none focus:border-petrol"
             />
           </label>
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Adicionando..."
             className="rounded-lg border border-petrol px-3.5 py-2 text-[13px] font-semibold text-petrol hover:bg-gold-soft"
           >
             Adicionar
-          </button>
+          </SubmitButton>
         </form>
       </details>
 
@@ -256,12 +257,12 @@ export function PlanMural({
                   </span>
                 </div>
                 <form action={pullTaskToCurrentWeek.bind(null, returnTo, task.id)}>
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Puxando..."
                     className="shrink-0 text-[12px] font-semibold text-petrol hover:underline"
                   >
                     Puxar pra essa semana →
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}
@@ -285,12 +286,12 @@ export function PlanMural({
                   </span>
                 </div>
                 <form action={pullTaskToCurrentWeek.bind(null, returnTo, task.id)}>
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Puxando..."
                     className="shrink-0 text-[12px] font-semibold text-petrol hover:underline"
                   >
                     Puxar pra essa semana →
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             ))}
@@ -340,12 +341,12 @@ export function PlanMural({
             />
           </div>
 
-          <button
-            type="submit"
+          <SubmitButton
+            pendingText="Enviando..."
             className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
             Confirmar check-in →
-          </button>
+          </SubmitButton>
         </form>
       </details>
     </div>

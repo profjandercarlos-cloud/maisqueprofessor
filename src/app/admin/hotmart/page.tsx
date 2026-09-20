@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { formatDateTime } from "@/lib/format-date";
 import { reprocessTransaction } from "../actions";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function AdminHotmartPage({
   searchParams,
@@ -73,12 +74,12 @@ export default async function AdminHotmartPage({
                   {JSON.stringify(payload, null, 2)}
                 </pre>
                 <form action={reprocessTransaction.bind(null, "/admin/hotmart", tx.id)}>
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="Reprocessando..."
                     className="rounded-lg border border-petrol px-3.5 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
                   >
                     Reprocessar este evento →
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             </details>

@@ -12,15 +12,21 @@ export function SubmitButton({
   children,
   pendingText,
   className,
+  disabled,
 }: {
   children: ReactNode;
   pendingText: string;
   className: string;
+  disabled?: boolean; // condição extra do chamador (ex.: validação de formulário) — combinada com o estado de envio, nunca o substitui
 }) {
   const { pending } = useFormStatus();
 
   return (
-    <button type="submit" disabled={pending} className={`${className} disabled:cursor-not-allowed disabled:opacity-70`}>
+    <button
+      type="submit"
+      disabled={pending || disabled}
+      className={`${className} disabled:cursor-not-allowed disabled:opacity-70`}
+    >
       {pending ? pendingText : children}
     </button>
   );

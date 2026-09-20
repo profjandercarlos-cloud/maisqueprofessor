@@ -7,6 +7,7 @@ import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { updateSettings } from "./actions";
 import { DeleteAccountForm } from "./delete-account-form";
 import { StepErrorBanner } from "@/components/step-error-banner";
+import { SubmitButton } from "@/components/submit-button";
 
 const fieldLabel = "mb-1.5 block text-[15px] font-medium text-ink";
 const inputClass =
@@ -98,12 +99,12 @@ export default async function ConfiguracoesPage({
 
         {error ? <StepErrorBanner error={error} /> : null}
 
-        <button
-          type="submit"
+        <SubmitButton
+          pendingText="Salvando..."
           className="self-start rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
         >
           Salvar
-        </button>
+        </SubmitButton>
       </form>
 
       <div className="mb-10 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">

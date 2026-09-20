@@ -1,6 +1,7 @@
 import { markMilestoneAchieved, unmarkMilestoneAchieved } from "@/app/planos/[planId]/milestones-actions";
 import { computeLevel, computeTaskCompletionPercent, LEVEL_LABELS, LEVEL_COLORS } from "@/lib/plano/evolucao";
 import { Medal } from "@/components/medal";
+import { SubmitButton } from "@/components/submit-button";
 import type { PlanMilestone, PlanTask } from "@/generated/prisma/client";
 
 export function PlanEvolucao({
@@ -91,12 +92,12 @@ export function PlanEvolucao({
                   )}
                   className="shrink-0"
                 >
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="..."
                     className="rounded-full border border-line px-2.5 py-1 text-[11px] font-semibold text-ink-muted transition-colors hover:border-petrol hover:text-petrol"
                   >
                     {achieved ? "Desmarcar" : "Alcancei"}
-                  </button>
+                  </SubmitButton>
                 </form>
               </li>
             );

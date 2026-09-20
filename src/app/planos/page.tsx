@@ -3,6 +3,7 @@ import { PapelIcon, PAPEL_LABELS } from "@/components/papel-icon";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { activatePlan } from "./actions";
+import { SubmitButton } from "@/components/submit-button";
 
 const STATUS_LABELS: Record<string, string> = {
   ATIVO: "Ativo",
@@ -79,12 +80,12 @@ export default async function PlanosPage() {
                 </a>
                 {!isActive ? (
                   <form action={activatePlan.bind(null, plan.id)}>
-                    <button
-                      type="submit"
+                    <SubmitButton
+                      pendingText="Ativando..."
                       className="rounded-lg border border-petrol px-4 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
                     >
                       Tornar este o plano ativo
-                    </button>
+                    </SubmitButton>
                   </form>
                 ) : null}
               </article>
