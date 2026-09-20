@@ -111,26 +111,29 @@ export default async function PossibilitiesReviewPage({
         </div>
       ) : null}
 
-      {!alreadyApproved ? (
-        <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
-            <circle cx="8" cy="8" r="7" stroke="var(--gold)" strokeWidth="1.4" />
-            <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <span>
-            Isto não é um ranking. Observe o que desperta reconhecimento em cada uma e reaja com
-            sinceridade, isso ajuda a refinar as próximas.
-          </span>
-        </div>
-      ) : null}
-
-      {round.avisoEconomico ? (
-        <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
-            <circle cx="8" cy="8" r="7" stroke="var(--role-2)" strokeWidth="1.4" />
-            <path d="M8 5v4M8 11v.1" stroke="var(--role-2)" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <span>{round.avisoEconomico}</span>
+      {!alreadyApproved || round.avisoEconomico ? (
+        <div className="mb-7 flex flex-col gap-3 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
+          {!alreadyApproved ? (
+            <div className="flex items-start gap-2.5">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+                <circle cx="8" cy="8" r="7" stroke="var(--gold)" strokeWidth="1.4" />
+                <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+              <span>
+                Isto não é um ranking. Observe o que desperta reconhecimento em cada uma e reaja com
+                sinceridade, isso ajuda a refinar as próximas.
+              </span>
+            </div>
+          ) : null}
+          {round.avisoEconomico ? (
+            <div className="flex items-start gap-2.5">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+                <circle cx="8" cy="8" r="7" stroke="var(--role-2)" strokeWidth="1.4" />
+                <path d="M8 5v4M8 11v.1" stroke="var(--role-2)" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
+              <span>{round.avisoEconomico}</span>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
