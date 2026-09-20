@@ -3,11 +3,23 @@
 import { usePathname } from "next/navigation";
 import { AppLogoMark } from "@/components/app-logo-mark";
 
-function InicioIcon() {
+function PainelIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
       <path d="M2.5 8.5 L9 3 L15.5 8.5" />
       <path d="M4 7.3 V15 H14 V7.3" />
+    </svg>
+  );
+}
+
+function PossibilidadesIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
+      <circle cx="9" cy="3.3" r="1.4" />
+      <circle cx="3.3" cy="14.7" r="1.4" />
+      <circle cx="9" cy="14.7" r="1.4" />
+      <circle cx="14.7" cy="14.7" r="1.4" />
+      <path d="M9 4.7 V9 M9 9 L3.3 13.3 M9 9 V13.3 M9 9 L14.7 13.3" />
     </svg>
   );
 }
@@ -76,7 +88,8 @@ function AdministracaoIcon() {
 }
 
 const BASE_ITEMS = [
-  { href: "/", label: "Início", Icon: InicioIcon },
+  { href: "/", label: "Painel", Icon: PainelIcon },
+  { href: "/diagnostico/concluido", label: "Possibilidades", Icon: PossibilidadesIcon },
   { href: "/planos", label: "Meus planos", Icon: PlanosIcon },
   { href: "/agenda", label: "Agenda", Icon: AgendaIcon },
   { href: "/evolucao", label: "Evolução", Icon: EvolucaoIcon },
@@ -88,6 +101,10 @@ const ADMIN_ITEM = { href: "/admin", label: "Administração", Icon: Administrac
 
 function isActiveHref(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
+  // "Possibilidades" cobre toda a árvore /diagnostico (wizard, incremento,
+  // ajuste, tela das 5 possibilidades) — não só o /diagnostico/concluido
+  // exato pro qual o item aponta.
+  if (href.startsWith("/diagnostico")) return pathname.startsWith("/diagnostico");
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

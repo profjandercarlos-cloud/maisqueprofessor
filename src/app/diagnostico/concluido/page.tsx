@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
+import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { generateForActiveDiagnostic } from "./actions";
 
 // maxDuration tem que ficar aqui (na page), não no arquivo "use server" —
@@ -25,7 +26,45 @@ export default async function DiagnosticoConcluidoPage({
     where: { userId: user.id, status: "CONCLUIDO" },
     orderBy: { createdAt: "desc" },
   });
-  if (!diagnostic) redirect("/");
+
+  // Sem diagnóstico concluído ainda (pode não existir nenhum, ou existir um
+  // em andamento) — mostra recado + CTA certo em vez de redirecionar em
+  // silêncio pra "/", já que agora "Possibilidades" é um item fixo do menu
+  // e precisa sempre levar a algum lugar que faça sentido.
+  if (!diagnostic) {
+    const anyDiagnostic = await db.diagnostic.findFirst({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
+    const cta = !anyDiagnostic
+      ? { label: "Começar diagnóstico", href: `/diagnostico/${SHARED_STEPS[0].slug}` }
+      : {
+          label: "Continuar diagnóstico",
+          href: `/diagnostico/${getResumeSlug(anyDiagnostic.intention, anyDiagnostic.rotaProfissional, anyDiagnostic.answers as Record<string, unknown>)}`,
+        };
+    return (
+      <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
+        <AppHeader progressLabel="POSSIBILIDADES" />
+        <div>
+          <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
+            Ainda não geradas
+          </span>
+          <h1 className="mb-3.5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
+            Suas possibilidades aparecem aqui depois do diagnóstico.
+          </h1>
+          <p className="mb-7 max-w-[46ch] text-[15.5px] text-ink-muted">
+            Termine seu diagnóstico pra gerar as cinco possibilidades personalizadas.
+          </p>
+          <a
+            href={cta.href}
+            className="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+          >
+            {cta.label} →
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   // Já existe uma rodada de possibilidades pra este diagnóstico — manda
   // direto pra ela em vez de reoferecer "gerar minhas 5 possibilidades",

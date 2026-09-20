@@ -46,7 +46,7 @@ export default async function Home({
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="INÍCIO" />
+      <AppHeader progressLabel="PAINEL" />
 
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
