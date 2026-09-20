@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { LogoutButton } from "./logout-button";
 import { PapelIcon } from "@/components/papel-icon";
+import { Prisma } from "@/generated/prisma/client";
 import type { PlanTask } from "@/generated/prisma/client";
 
 export default async function Home({
@@ -16,10 +17,11 @@ export default async function Home({
   const query = await searchParams;
   const expandedTaskId = typeof query.parcial === "string" ? query.parcial : undefined;
 
-  const [diagnostic, activePlan, dbUser] = await Promise.all([
+  const [diagnostic, activePlan, dbUser, pendingMissoesPossibility] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
     db.plan.findFirst({ where: { userId: user.id, status: "ATIVO" }, include: { possibility: true } }),
     db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true, name: true } }),
+    loadPendingMissoesPossibility(user.id),
   ]);
 
   let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
@@ -59,6 +61,24 @@ export default async function Home({
         </div>
         <LogoutButton />
       </div>
+
+      {pendingMissoesPossibility ? (
+        <div className="mb-8 rounded-[var(--radius-app)] border border-gold bg-gold-soft p-5 shadow-[var(--shadow)]">
+          <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
+            Missões de ativação pendentes
+          </span>
+          <p className="mb-2 font-serif text-lg font-medium text-ink">{pendingMissoesPossibility.titulo}</p>
+          <p className="mb-3 text-[13.5px] text-ink-muted">
+            Faltam respostas nas suas missões de ativação — elas calibram o seu Plano Personalizado de Transição.
+          </p>
+          <a
+            href={`/adequacao/${pendingMissoesPossibility.id}/missoes`}
+            className="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+          >
+            Continuar minhas missões →
+          </a>
+        </div>
+      ) : null}
 
       {activePlan && currentWeek ? (
         <>
@@ -114,6 +134,24 @@ export default async function Home({
       )}
     </div>
   );
+}
+
+// Possibilidade aprovada, com adequação concluída e missões já geradas, mas
+// ainda faltando resposta em alguma missão ou o feedback geral — o estado
+// transitório entre aprovar uma possibilidade e o Plano ser criado. Sem
+// isso visível no Painel, quem sai da tela de missões no meio só acha o
+// caminho de volta cavando em Meus Planos.
+function loadPendingMissoesPossibility(userId: string) {
+  return db.possibility.findFirst({
+    where: {
+      round: { diagnostic: { userId } },
+      status: "APROVADA",
+      plan: null,
+      missoesAtivacao: { some: {} },
+      OR: [{ missoesAtivacao: { some: { respondidoEm: null } } }, { feedbackMissoesAtivacao: { equals: Prisma.DbNull } }],
+    },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 function loadCurrentWeek(planId: string) {

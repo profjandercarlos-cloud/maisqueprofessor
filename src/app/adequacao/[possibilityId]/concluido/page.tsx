@@ -35,6 +35,20 @@ export default async function AdequacaoConcluidoPage({
     redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
   }
 
+  // Se as missões já existem mas ainda faltam respostas (ou o feedback
+  // geral), manda direto pra lá em vez de esperar o clique em "Continuar
+  // minha rota" pra só então perceber isso — quem sai da tela de missões e
+  // volta por aqui depois não devia precisar de um clique a mais só pra
+  // ser redirecionado de novo. Não gera nada aqui (isso só acontece no
+  // clique, na 1ª vez) — é só leitura do que já existe.
+  const missoesExistentes = await db.missaoAtivacao.findMany({ where: { possibilityId } });
+  if (missoesExistentes.length > 0) {
+    const missoesIncompletas = missoesExistentes.some((m) => m.respondidoEm === null);
+    if (missoesIncompletas || !possibility.feedbackMissoesAtivacao) {
+      redirect(`/adequacao/${possibilityId}/missoes`);
+    }
+  }
+
   const action = generatePlan.bind(null, possibilityId);
 
   return (

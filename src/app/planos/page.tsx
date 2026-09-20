@@ -28,6 +28,7 @@ export default async function PlanosPage() {
       status: { not: "REJEITADA" },
       id: { notIn: [...planPossibilityIds] },
     },
+    include: { missoesAtivacao: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -103,21 +104,31 @@ export default async function PlanosPage() {
             Ainda sem plano — dá pra transformar qualquer uma dessas num plano próprio.
           </p>
           <div className="flex flex-col gap-2.5">
-            {availablePossibilities.map((p) => (
-              <a
-                key={p.id}
-                href={`/adequacao/${p.id}`}
-                className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[14.5px] text-ink hover:border-petrol"
-              >
-                <span className="flex min-w-0 items-center gap-2">
-                  <PapelIcon papel={p.papel} className="h-[16px] w-[16px] shrink-0 text-petrol" />
-                  <span className="truncate" title={PAPEL_LABELS[p.papel]}>
-                    {p.titulo}
+            {availablePossibilities.map((p) => {
+              const missoesPendentes =
+                p.status === "APROVADA" &&
+                p.missoesAtivacao.length > 0 &&
+                (p.missoesAtivacao.some((m) => m.respondidoEm === null) || !p.feedbackMissoesAtivacao);
+              return (
+                <a
+                  key={p.id}
+                  href={`/adequacao/${p.id}`}
+                  className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-[14.5px] text-ink hover:border-petrol ${
+                    missoesPendentes ? "border-gold bg-gold-soft" : "border-line bg-paper-raised"
+                  }`}
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <PapelIcon papel={p.papel} className="h-[16px] w-[16px] shrink-0 text-petrol" />
+                    <span className="truncate" title={PAPEL_LABELS[p.papel]}>
+                      {p.titulo}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-[13px] font-semibold text-petrol">Criar plano →</span>
-              </a>
-            ))}
+                  <span className="shrink-0 text-[13px] font-semibold text-petrol">
+                    {missoesPendentes ? "Missões pendentes →" : "Criar plano →"}
+                  </span>
+                </a>
+              );
+            })}
           </div>
         </>
       ) : null}
