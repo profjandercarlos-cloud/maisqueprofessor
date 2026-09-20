@@ -41,12 +41,14 @@ const ROLE_MAP_INVERSO: Record<string, string> = Object.fromEntries(
   Object.entries(ROLE_MAP).map(([snake, enumValue]) => [enumValue, snake]),
 );
 
-// A rota interna (api/internal/generation-step) tem maxDuration=120s — a
-// Vercel mata a função antes disso se ela ainda estiver rodando. Um lock
-// mais velho que isso só pode ser de uma invocação que já morreu (matada
-// pela plataforma ou por erro não tratado), nunca de uma ainda em curso —
-// por isso é seguro reivindicar de novo depois desse prazo.
-export const CLAIM_TIMEOUT_MS = 150_000;
+// A rota interna (api/internal/generation-step) tem maxDuration=300s (plano
+// Pro) — a Vercel mata a função antes disso se ela ainda estiver rodando.
+// Um lock mais velho que isso só pode ser de uma invocação que já morreu
+// (matada pela plataforma ou por erro não tratado), nunca de uma ainda em
+// curso — por isso é seguro reivindicar de novo depois desse prazo. Precisa
+// sempre ficar ACIMA do maxDuration da rota, senão uma chamada legítima
+// ainda rodando é confundida com morta e disparada de novo à toa.
+export const CLAIM_TIMEOUT_MS = 320_000;
 
 // Reivindica a fase ANTES de chamar a OpenAI (não só na gravação final) —
 // evita não só persistir duas vezes, mas também pagar duas vezes pela
@@ -407,15 +409,17 @@ async function runCorrecao(
     };
   });
 
-  // Corrige no máximo 2 papéis por chamada — corrigir 4 de uma vez levou
-  // 133s num teste real (medido direto, sem o teto da rota), estourando o
-  // maxDuration=120s da invocação HTTP e travando a rodada em produção sem
-  // erro nenhum (a Vercel mata a função no meio). Em lotes de 2 (~40-70s
-  // medido), sobra sempre uma rodada de folga segura. Se sobrar mais que um
-  // lote, esta fase se retrigger sozinha pro próximo, sem passar por
+  // Corrige no máximo 4 papéis por chamada (o teto real de qualquer ajuste
+  // seletivo, já que pelo menos 1 sempre fica mantido) — antes do plano Pro,
+  // corrigir 4 de uma vez levou 133s num teste real (medido direto, sem o
+  // teto da rota), estourando o maxDuration=120s da rota no plano Hobby e
+  // travando a rodada em produção sem erro nenhum (a Vercel mata a função no
+  // meio). Com maxDuration=300s (Pro), 133s cabe com folga confortável. O
+  // loop de lotes continua existindo como rede de segurança: se sobrar mais
+  // que um lote, esta fase se retrigger sozinha pro próximo, sem passar por
   // VALIDANDO ainda — as ainda-não-corrigidas deste ciclo entram como
   // "mantidas" só pra esta chamada, pra não colidir território com elas.
-  const CORRECAO_LOTE_MAX = 2;
+  const CORRECAO_LOTE_MAX = 4;
   const lote = papeisSubstituir.slice(0, CORRECAO_LOTE_MAX);
   const loteRestante = papeisSubstituir.slice(CORRECAO_LOTE_MAX);
   const mantidasParaLote = draft.possibilidades.filter(

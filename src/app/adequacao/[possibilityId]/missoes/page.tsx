@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { responderMissao, enviarFeedbackMissoes } from "./actions";
 
-export const maxDuration = 120;
+// 300s — teto do plano Vercel Pro (era 120, ajustado pro Hobby).
+export const maxDuration = 300;
 
 const TIPO_LABELS: Record<string, string> = {
   CAPACIDADE: "Eu consigo fazer isso?",

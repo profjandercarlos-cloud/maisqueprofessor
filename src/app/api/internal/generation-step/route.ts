@@ -9,7 +9,11 @@ import { after } from "next/server";
 import { timingSafeStringEqual } from "@/lib/timing-safe-equal";
 import { runGenerationStep } from "@/lib/ai-engine/run-generation-pipeline";
 
-export const maxDuration = 120;
+// 300s — teto do plano Vercel Pro (era 120, ajustado no Hobby; o Hobby na
+// prática matava a função bem antes disso, causando ~25% de erro medido
+// nesta rota — ver run-generation-pipeline.ts:CLAIM_TIMEOUT_MS, que precisa
+// ficar sempre acima deste valor).
+export const maxDuration = 300;
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET;

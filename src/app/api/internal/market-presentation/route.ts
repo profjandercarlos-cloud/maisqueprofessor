@@ -8,7 +8,8 @@ import { after } from "next/server";
 import { timingSafeStringEqual } from "@/lib/timing-safe-equal";
 import { runMarketPresentationStep } from "@/lib/ai-engine/run-market-presentation-step";
 
-export const maxDuration = 120;
+// 300s — teto do plano Vercel Pro (era 120, ajustado pro Hobby).
+export const maxDuration = 300;
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.INTERNAL_API_SECRET;

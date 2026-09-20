@@ -11,13 +11,14 @@ const POLL_INTERVAL_MS = 12000;
 // saudável. 6 minutos aqui já mostrava "demorando demais" numa geração que
 // terminava certinho pouco depois, sem nenhum problema real.
 const GIVE_UP_AFTER_MS = 15 * 60 * 1000;
-// Sem atualização por mais que isso → tenta redisparar a fase. Fica bem
-// acima do pior tempo de uma fase saudável já medido (~96s pra geração)
-// pra não competir em corrida com uma fase lenta, porém viva — o pipeline
-// já é seguro contra disparo duplicado (controle de concorrência otimista
-// em run-generation-pipeline.ts), mas evitar a corrida também evita
-// chamadas de IA duplicadas e desperdiçadas.
-const STALE_AFTER_MS = 180 * 1000;
+// Sem atualização por mais que isso → tenta redisparar a fase. Precisa
+// ficar sempre ACIMA do maxDuration=300s da rota (plano Pro) — mesmo motivo
+// do CLAIM_TIMEOUT_MS em run-generation-pipeline.ts, com a mesma folga: sem
+// isso, uma fase lenta porém viva seria confundida com morta e disparada de
+// novo à toa. O pipeline já é seguro contra disparo duplicado (controle de
+// concorrência otimista), mas evitar a corrida também evita chamadas de IA
+// duplicadas e desperdiçadas.
+const STALE_AFTER_MS = 320 * 1000;
 
 const STATUS_TEXT: Record<string, string> = {
   PENDENTE: "Gerando suas possibilidades…",
