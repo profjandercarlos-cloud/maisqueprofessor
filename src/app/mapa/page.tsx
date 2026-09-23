@@ -16,7 +16,7 @@ const ESTAGIO_ORDEM: EstagioProgresso[] = ["escolhida", "missoes", "plano", "exe
 const ESTAGIO_LABELS: Record<EstagioProgresso, string> = {
   escolhida: "Escolhida",
   missoes: "Missões",
-  plano: "Plano",
+  plano: "Plano Personalizado",
   execucao: "Execução",
 };
 
@@ -107,13 +107,15 @@ export default async function MapaPage() {
           {possibilidades.map((p) => {
             const meta = ROLE_META[p.papel];
             const estagio = calcularEstagio(p);
+            const ativa = estagio !== "aberta" && estagio !== "nao_seguida";
 
             return (
               <div
                 key={p.id}
-                className="rounded-[var(--radius-app)] border px-4 py-3.5"
+                className={`rounded-[var(--radius-app)] px-4 py-3.5 ${ativa ? "border-2 shadow-[var(--shadow)]" : "border"}`}
                 style={{
-                  borderColor: estagio === "nao_seguida" ? "var(--line)" : meta.accentVar,
+                  borderColor: estagio === "nao_seguida" ? "var(--line)" : ativa ? meta.accentVar : "var(--line)",
+                  background: ativa ? `color-mix(in srgb, ${meta.accentVar} 6%, var(--paper-raised))` : "var(--paper-raised)",
                   opacity: estagio === "nao_seguida" ? 0.55 : 1,
                 }}
               >
@@ -124,10 +126,20 @@ export default async function MapaPage() {
                   >
                     <PapelIcon papel={p.papel} className="h-[15px] w-[15px]" />
                   </span>
-                  <div className="min-w-0">
-                    <p className="font-mono text-[10px] tracking-[0.06em] uppercase" style={{ color: meta.accentVar }}>
-                      {PAPEL_LABELS[p.papel]}
-                    </p>
+                  <div className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-[10px] tracking-[0.06em] uppercase" style={{ color: meta.accentVar }}>
+                        {PAPEL_LABELS[p.papel]}
+                      </span>
+                      {ativa ? (
+                        <span
+                          className="rounded-full px-2 py-[1px] font-mono text-[9px] font-semibold tracking-[0.06em] text-paper uppercase"
+                          style={{ background: meta.accentVar }}
+                        >
+                          Ativa agora
+                        </span>
+                      ) : null}
+                    </span>
                     <p className="truncate font-serif text-[14.5px] font-medium text-ink">{p.titulo}</p>
                   </div>
                 </div>
@@ -164,7 +176,7 @@ export default async function MapaPage() {
                               ) : null}
                             </span>
                             <span
-                              className="whitespace-nowrap text-[10.5px] font-medium"
+                              className="max-w-[62px] text-center text-[10px] leading-[1.2] font-medium"
                               style={{ color: atual ? meta.accentVar : "var(--ink-muted)" }}
                             >
                               {ESTAGIO_LABELS[etapa]}
