@@ -152,6 +152,9 @@ export async function generatePlan(possibilityId: string) {
         criterioConclusao: m.criterio_conclusao,
         evidenciaEsperada: m.evidencia_esperada,
         perguntaReflexao: m.pergunta_reflexao,
+        perguntaRegistro: m.pergunta_registro,
+        exemploCenario: m.exemplo_cenario,
+        exemploResultado: m.exemplo_resultado,
       })),
     });
     redirect(`/adequacao/${possibilityId}/missoes`);

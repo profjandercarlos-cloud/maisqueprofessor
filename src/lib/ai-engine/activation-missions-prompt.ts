@@ -34,6 +34,25 @@ Uma missão não é uma tarefa de estudo. É um experimento. "Estude como funcio
 - \`criterio_conclusao\` é uma frase objetiva e verificável (nunca "quando você achar que está bom").
 - \`pergunta_reflexao\` é uma única pergunta que force o professor a converter o que aconteceu em aprendizado, não apenas descrever a tarefa (ex.: "O que essa reação te diz sobre se alguém pagaria por isso?", nunca "Como foi fazer isso?").
 
+## \`pergunta_registro\` — nunca "o que aconteceu?"
+
+Depois de executar, o professor registra o que aconteceu num campo de texto livre — mas "o que aconteceu?" sozinho produz respostas vagas demais pra servir de insumo real. Esse campo é usado depois, junto com a reflexão, para a IA que gera o Plano Personalizado decidir se o nível de execução sobe, desce, ou se as primeiras semanas do plano precisam resolver uma dificuldade específica antes de seguir — então a pergunta precisa puxar exatamente o tipo de informação que essa decisão exige.
+
+\`pergunta_registro\` é uma única pergunta (nunca genérica, sempre específica ao que ESTA missão pode revelar) que sempre cobre dois pontos:
+1. O fato concreto que a missão deveria produzir (ex., na missão de Realidade: o que a pessoa entrevistada disse sobre frequência do problema, o que já tentou antes, quem decidiria uma contratação — não "como foi a conversa").
+2. A principal dificuldade enfrentada ao tentar executar (técnica, de acesso a alguém, de tempo real muito diferente do estimado, ou de insegurança) — sem isso, a IA do plano não sabe se deve reforçar competência, ajustar tempo, ou mudar de abordagem antes de seguir.
+
+Nunca aceite uma versão genérica que sirva pra qualquer missão — se \`pergunta_registro\` pudesse ser copiada e colada em outra possibilidade sem perder sentido, ela está genérica demais.
+
+## \`exemplo_cenario\` e \`exemplo_resultado\` — um caso concreto pra seguir
+
+Toda missão vem com instruções abstratas (\`passo_a_passo\`) que descrevem O QUE fazer, mas não mostram como fica um resultado de verdade — e isso deixa o professor sem referência de padrão de qualidade ou de direção a seguir. Por isso, toda missão também vem com um exemplo fictício completo, mostrado lado a lado com a missão real.
+
+- \`exemplo_cenario\`: 1-2 frases nomeando um cenário fictício ESPECÍFICO (não genérico) dentro do mesmo território da possibilidade — um nome de negócio/situação inventado, plausível, do tipo que a possibilidade realmente atenderia. Nunca reutilize o cenário citado na própria missão (ex.: se a missão já cita "retrabalho no fluxo de pedidos", o exemplo escolhe uma situação diferente, mas do mesmo tipo).
+- \`exemplo_resultado\`: o resultado concreto que essa pessoa fictícia produziu seguindo exatamente o \`passo_a_passo\` desta missão — no mesmo formato que \`evidencia_esperada\` descreve (ex.: se a evidência esperada é "um documento de uma página", \`exemplo_resultado\` é o texto completo desse documento, com conteúdo específico e plausível, não um resumo do que ele conteria).
+
+Deixe claro que é um exemplo ilustrativo (comece com algo como "Imagine alguém que..."), nunca apresente como se fosse um caso real verificado. Siga as mesmas regras de honestidade do resto do motor: não prometa reação de terceiros como garantida dentro do exemplo.
+
 ## Adaptação pelo estágio inicial
 
 O campo \`estagio_inicial\` da adequação muda o ponto de partida:
@@ -64,7 +83,10 @@ Retorne exclusivamente este JSON, sem texto fora dele:
       "passo_a_passo": ["string", "string", "string"],
       "criterio_conclusao": "string",
       "evidencia_esperada": "string — o que deve existir, concretamente, ao final",
-      "pergunta_reflexao": "string"
+      "pergunta_reflexao": "string",
+      "pergunta_registro": "string — cobre o fato concreto esperado e a principal dificuldade, nunca 'o que aconteceu?'",
+      "exemplo_cenario": "string — 1-2 frases, cenário fictício específico e diferente do citado na missão",
+      "exemplo_resultado": "string — o resultado concreto completo que esse caso fictício produziu"
     }
   ]
 }

@@ -78,46 +78,65 @@ export default async function MissoesAtivacaoPage({
               <h2 className="mb-1 font-serif text-lg font-medium text-petrol">{missao.nome}</h2>
               <p className="mb-3 text-[13.5px] text-ink-muted">{missao.objetivo}</p>
 
-              <dl className="mb-3 flex flex-col gap-2 text-[13.5px]">
-                <div>
-                  <dt className="font-semibold text-petrol">Por que essa missão existe</dt>
-                  <dd className="text-ink-muted">{missao.porQueExiste}</dd>
+              <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-2 md:items-stretch">
+                <dl className="flex flex-col gap-2 rounded-lg border border-line bg-paper p-3.5 text-[13.5px]">
+                  <span className="mb-0.5 font-mono text-[10px] tracking-[0.08em] text-badge-text uppercase">
+                    Sua missão
+                  </span>
+                  <div>
+                    <dt className="font-semibold text-petrol">Por que essa missão existe</dt>
+                    <dd className="text-ink-muted">{missao.porQueExiste}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-petrol">Tempo estimado</dt>
+                    <dd className="text-ink-muted">{missao.tempoEstimadoMinutos} minutos</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-petrol">Você vai precisar de</dt>
+                    <dd className="text-ink-muted">{missao.recursosNecessarios}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-petrol">Passo a passo</dt>
+                    <dd>
+                      <ol className="ml-4 list-decimal text-ink-muted">
+                        {passos.map((passo, i) => (
+                          <li key={i}>{passo}</li>
+                        ))}
+                      </ol>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-petrol">Você terminou quando</dt>
+                    <dd className="text-ink-muted">{missao.criterioConclusao}</dd>
+                  </div>
+                  <div>
+                    <dt className="font-semibold text-petrol">Evidência esperada</dt>
+                    <dd className="text-ink-muted">{missao.evidenciaEsperada}</dd>
+                  </div>
+                </dl>
+
+                <div className="flex flex-col gap-2 rounded-lg border border-gold bg-gold-soft p-3.5 text-[13.5px]">
+                  <span className="mb-0.5 font-mono text-[10px] tracking-[0.08em] text-gold uppercase">
+                    Exemplo de alguém que já fez isso
+                  </span>
+                  <p className="text-ink-muted italic">{missao.exemploCenario}</p>
+                  <div className="rounded-md border border-line bg-paper p-2.5 whitespace-pre-wrap text-ink">
+                    {missao.exemploResultado}
+                  </div>
                 </div>
-                <div>
-                  <dt className="font-semibold text-petrol">Tempo estimado</dt>
-                  <dd className="text-ink-muted">{missao.tempoEstimadoMinutos} minutos</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-petrol">Você vai precisar de</dt>
-                  <dd className="text-ink-muted">{missao.recursosNecessarios}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-petrol">Passo a passo</dt>
-                  <dd>
-                    <ol className="ml-4 list-decimal text-ink-muted">
-                      {passos.map((passo, i) => (
-                        <li key={i}>{passo}</li>
-                      ))}
-                    </ol>
-                  </dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-petrol">Você terminou quando</dt>
-                  <dd className="text-ink-muted">{missao.criterioConclusao}</dd>
-                </div>
-                <div>
-                  <dt className="font-semibold text-petrol">Evidência esperada</dt>
-                  <dd className="text-ink-muted">{missao.evidenciaEsperada}</dd>
-                </div>
-              </dl>
+              </div>
 
               {respondida ? (
                 <div className="rounded-lg bg-badge-bg p-3 text-[13.5px]">
                   <p className="font-semibold text-petrol">
                     ✓ {CONCLUSAO_LABELS[missao.conseguiuConcluir ?? ""] ?? "Respondida"}
                   </p>
-                  <p className="mt-1 text-ink-muted">O que aconteceu: {missao.oQueAconteceu}</p>
-                  <p className="mt-1 text-ink-muted">Reflexão: {missao.reflexao}</p>
+                  <p className="mt-1 text-ink-muted">
+                    <span className="font-medium text-ink">{missao.perguntaRegistro}</span> {missao.oQueAconteceu}
+                  </p>
+                  <p className="mt-1 text-ink-muted">
+                    <span className="font-medium text-ink">{missao.perguntaReflexao}</span> {missao.reflexao}
+                  </p>
                 </div>
               ) : (
                 <form action={action} className="flex flex-col gap-3 border-t border-line pt-3">
@@ -141,7 +160,7 @@ export default async function MissoesAtivacaoPage({
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-[13.5px]">
-                    <span className="font-semibold text-petrol">O que aconteceu?</span>
+                    <span className="font-semibold text-petrol">{missao.perguntaRegistro}</span>
                     <textarea
                       name="oQueAconteceu"
                       required

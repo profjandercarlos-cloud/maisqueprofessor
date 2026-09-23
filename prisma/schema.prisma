@@ -242,6 +242,9 @@ model MissaoAtivacao {
   criterioConclusao   String   @db.Text
   evidenciaEsperada   String   @db.Text
   perguntaReflexao    String   @db.Text
+  perguntaRegistro    String   @db.Text // pergunta especifica de "o que registrar" (substitui o generico "o que aconteceu?") - sempre inclui a principal dificuldade, pra virar subsidio real pro plano personalizado
+  exemploCenario      String   @db.Text // 1-2 frases de contexto do caso fictício escolhido pro exemplo (ex.: "Imagine alguem que escolheu...")
+  exemploResultado    String   @db.Text // o resultado concreto que esse caso fictício produziu, seguindo o passo a passo real da missao - mostrado lado a lado com a missao, pra pessoa nunca ficar sem saber que direcao tomar
 
   // Preenchido pelo professor depois de executar (ou tentar executar)
   conseguiuConcluir MissaoConclusao?

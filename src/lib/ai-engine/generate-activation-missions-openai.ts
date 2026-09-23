@@ -27,6 +27,9 @@ const missaoSchema = z.object({
   criterio_conclusao: z.string().min(1),
   evidencia_esperada: z.string().min(1),
   pergunta_reflexao: z.string().min(1),
+  pergunta_registro: z.string().min(1),
+  exemplo_cenario: z.string().min(1),
+  exemplo_resultado: z.string().min(1),
 });
 
 const responseSchema = z.object({
@@ -48,6 +51,9 @@ const MISSAO_JSON_SCHEMA = {
     criterio_conclusao: { type: "string" },
     evidencia_esperada: { type: "string" },
     pergunta_reflexao: { type: "string" },
+    pergunta_registro: { type: "string" },
+    exemplo_cenario: { type: "string" },
+    exemplo_resultado: { type: "string" },
   },
   required: [
     "tipo",
@@ -60,6 +66,9 @@ const MISSAO_JSON_SCHEMA = {
     "criterio_conclusao",
     "evidencia_esperada",
     "pergunta_reflexao",
+    "pergunta_registro",
+    "exemplo_cenario",
+    "exemplo_resultado",
   ],
   additionalProperties: false,
 } as const;
@@ -164,7 +173,7 @@ Distribuição do tempo na semana: ${DISTRIBUICAO_LABELS[params.distribuicaoTemp
 
   const completion = await openai.chat.completions.create({
     model: OPENAI_GENERATION_MODEL,
-    max_completion_tokens: 6000,
+    max_completion_tokens: 10000,
     messages: [
       { role: "system", content: ACTIVATION_MISSIONS_SYSTEM_PROMPT },
       { role: "user", content: userMessage },
