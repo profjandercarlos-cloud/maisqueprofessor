@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
+import { ROLE_META } from "@/lib/possibilidades/role-meta";
 import { responderMissao, enviarFeedbackMissoes } from "./actions";
 
 // 300s — teto do plano Vercel Pro (era 120, ajustado pro Hobby).
@@ -51,12 +52,26 @@ export default async function MissoesAtivacaoPage({
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="BLOCO 0 — MISSÕES DE ATIVAÇÃO" />
 
-      <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-        Antes do seu plano
-      </span>
+      <div className="mb-[18px] flex flex-wrap items-center gap-2">
+        <span className="inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
+          Antes do seu plano
+        </span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full py-[3px] pr-[9px] pl-2 font-mono text-[10px] tracking-[0.07em] uppercase"
+          style={{
+            color: ROLE_META[possibility.papel].accentVar,
+            background: `color-mix(in srgb, ${ROLE_META[possibility.papel].accentVar} 13%, var(--tint-base))`,
+          }}
+        >
+          {ROLE_META[possibility.papel].icon}
+          {ROLE_META[possibility.papel].label}
+        </span>
+      </div>
+      <p className="mb-1.5 font-mono text-[11px] tracking-[0.06em] text-ink-muted uppercase">Possibilidade escolhida</p>
       <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
-        3 missões pequenas antes do seu plano
+        {possibility.titulo}
       </h1>
+      <p className="mb-6 text-[13.5px] font-medium text-ink-muted">3 missões pequenas antes do seu plano</p>
       <p className="mb-8 max-w-[60ch] text-[14.5px] text-ink-muted">
         Antes de montar seu plano de várias semanas, vamos testar esta possibilidade na prática — rápido e em
         pequena escala. Cada missão cabe numa única sessão. O que acontecer aqui vai calibrar seu plano de verdade.
