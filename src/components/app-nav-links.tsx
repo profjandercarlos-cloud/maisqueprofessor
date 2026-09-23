@@ -12,6 +12,16 @@ function PainelIcon() {
   );
 }
 
+function MapaIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
+      <circle cx="4" cy="4.5" r="1.8" />
+      <path d="M4 6.3 V9 C4 11 5.5 11 7 11 H11 C12.5 11 14 11 14 13 V13.5" />
+      <circle cx="14" cy="15.2" r="1.8" />
+    </svg>
+  );
+}
+
 function PossibilidadesIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
@@ -89,6 +99,7 @@ function AdministracaoIcon() {
 
 const BASE_ITEMS = [
   { href: "/", label: "Painel", Icon: PainelIcon },
+  { href: "/mapa", label: "Mapa", Icon: MapaIcon },
   { href: "/diagnostico/concluido", label: "Possibilidades", Icon: PossibilidadesIcon },
   { href: "/planos", label: "Meus planos", Icon: PlanosIcon },
   { href: "/agenda", label: "Agenda", Icon: AgendaIcon },
