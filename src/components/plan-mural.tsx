@@ -102,6 +102,15 @@ export function PlanMural({
 
       <h2 className="mb-4 font-serif text-xl font-medium tracking-tight text-petrol">{week.meta}</h2>
 
+      {week.dificuldadesAntecipadas ? (
+        <details className="mb-4 rounded-lg border border-gold-soft bg-gold-soft">
+          <summary className="cursor-pointer px-3.5 py-2.5 font-mono text-[11px] tracking-[0.06em] text-gold uppercase">
+            Dica desta semana
+          </summary>
+          <p className="px-3.5 pb-3 text-[13px] leading-[1.5] text-ink">{week.dificuldadesAntecipadas}</p>
+        </details>
+      ) : null}
+
       <ul className="mb-4 flex flex-col gap-2.5">
         {weekTasks.map((task) => {
           const isExpanded = expandedTaskId === task.id;
