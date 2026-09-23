@@ -128,6 +128,15 @@ body {
   line-height: 1.5;
 }
 
+/* color-scheme sozinho não é suficiente em todo navegador/SO pra temar o
+   popup nativo do <select> — força explicitamente as cores das <option>
+   também, usando os mesmos tokens do tema atual. */
+select,
+option {
+  background-color: var(--paper-raised);
+  color: var(--ink);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
