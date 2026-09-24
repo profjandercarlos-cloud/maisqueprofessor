@@ -6,6 +6,9 @@ import { formatDate } from "@/lib/format-date";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
 import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
 import { ROLE_META } from "@/lib/possibilidades/role-meta";
+import type { Prisma } from "@/generated/prisma/client";
+
+type WeekWithDetails = Prisma.PlanWeekGetPayload<{ include: { checkin: true; tasks: true } }>;
 
 export default async function PlanPage({
   params,
@@ -20,6 +23,7 @@ export default async function PlanPage({
     where: { id: planId },
     include: {
       possibility: true,
+      acoes: { orderBy: { sequencia: "asc" } },
       weeks: {
         orderBy: { weekNumber: "asc" },
         include: { checkin: true, tasks: { orderBy: { sequencia: "asc" } } },
@@ -30,6 +34,22 @@ export default async function PlanPage({
 
   const relatorio = plan.relatorio as unknown as Relatorio;
   const hasCheckinDue = plan.weeks.some((w) => w.status === "PENDENTE" && !w.checkin);
+
+  // Semanas agrupadas por Ação (a unidade narrativa principal) — semanas
+  // sem planAcaoId são "extras" (criadas depois pra pendências, ver
+  // src/lib/plano/current-week.ts) e ficam fora do agrupamento.
+  const semanasPorAcao = new Map<string, typeof plan.weeks>();
+  const semanasExtras: typeof plan.weeks = [];
+  for (const week of plan.weeks) {
+    if (!week.planAcaoId) {
+      semanasExtras.push(week);
+      continue;
+    }
+    const lista = semanasPorAcao.get(week.planAcaoId) ?? [];
+    lista.push(week);
+    semanasPorAcao.set(week.planAcaoId, lista);
+  }
+  const primeiraSemanaPendente = plan.weeks.find((w) => w.status === "PENDENTE");
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
@@ -57,6 +77,24 @@ export default async function PlanPage({
       <h1 className="mb-5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
         {plan.possibility.titulo}
       </h1>
+
+      {/* Resumo em linguagem simples, antes de qualquer bloco técnico —
+          "pra onde você vai e o que conta como chegar lá" de cara, sem
+          precisar ler o relatório inteiro primeiro. Montado a partir de
+          campos que já existem no relatório, sem chamada de IA nova. */}
+      {relatorio.hipotese_de_teste ? (
+        <div className="mb-6 rounded-[var(--radius-app)] border border-petrol bg-gold-soft p-5">
+          <p className="mb-2 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">Em resumo</p>
+          <p className="mb-2 text-[14.5px] leading-[1.55] text-ink">
+            <span className="font-semibold text-petrol">Você está testando: </span>
+            {relatorio.hipotese_de_teste}
+          </p>
+          <p className="text-[14.5px] leading-[1.55] text-ink">
+            <span className="font-semibold text-petrol">Isso conta como feito quando: </span>
+            {plan.resultadoMinimoViavel}
+          </p>
+        </div>
+      ) : null}
 
       {/* relatorio.hipotese_de_teste guarda a presença dos campos novos —
           planos gerados antes desta mudança não têm esse bloco no JSON
@@ -147,78 +185,54 @@ export default async function PlanPage({
         </a>
       ) : null}
 
-      <div className="flex flex-col gap-4">
-        {plan.weeks.map((week) => {
-          const done = week.status === "CONCLUIDA";
+      <div className="flex flex-col gap-5">
+        {plan.acoes.map((acao) => {
+          const weeksDaAcao = semanasPorAcao.get(acao.id) ?? [];
+          const acaoAtual = weeksDaAcao.some((w) => w.id === primeiraSemanaPendente?.id);
+          const acaoConcluida = weeksDaAcao.length > 0 && weeksDaAcao.every((w) => w.status === "CONCLUIDA");
           return (
-            <article
-              key={week.id}
+            <details
+              key={acao.id}
+              open={acaoAtual}
               className="overflow-hidden rounded-[var(--radius-app)] border border-line bg-paper-raised shadow-[var(--shadow)]"
-              style={done ? { opacity: 0.7 } : undefined}
             >
-              <div className="flex items-center justify-between gap-3 border-b border-line bg-paper px-4 py-2.5">
+              <summary className="flex cursor-pointer items-center justify-between gap-3 bg-paper px-5 py-3.5">
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-petrol font-mono text-[11px] font-bold text-paper">
-                    {week.weekNumber}
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-petrol font-mono text-[11px] font-bold text-paper">
+                    {acao.sequencia}
                   </span>
-                  <span className="font-mono text-[10.5px] tracking-[0.08em] text-ink-muted uppercase">
-                    {done ? "Concluída" : "Semana"}
-                  </span>
-                </div>
-                <span className="text-[12px] text-ink-muted">
-                  {formatDate(week.scheduledDate, { day: "2-digit", month: "short" })}
-                </span>
-              </div>
-
-              <div className="p-4">
-                <p className="mb-3.5 font-serif text-[16px] leading-snug font-medium text-ink">
-                  {week.meta}
-                </p>
-
-                <ul className="mb-3.5 flex flex-col gap-2">
-                  {week.tasks.map((t) => (
-                    <li
-                      key={t.id}
-                      className="flex items-start gap-2.5 rounded-lg bg-paper px-3.5 py-2.5"
-                    >
-                      <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-petrol" />
-                      <span className="flex-1 text-[13.5px] leading-[1.5] text-ink">{t.texto}</span>
-                      <span className="mt-px shrink-0 text-[11.5px] whitespace-nowrap text-ink-muted">
-                        {t.horasEstimadas}h
-                      </span>
-                      {t.opcional ? (
-                        <span className="mt-px shrink-0 rounded-full px-2 py-0.5 font-mono text-[9.5px] tracking-wide text-gold uppercase">
-                          Opcional
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-
-                {week.dificuldadesAntecipadas ? (
-                  <div className="flex items-start gap-2.5 rounded-lg border border-gold-soft bg-gold-soft px-3.5 py-3">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      className="mt-0.5 shrink-0"
-                    >
-                      <circle cx="8" cy="8" r="7" stroke="var(--gold)" strokeWidth="1.4" />
-                      <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
-                    </svg>
-                    <div>
-                      <p className="mb-0.5 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                        Ponto de atenção
-                      </p>
-                      <p className="text-[13px] leading-[1.5] text-ink">{week.dificuldadesAntecipadas}</p>
-                    </div>
+                  <div>
+                    <p className="font-serif text-[15px] leading-snug font-medium text-petrol">{acao.nome}</p>
+                    <p className="text-[12px] text-ink-muted">{acao.objetivo}</p>
                   </div>
+                </div>
+                {acaoAtual ? (
+                  <span className="shrink-0 rounded-full bg-gold px-2.5 py-[3px] font-mono text-[9.5px] font-semibold tracking-wide text-paper uppercase">
+                    Atual
+                  </span>
+                ) : acaoConcluida ? (
+                  <span className="shrink-0 font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+                    Concluída
+                  </span>
                 ) : null}
+              </summary>
+              <div className="flex flex-col gap-4 p-4">
+                {weeksDaAcao.map((week) => (
+                  <WeekCard key={week.id} week={week} />
+                ))}
               </div>
-            </article>
+            </details>
           );
         })}
+
+        {semanasExtras.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            <p className="font-mono text-[11px] tracking-wide text-ink-muted uppercase">Semanas extras</p>
+            {semanasExtras.map((week) => (
+              <WeekCard key={week.id} week={week} />
+            ))}
+          </div>
+        ) : null}
       </div>
 
       {relatorio.criterios_decisao ? (
@@ -254,5 +268,63 @@ export default async function PlanPage({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function WeekCard({ week }: { week: WeekWithDetails }) {
+  const done = week.status === "CONCLUIDA";
+  return (
+    <article
+      className="overflow-hidden rounded-[var(--radius-app)] border border-line bg-paper shadow-[var(--shadow)]"
+      style={done ? { opacity: 0.7 } : undefined}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-line bg-paper-raised px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-petrol font-mono text-[11px] font-bold text-paper">
+            {week.weekNumber}
+          </span>
+          <span className="font-mono text-[10.5px] tracking-[0.08em] text-ink-muted uppercase">
+            {done ? "Concluída" : "Semana"}
+          </span>
+        </div>
+        <span className="text-[12px] text-ink-muted">
+          {formatDate(week.scheduledDate, { day: "2-digit", month: "short" })}
+        </span>
+      </div>
+
+      <div className="p-4">
+        <p className="mb-3.5 font-serif text-[16px] leading-snug font-medium text-ink">{week.meta}</p>
+
+        <ul className="mb-3.5 flex flex-col gap-2">
+          {week.tasks.map((t) => (
+            <li key={t.id} className="flex items-start gap-2.5 rounded-lg bg-paper-raised px-3.5 py-2.5">
+              <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-petrol" />
+              <span className="flex-1 text-[13.5px] leading-[1.5] text-ink">{t.texto}</span>
+              <span className="mt-px shrink-0 text-[11.5px] whitespace-nowrap text-ink-muted">
+                {t.horasEstimadas}h
+              </span>
+              {t.opcional ? (
+                <span className="mt-px shrink-0 rounded-full px-2 py-0.5 font-mono text-[9.5px] tracking-wide text-gold uppercase">
+                  Opcional
+                </span>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+
+        {week.dificuldadesAntecipadas ? (
+          <div className="flex items-start gap-2.5 rounded-lg border border-gold-soft bg-gold-soft px-3.5 py-3">
+            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
+              <circle cx="8" cy="8" r="7" stroke="var(--gold)" strokeWidth="1.4" />
+              <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            <div>
+              <p className="mb-0.5 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">Ponto de atenção</p>
+              <p className="text-[13px] leading-[1.5] text-ink">{week.dificuldadesAntecipadas}</p>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </article>
   );
 }

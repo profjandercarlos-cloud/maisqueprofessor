@@ -426,12 +426,36 @@ model Plan {
   updatedAt                  DateTime                   @updatedAt
 
   weeks                       PlanWeek[]
+  acoes                       PlanAcao[]
   tasks                       PlanTask[]
   journalEntries              JournalEntry[]
   milestones                  PlanMilestone[]
   antiProcrastinacaoRespostas AntiProcrastinacaoResposta[]
 
   @@map("plans")
+}
+
+// =========================================================================
+// Ações padronizadas do plano — 5 a 8 por plano, a unidade narrativa
+// principal ("Ação 3 de 6"), cada uma agrupando 1+ semanas reais. O
+// check-in continua semanal (nenhuma mudança em Checkin/ExecutionGuidance)
+// — a Ação é só uma camada de significado sobre as mesmas semanas, não uma
+// substituição delas.
+// =========================================================================
+model PlanAcao {
+  id           String   @id @default(uuid())
+  planId       String
+  plan         Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
+  sequencia    Int // 1-8
+  nome         String // curto, 3-6 palavras
+  objetivo     String   @db.Text
+  escopoMinimo String   @db.Text // o que conta como concluída, independente do tempo que a pessoa levar
+  createdAt    DateTime @default(now())
+
+  weeks PlanWeek[]
+
+  @@unique([planId, sequencia])
+  @@map("plan_acoes")
 }
 
 // =========================================================================
@@ -501,6 +525,8 @@ model PlanWeek {
   id                      String     @id @default(uuid())
   planId                  String
   plan                    Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  planAcaoId              String? // null nas semanas extras (criadas depois, sem Ação associada — mesmo motivo de dificuldadesAntecipadas ser opcional)
+  planAcao                PlanAcao?  @relation(fields: [planAcaoId], references: [id])
   weekNumber              Int
   meta                    String     @db.Text
   dificuldadesAntecipadas String?    @db.Text // null nas semanas extras (criadas só pra receber pendências, sem conteúdo novo da IA)

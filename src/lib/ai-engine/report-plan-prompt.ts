@@ -122,7 +122,20 @@ A última semana do plano sempre termina num ponto de decisão (avançar, ajusta
 
 Nunca use uma quantidade rígida de curtidas, visualizações ou seguidores como critério — um teste inicial tem pouca distribuição por natureza; os sinais qualitativos (uma resposta real, uma pergunta de volta, um pedido de mais informação) valem mais que números de alcance.
 
-### 2. Plano de execução por semanas
+### 2. Ações padronizadas — a unidade narrativa do plano
+
+Antes de detalhar semana a semana, organize o plano inteiro em **Ações** — a unidade que a pessoa usa pra entender onde está ("Ação 3 de 6"), não a semana. Cada Ação agrupa 1 ou mais semanas reais (o número de semanas por Ação não precisa ser igual entre elas) e representa uma etapa genuinamente diferente do caminho, nunca uma subdivisão artificial de uma mesma categoria de tarefa.
+
+- Gere entre 3 e 8 Ações — o normal é 5 a 8; só gere menos de 5 quando a duração do plano for muito curta (4-5 semanas) e não houver etapas suficientes pra justificar mais. Nunca gere mais Ações do que semanas totais do plano (cada Ação precisa de pelo menos 1 semana inteira).
+- Cada Ação é uma etapa real e distinta — se duas semanas seguidas fariam essencialmente a mesma categoria de coisa (ex.: "entrevistar mais pessoas"), isso é UMA Ação de 2 semanas, nunca duas Ações separadas. Não infle a contagem de Ações artificialmente nem junte duas etapas genuinamente diferentes numa só só pra bater um número.
+- As Ações vêm em ordem — a primeira Ação cobre as primeiras \`numero_semanas\` semanas do array \`semanas\` que você vai gerar a seguir, a segunda Ação cobre as próximas, e assim por diante. A soma de \`numero_semanas\` de todas as Ações precisa ser exatamente igual ao número total de semanas do plano.
+- Cada Ação precisa ter:
+  - **nome**: curto (3-6 palavras), nomeando a etapa (ex.: "Confirmar a dor real", "Testar preço com compradores")
+  - **objetivo**: 1 frase do que essa etapa busca alcançar
+  - **escopo_minimo**: o que conta como essa Ação genuinamente concluída, independente de quanto tempo a pessoa levar pra chegar lá — a menor versão que ainda vale como feita (mesmo espírito do \`criterio_conclusao\` das tarefas, só que no nível da etapa inteira)
+  - **numero_semanas**: quantas semanas do plano essa Ação cobre
+
+### 3. Plano de execução por semanas
 
 A duração do plano é a que você determinou na seção "Duração do plano" acima (entre 4 e 12 semanas) — gere exatamente esse número de semanas, nem mais, nem menos.
 
@@ -150,7 +163,7 @@ O plano deve ter progressão real: comece pelo teste mais simples e barato poss�
 
 **A última semana do plano precisa fechar o ciclo** — pelo menos uma tarefa de consolidar o que foi aprendido com base em evidências reais (não em impressão geral), usando os \`criterios_decisao\` definidos no relatório para chegar a avançar/ajustar/encerrar, e a meta da semana deve indicar o que faz sentido no próximo ciclo.
 
-### 3. Marcos de evolução
+### 4. Marcos de evolução
 
 Além das tarefas semana a semana, identifique marcos — conquistas reais que a pessoa vai reconhecer quando acontecerem, não tarefas do checklist. Um marco é um resultado concreto do mundo real (ex.: "Primeira empresa aceita conversar sobre a proposta", "Primeira turma fechada com 5 pessoas", "Primeiro pagamento recebido"), não uma ação que a pessoa simplesmente executa e risca da lista.
 
@@ -200,6 +213,9 @@ Retorne exclusivamente um JSON válido, sem texto fora dele:
       "regra_encerrar": "string"
     }
   },
+  "acoes": [
+    { "nome": "string", "objetivo": "string", "escopo_minimo": "string", "numero_semanas": 2 }
+  ],
   "semanas": [
     {
       "meta": "string",

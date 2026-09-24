@@ -9,7 +9,7 @@ import { submitCheckin } from "@/app/planos/[planId]/checkin/actions";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
 import { SubmitButton } from "@/components/submit-button";
 import { formatDate } from "@/lib/format-date";
-import type { PlanTask, PlanWeek } from "@/generated/prisma/client";
+import type { PlanAcao, PlanTask, PlanWeek } from "@/generated/prisma/client";
 
 const ORIGIN_LABEL: Record<string, string> = {
   PLANO: "Do plano",
@@ -63,6 +63,7 @@ export function PlanMural({
   horasDisponiveis,
   expandedTaskId,
   duracaoSemanas,
+  acoes,
 }: {
   planId: string;
   week: PlanWeek;
@@ -72,6 +73,7 @@ export function PlanMural({
   horasDisponiveis: number;
   expandedTaskId?: string;
   duracaoSemanas: number;
+  acoes: PlanAcao[];
 }) {
   const returnTo = "/";
   const horasAlocadas = weekTasks.reduce((sum, t) => sum + t.horasEstimadas, 0);
@@ -88,13 +90,18 @@ export function PlanMural({
   const temSemanasFuturas = week.weekNumber < duracaoSemanas;
   const adiantouSemanaSeguinte = temSemanasFuturas && proximasDoPlano.length === 0;
 
+  const acaoIndex = acoes.findIndex((a) => a.id === week.planAcaoId);
+  const acaoAtual = acaoIndex >= 0 ? acoes[acaoIndex] : null;
+  const semanaLabel = isExtra ? `Semana ${week.weekNumber} · extra` : `Semana ${week.weekNumber} de ${duracaoSemanas}`;
+
   return (
     <div className="mb-10 rounded-[var(--radius-app)] border border-petrol bg-paper-raised p-5 shadow-[var(--shadow)]">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <span className="font-mono text-[11px] tracking-wide text-gold uppercase">
-          {isExtra ? `Semana ${week.weekNumber} · extra` : `Semana ${week.weekNumber} de ${duracaoSemanas}`}
+          {acaoAtual ? `Ação ${acaoIndex + 1} de ${acoes.length} — ${acaoAtual.nome}` : semanaLabel}
         </span>
         <span className="text-[12px] text-ink-muted">
+          {acaoAtual ? `${semanaLabel} · ` : ""}
           {formatWeekRange(week.scheduledDate, weekEnd)}
           {diasAtraso > 0 ? ` · ${diasAtraso}d atrasada` : ""}
         </span>

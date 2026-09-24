@@ -20,7 +20,10 @@ export default async function Home({
 
   const [diagnostic, activePlan, dbUser, pendingEspecificacaoPossibility] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
-    db.plan.findFirst({ where: { userId: user.id, status: "ATIVO" }, include: { possibility: true } }),
+    db.plan.findFirst({
+      where: { userId: user.id, status: "ATIVO" },
+      include: { possibility: true, acoes: { orderBy: { sequencia: "asc" } } },
+    }),
     db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true, name: true } }),
     loadPendingEspecificacaoPossibility(user.id),
   ]);
@@ -104,6 +107,7 @@ export default async function Home({
             horasDisponiveis={activePlan.tempoDisponivelHoras}
             expandedTaskId={expandedTaskId}
             duracaoSemanas={activePlan.duracaoSemanas}
+            acoes={activePlan.acoes}
           />
         </>
       ) : activePlan ? (

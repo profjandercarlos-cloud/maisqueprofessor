@@ -28,6 +28,7 @@ const NIVEL_EXECUCAO_MAP: Record<string, NivelExecucao> = {
   desenvolvimento: NivelExecucao.DESENVOLVIMENTO,
 };
 import { calcularHorasNucleoSemana } from "@/lib/plano/formula";
+import { distribuirSemanasPorAcao } from "@/lib/plano/distribuir-acoes";
 import {
   generateReportAndPlanOpenAI,
   type AcaoEspecificacaoResultado,
@@ -292,18 +293,6 @@ export async function generatePlan(possibilityId: string) {
       proporcaoAprendizado: generated.relatorio.proporcao_aprendizado,
       duracaoSemanas: generated.semanas.length,
       relatorio: generated.relatorio as Prisma.InputJsonValue,
-      weeks: {
-        create: generated.semanas.map((semana, index) => {
-          const scheduledDate = new Date(now);
-          scheduledDate.setDate(scheduledDate.getDate() + index * 7);
-          return {
-            weekNumber: index + 1,
-            meta: semana.meta,
-            dificuldadesAntecipadas: semana.dificuldades_antecipadas,
-            scheduledDate,
-          };
-        }),
-      },
       milestones: {
         create: generated.marcos.map((marco, index) => ({
           sequencia: index,
@@ -313,15 +302,52 @@ export async function generatePlan(possibilityId: string) {
         })),
       },
     },
-    include: { weeks: { orderBy: { weekNumber: "asc" } } },
   });
 
-  // PlanTask não pode ser criado aninhado 3 níveis abaixo de Plan (o create
-  // aninhado só preenche a FK do pai imediato — planWeekId — não a de Plan)
-  // então as tarefas são inseridas à parte, já com os dois IDs resolvidos.
+  // As Ações precisam existir (com IDs reais) antes das semanas, pra cada
+  // semana já nascer com planAcaoId — por isso não entram no create
+  // aninhado acima. distribuirSemanasPorAcao é a rede de segurança
+  // determinística caso normalizeWeekCount tenha alterado o número final
+  // de semanas depois que a IA gerou "acoes" (ver o próprio helper).
+  const acoesCriadas = await db.$transaction(
+    generated.acoes.map((acao, index) =>
+      db.planAcao.create({
+        data: {
+          planId: plan.id,
+          sequencia: index + 1,
+          nome: acao.nome,
+          objetivo: acao.objetivo,
+          escopoMinimo: acao.escopo_minimo,
+        },
+      }),
+    ),
+  );
+  const faixasPorAcao = distribuirSemanasPorAcao(generated.acoes, generated.semanas.length);
+
+  const weeksCriadas = await db.$transaction(
+    generated.semanas.map((semana, index) => {
+      const scheduledDate = new Date(now);
+      scheduledDate.setDate(scheduledDate.getDate() + index * 7);
+      const acaoIndex = faixasPorAcao.findIndex((faixa) => index >= faixa.inicio && index < faixa.fim);
+      return db.planWeek.create({
+        data: {
+          planId: plan.id,
+          planAcaoId: acaoIndex >= 0 ? acoesCriadas[acaoIndex].id : null,
+          weekNumber: index + 1,
+          meta: semana.meta,
+          dificuldadesAntecipadas: semana.dificuldades_antecipadas,
+          scheduledDate,
+        },
+      });
+    }),
+  );
+
+  // PlanTask não pode ser criado aninhado abaixo de Plan/PlanWeek (o create
+  // aninhado só preenche a FK do pai imediato) então as tarefas são
+  // inseridas à parte, já com os dois IDs resolvidos.
   let sequencia = 0;
   const taskRows = generated.semanas.flatMap((semana, index) => {
-    const week = plan.weeks[index];
+    const week = weeksCriadas[index];
     return semana.tarefas.map((tarefa) => ({
       planId: plan.id,
       planWeekId: week.id,

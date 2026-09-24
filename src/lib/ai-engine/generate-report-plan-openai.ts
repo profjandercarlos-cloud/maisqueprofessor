@@ -37,6 +37,13 @@ const weekSchema = z.object({
   dificuldades_antecipadas: z.string().min(1),
 });
 
+const acaoResumoSchema = z.object({
+  nome: z.string().min(1),
+  objetivo: z.string().min(1),
+  escopo_minimo: z.string().min(1),
+  numero_semanas: z.number().int().positive(),
+});
+
 const MARCO_TIPO_VALUES = ["entrega_controlavel", "sinal_externo"] as const;
 
 const marcoSchema = z.object({
@@ -80,6 +87,10 @@ const responseSchema = z.object({
     condicao_de_termino: z.string().min(1),
     criterios_decisao: criteriosDecisaoSchema,
   }),
+  // 5-8 é o alvo típico, mas planos muito curtos (mínimo 4 semanas) não
+  // comportam 5 ações de 1+ semana cada — piso real 3, nunca mais ações
+  // que semanas do plano.
+  acoes: z.array(acaoResumoSchema).min(3).max(8),
   semanas: z.array(weekSchema).min(1),
   // Best effort — ver normalizeMarcos: uma contagem fora do alvo (proporcional
   // à duração final) não derruba a geração inteira, só ajusta o que sobra pra tela.
@@ -141,6 +152,20 @@ const JSON_SCHEMA = {
       ],
       additionalProperties: false,
     },
+    acoes: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          nome: { type: "string" },
+          objetivo: { type: "string" },
+          escopo_minimo: { type: "string" },
+          numero_semanas: { type: "number" },
+        },
+        required: ["nome", "objetivo", "escopo_minimo", "numero_semanas"],
+        additionalProperties: false,
+      },
+    },
     semanas: {
       type: "array",
       items: {
@@ -180,7 +205,7 @@ const JSON_SCHEMA = {
       },
     },
   },
-  required: ["relatorio", "semanas", "marcos"],
+  required: ["relatorio", "acoes", "semanas", "marcos"],
   additionalProperties: false,
 } as const;
 
@@ -367,7 +392,7 @@ Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "n
       { role: "system", content: REPORT_PLAN_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `${userMessage}\n\nLEMBRETE FINAL: confira que o número de semanas do array "semanas" é coerente com o nível de execução que você escolheu (esforço daquele nível ÷ núcleo semanal, entre ${DURACAO_MIN_SEMANAS} e ${DURACAO_MAX_SEMANAS}), que a última semana fecha o ciclo, que existe uma revisão intermediária perto do meio do plano, e que nenhuma semana individualmente estourou o núcleo semanal informado acima.`,
+        content: `${userMessage}\n\nLEMBRETE FINAL: confira que o número de semanas do array "semanas" é coerente com o nível de execução que você escolheu (esforço daquele nível ÷ núcleo semanal, entre ${DURACAO_MIN_SEMANAS} e ${DURACAO_MAX_SEMANAS}), que a última semana fecha o ciclo, que existe uma revisão intermediária perto do meio do plano, que nenhuma semana individualmente estourou o núcleo semanal informado acima, e que a soma de "numero_semanas" de todas as ações em "acoes" é exatamente igual ao número de itens em "semanas".`,
       },
     ],
     response_format: {
