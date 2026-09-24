@@ -10,7 +10,7 @@
 // "analiseMercadoAmpliada", gerada numa fase separada depois, não é mais
 // necessária — ver nota no schema.prisma). `comoGerarReceita`/`comoValidar`
 // continuam existindo como resumos internos curtos, pra não quebrar Mapa de
-// Execução / Missões de Ativação / Plano, que ainda leem esses campos.
+// Execução / Etapa de Especificação / Plano, que ainda leem esses campos.
 import { z } from "zod";
 import type { Possibility, PossibilityRole } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
@@ -87,7 +87,7 @@ export type GeneratedPossibility = {
   horizonteRelevanciaFinanceira: "CURTO_PRAZO" | "MEDIO_PRAZO" | "LONGO_PRAZO" | "A_VALIDAR";
   destaque: boolean;
   comoFunciona: string; // bloco 1 — "A possibilidade" (já com exemplo concreto embutido)
-  comoGerarReceita: string; // resumo interno curto — usado por Mapa de Execução/Missões/Plano
+  comoGerarReceita: string; // resumo interno curto — usado por Mapa de Execução/Etapa de Especificação/Plano
   porQueCombinaComVoce: string;
   primeiraValidacao: string; // resumo interno curto ("como validar")
   pontoDeAtencao: string;

@@ -3,19 +3,20 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { PapelIcon, PAPEL_LABELS } from "@/components/papel-icon";
 import { ROLE_META, ROLE_ORDER } from "@/lib/possibilidades/role-meta";
+import { ESPECIFICACAO_TITULO } from "@/lib/especificacao/titulo";
 
 // Mapa fixo da jornada do RAS — não mostra o mecanismo de ajuste seletivo
 // nem a troca de possibilidades (é um caso à parte, deliberadamente fora
 // deste mapa). Mostra só: Diagnóstico -> 5 possibilidades (uma raia por
-// papel) -> Missões -> Plano -> Execução, com "você está aqui" calculado a
-// partir do estado real de cada possibilidade.
-type Estagio = "aberta" | "escolhida" | "missoes" | "plano" | "execucao" | "nao_seguida";
+// papel) -> Sua Rota Específica -> Plano -> Execução, com "você está aqui"
+// calculado a partir do estado real de cada possibilidade.
+type Estagio = "aberta" | "escolhida" | "especificacao" | "plano" | "execucao" | "nao_seguida";
 
-type EstagioProgresso = "escolhida" | "missoes" | "plano" | "execucao";
-const ESTAGIO_ORDEM: EstagioProgresso[] = ["escolhida", "missoes", "plano", "execucao"];
+type EstagioProgresso = "escolhida" | "especificacao" | "plano" | "execucao";
+const ESTAGIO_ORDEM: EstagioProgresso[] = ["escolhida", "especificacao", "plano", "execucao"];
 const ESTAGIO_LABELS: Record<EstagioProgresso, string> = {
   escolhida: "Escolhida",
-  missoes: "Missões",
+  especificacao: ESPECIFICACAO_TITULO,
   plano: "Plano Personalizado",
   execucao: "Execução",
 };
@@ -36,7 +37,7 @@ export default async function MapaPage() {
           possibilities: {
             include: {
               plan: { include: { weeks: { include: { checkin: true } } } },
-              missoesAtivacao: true,
+              acoesEspecificacao: true,
             },
           },
         },
@@ -51,9 +52,10 @@ export default async function MapaPage() {
     if (p.status === "REJEITADA") return "nao_seguida";
     if (p.status !== "APROVADA") return "aberta";
     if (!p.plan) {
-      if (p.missoesAtivacao.length === 0) return "escolhida";
-      const missoesCompletas = p.missoesAtivacao.every((m) => m.respondidoEm !== null) && !!p.feedbackMissoesAtivacao;
-      return missoesCompletas ? "plano" : "missoes";
+      if (p.acoesEspecificacao.length === 0) return "escolhida";
+      const especificacaoCompleta =
+        p.acoesEspecificacao.every((a) => a.respondidoEm !== null) && !!p.feedbackEspecificacao;
+      return especificacaoCompleta ? "plano" : "especificacao";
     }
     const teveCheckin = p.plan.weeks.some((w) => w.checkin !== null);
     return teveCheckin ? "execucao" : "plano";

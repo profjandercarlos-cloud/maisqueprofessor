@@ -30,20 +30,22 @@ const NIVEL_EXECUCAO_MAP: Record<string, NivelExecucao> = {
 import { calcularHorasNucleoSemana } from "@/lib/plano/formula";
 import {
   generateReportAndPlanOpenAI,
-  type FeedbackMissoesAtivacao,
-  type MissaoAtivacaoResultado,
+  type AcaoEspecificacaoResultado,
+  type FeedbackEspecificacao,
+  type RecorteEspecificado,
 } from "@/lib/ai-engine/generate-report-plan-openai";
 import { generateMapaExecucaoOpenAI, type MapaExecucao } from "@/lib/ai-engine/generate-mapa-execucao-openai";
-import { generateActivationMissionsOpenAI } from "@/lib/ai-engine/generate-activation-missions-openai";
+import { generateSpecificationActionsOpenAI } from "@/lib/ai-engine/generate-specification-actions-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
 
-const MISSAO_TIPO_MAP: Record<string, "CAPACIDADE" | "REALIDADE" | "VALIDACAO"> = {
-  capacidade: "CAPACIDADE",
-  realidade: "REALIDADE",
-  validacao: "VALIDACAO",
+const DIMENSAO_MAP: Record<string, "PUBLICO" | "PROBLEMA" | "FORMATO" | "EVIDENCIA"> = {
+  publico: "PUBLICO",
+  problema: "PROBLEMA",
+  formato: "FORMATO",
+  evidencia: "EVIDENCIA",
 };
 
 function fail(possibilityId: string, message: string): never {
@@ -97,26 +99,27 @@ export async function generatePlan(possibilityId: string) {
     redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
   }
 
-  // Bloco 0 da rota: as 3 Missões de Ativação precisam existir e estar
-  // respondidas (mais o feedback geral) antes do Plano de Execução
-  // Personalizado ser gerado — ver src/app/adequacao/[possibilityId]/missoes.
-  // As respostas da missão são insumo real pro plano (ver
-  // generateReportAndPlanOpenAI), não só uma barreira de fricção.
-  const estagioInicialParaMissoes = answers.estagioInicial as EstagioInicial;
-  const acoesAceitasParaMissoes = (answers.acoesAceitas as string[] | undefined) ?? [];
-  const orcamentoParaMissoes = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
-  const regraFinanceiraParaMissoes = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
-  const distribuicaoTempoParaMissoes = answers.distribuicaoTempo as DistribuicaoTempo;
+  // Bloco 0 da rota: a Etapa de Especificação ("Sua Rota Específica")
+  // precisa existir e estar respondida (mais o feedback geral) antes do
+  // Plano de Execução Personalizado ser gerado — ver
+  // src/app/adequacao/[possibilityId]/especificacao. As respostas das
+  // ações são insumo real pro plano (ver generateReportAndPlanOpenAI),
+  // não só uma barreira de fricção.
+  const estagioInicialParaEspecificacao = answers.estagioInicial as EstagioInicial;
+  const acoesAceitasParaEspecificacao = (answers.acoesAceitas as string[] | undefined) ?? [];
+  const orcamentoParaEspecificacao = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
+  const regraFinanceiraParaEspecificacao = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
+  const distribuicaoTempoParaEspecificacao = answers.distribuicaoTempo as DistribuicaoTempo;
 
-  let missoes = await db.missaoAtivacao.findMany({
+  let acoes = await db.acaoEspecificacao.findMany({
     where: { possibilityId: possibility.id },
     orderBy: { ordem: "asc" },
   });
 
-  if (missoes.length === 0) {
+  if (acoes.length === 0) {
     let geradas;
     try {
-      geradas = await generateActivationMissionsOpenAI({
+      geradas = await generateSpecificationActionsOpenAI({
         diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
         possibility: {
           titulo: possibility.titulo,
@@ -127,57 +130,65 @@ export async function generatePlan(possibilityId: string) {
           pontoDeAtencao: possibility.pontoDeAtencao,
         },
         mapaExecucao,
-        estagioInicial: estagioInicialParaMissoes,
-        acoesAceitas: acoesAceitasParaMissoes as AcaoAceita[],
-        orcamentoFaixa: orcamentoParaMissoes,
-        regraSegurancaFinanceira: regraFinanceiraParaMissoes,
-        distribuicaoTempo: distribuicaoTempoParaMissoes,
+        estagioInicial: estagioInicialParaEspecificacao,
+        acoesAceitas: acoesAceitasParaEspecificacao as AcaoAceita[],
+        orcamentoFaixa: orcamentoParaEspecificacao,
+        regraSegurancaFinanceira: regraFinanceiraParaEspecificacao,
+        distribuicaoTempo: distribuicaoTempoParaEspecificacao,
       });
     } catch (err) {
-      console.error("Erro ao gerar Missões de Ativação", err);
-      await logDebugError("adequacao:generateActivationMissions", err);
-      fail(possibilityId, "Não foi possível preparar suas missões de ativação agora. Tente de novo em instantes.");
+      console.error("Erro ao gerar a Etapa de Especificação", err);
+      await logDebugError("adequacao:generateSpecificationActions", err);
+      fail(possibilityId, "Não foi possível preparar sua rota específica agora. Tente de novo em instantes.");
     }
-    await db.missaoAtivacao.createMany({
-      data: geradas.missoes.map((m, index) => ({
+    await db.acaoEspecificacao.createMany({
+      data: geradas.acoes.map((a, index) => ({
         possibilityId: possibility.id,
         ordem: index + 1,
-        tipo: MISSAO_TIPO_MAP[m.tipo],
-        nome: m.nome,
-        objetivo: m.objetivo,
-        porQueExiste: m.por_que_existe,
-        tempoEstimadoMinutos: m.tempo_estimado_minutos,
-        recursosNecessarios: m.recursos_necessarios,
-        passoAPasso: m.passo_a_passo as Prisma.InputJsonValue,
-        criterioConclusao: m.criterio_conclusao,
-        evidenciaEsperada: m.evidencia_esperada,
-        perguntaReflexao: m.pergunta_reflexao,
-        perguntaRegistro: m.pergunta_registro,
-        exemploCenario: m.exemplo_cenario,
-        exemploResultado: m.exemplo_resultado,
+        dimensao: DIMENSAO_MAP[a.dimensao],
+        nome: a.nome,
+        objetivo: a.objetivo,
+        porQueExiste: a.por_que_existe,
+        tempoEstimadoMinutos: a.tempo_estimado_minutos,
+        recursosNecessarios: a.recursos_necessarios,
+        passoAPasso: a.passo_a_passo as Prisma.InputJsonValue,
+        criterioConclusao: a.criterio_conclusao,
+        evidenciaEsperada: a.evidencia_esperada,
+        perguntaReflexao: a.pergunta_reflexao,
+        perguntaRegistro: a.pergunta_registro,
+        exemploCenario: a.exemplo_cenario,
+        exemploResultado: a.exemplo_resultado,
       })),
     });
-    redirect(`/adequacao/${possibilityId}/missoes`);
+    // Dimensões já resolvidas pela própria possibilidade entram direto no
+    // recorte; as em aberto ficam null até a ação correspondente ser
+    // respondida (ver enviarFeedbackEspecificacao, que completa o recorte).
+    await db.possibility.update({
+      where: { id: possibility.id },
+      data: { recorteEspecificado: geradas.dimensoes_resolvidas as unknown as Prisma.InputJsonValue },
+    });
+    redirect(`/adequacao/${possibilityId}/especificacao`);
   }
 
-  const missoesIncompletas = missoes.some((m) => m.respondidoEm === null);
+  const acoesIncompletas = acoes.some((a) => a.respondidoEm === null);
   const currentPossibility = await db.possibility.findUnique({
     where: { id: possibility.id },
-    select: { feedbackMissoesAtivacao: true },
+    select: { feedbackEspecificacao: true, recorteEspecificado: true },
   });
-  if (missoesIncompletas || !currentPossibility?.feedbackMissoesAtivacao) {
-    redirect(`/adequacao/${possibilityId}/missoes`);
+  if (acoesIncompletas || !currentPossibility?.feedbackEspecificacao) {
+    redirect(`/adequacao/${possibilityId}/especificacao`);
   }
 
-  const feedbackMissoes = currentPossibility.feedbackMissoesAtivacao as unknown as FeedbackMissoesAtivacao;
-  const missoesResultado: MissaoAtivacaoResultado[] = missoes.map((m) => ({
-    ordem: m.ordem,
-    tipo: m.tipo,
-    nome: m.nome,
-    conseguiuConcluir: m.conseguiuConcluir,
-    tempoRealMinutos: m.tempoRealMinutos,
-    oQueAconteceu: m.oQueAconteceu,
-    reflexao: m.reflexao,
+  const feedbackEspecificacao = currentPossibility.feedbackEspecificacao as unknown as FeedbackEspecificacao;
+  const recorteEspecificado = currentPossibility.recorteEspecificado as unknown as RecorteEspecificado;
+  const acoesResultado: AcaoEspecificacaoResultado[] = acoes.map((a) => ({
+    ordem: a.ordem,
+    dimensao: a.dimensao,
+    nome: a.nome,
+    conseguiuConcluir: a.conseguiuConcluir,
+    tempoRealMinutos: a.tempoRealMinutos,
+    oQueAconteceu: a.oQueAconteceu,
+    reflexao: a.reflexao,
   }));
 
   const existingPlanCount = await db.plan.count({ where: { userId: user.id } });
@@ -222,8 +233,9 @@ export async function generatePlan(possibilityId: string) {
       equilibrioAprenderExecutar,
       ritmoDesejado,
       condicaoAdicionalExecucao,
-      missoesAtivacao: missoesResultado,
-      feedbackMissoesAtivacao: feedbackMissoes,
+      recorteEspecificado,
+      acoesEspecificacao: acoesResultado,
+      feedbackEspecificacao,
     });
   } catch (err) {
     console.error("Erro ao gerar relatório e plano", err);

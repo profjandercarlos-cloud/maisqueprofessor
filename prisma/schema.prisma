@@ -186,7 +186,8 @@ model Possibility {
   impressaoDigital     Json // impressão digital semântica compacta (papel/território/problema/público/pagador/entrega/modelo_receita/evidências/risco/confiança) — nunca exibido ao professor, usado pelo auditor pra comparar possibilidades
   analiseConvergenciaComercial Json? // só a possibilidade com destaque=true tem; null nas outras 4
   mapaExecucao         Json? // gerado só depois que o professor aprova esta possibilidade (ver adequacao/[possibilityId]/concluido/actions.ts) — null até lá
-  feedbackMissoesAtivacao Json? // respostas gerais pós-missões (vontade de continuar, horas reais por semana, dificuldade principal) — null até o professor concluir as 3 missões
+  recorteEspecificado  Json? // publico/problema/formato/evidencia — montado deterministicamente ao final da Etapa de Especificação (dimensões já resolvidas pela própria possibilidade + dimensões descobertas pelas ações); substitui a antiga tarefa "escolha seu recorte" dentro do plano
+  feedbackEspecificacao Json? // respostas gerais pós-especificação (vontade de continuar, horas reais por semana, dificuldade principal) — null até o professor concluir a Etapa de Especificação (renomeado de feedbackMissoesAtivacao)
   analiseMercadoAmpliada Json? // camada aditiva antiga (pré macro-nicho) — mantida só por compatibilidade com rodadas geradas antes de 2026-09; o motor novo já embute conexão com mercado + trajetória financeira direto na geração (ver campos abaixo), então essa fase separada não é mais disparada.
   dominioAplicacao     String? // eixo 1 de diversidade: pra que tipo de comprador o macro nicho é aplicado nesta possibilidade
   mecanismoComercialClasse String? // eixo 2: servico_projeto | produto_digital | software_recorrente | intermediacao | operacao_recorrente | conteudo
@@ -199,17 +200,18 @@ model Possibility {
 
   plan              Plan?
   adequacaoResponse AdequacaoResponse?
-  missoesAtivacao   MissaoAtivacao[]
+  acoesEspecificacao AcaoEspecificacao[]
 
   @@map("possibilities")
 }
 
-enum MissaoTipo {
-  CAPACIDADE // "eu consigo fazer alguma versão pequena disso?"
-  REALIDADE // "isso existe fora da minha cabeça?"
-  VALIDACAO // "eu consigo gerar algum valor real com isso?"
+enum DimensaoEspecificacao {
+  PUBLICO // quem exatamente — não "empresas", mas que tipo, que porte, que situação
+  PROBLEMA // qual dor exata dentro do problema mais amplo da possibilidade
+  FORMATO // como o contato e a entrega realmente acontecem (presencial, remoto, mensagem, etc.)
+  EVIDENCIA // o que confirma, por contato real, que isso não é hipótese
 
-  @@map("missao_tipo")
+  @@map("dimensao_especificacao")
 }
 
 enum MissaoConclusao {
@@ -221,18 +223,24 @@ enum MissaoConclusao {
 }
 
 // =========================================================================
-// Missões de Ativação — Bloco 0 da rota: 3 missões pequenas, geradas depois
-// da adequação (já temos o Mapa de Execução + as respostas de adequação
-// como matéria-prima) e antes do Plano de Execução Personalizado. Servem
-// pra colocar a possibilidade escolhida em contato com a realidade antes de
-// comprometer 4-12 semanas — não são conteúdo, são um teste rápido.
+// Etapa de Especificação ("Sua Rota Específica") — Bloco 0 da rota: 1-4
+// ações pequenas, geradas depois da adequação (já temos o Mapa de Execução
+// + as respostas de adequação como matéria-prima) e antes do Plano de
+// Execução Personalizado. Substitui as antigas Missões de Ativação
+// (capacidade/realidade/validação fixas) por uma análise de lacunas em 4
+// dimensões (público/problema/formato/evidência) — só gera ação pra
+// dimensão que a própria possibilidade ainda não resolve. Servem pra
+// colocar a possibilidade escolhida em contato com a realidade E, ao mesmo
+// tempo, transformar um mecanismo genérico ("conectar empresas a
+// fornecedores") num recorte específico e validado antes de comprometer
+// 4-12 semanas de plano.
 // =========================================================================
-model MissaoAtivacao {
+model AcaoEspecificacao {
   id            String         @id @default(uuid())
   possibilityId String
   possibility   Possibility    @relation(fields: [possibilityId], references: [id], onDelete: Cascade)
-  ordem         Int // 1-3
-  tipo          MissaoTipo
+  ordem         Int // 1-4
+  dimensao      DimensaoEspecificacao
   nome          String
   objetivo      String         @db.Text
   porQueExiste  String         @db.Text
@@ -256,7 +264,7 @@ model MissaoAtivacao {
   createdAt DateTime @default(now())
 
   @@unique([possibilityId, ordem])
-  @@map("missoes_ativacao")
+  @@map("acoes_especificacao")
 }
 
 // =========================================================================

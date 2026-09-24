@@ -7,6 +7,7 @@ import { LogoutButton } from "./logout-button";
 import { PapelIcon } from "@/components/papel-icon";
 import { Prisma } from "@/generated/prisma/client";
 import type { PlanTask } from "@/generated/prisma/client";
+import { ESPECIFICACAO_TITULO } from "@/lib/especificacao/titulo";
 
 export default async function Home({
   searchParams,
@@ -17,11 +18,11 @@ export default async function Home({
   const query = await searchParams;
   const expandedTaskId = typeof query.parcial === "string" ? query.parcial : undefined;
 
-  const [diagnostic, activePlan, dbUser, pendingMissoesPossibility] = await Promise.all([
+  const [diagnostic, activePlan, dbUser, pendingEspecificacaoPossibility] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
     db.plan.findFirst({ where: { userId: user.id, status: "ATIVO" }, include: { possibility: true } }),
     db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true, name: true } }),
-    loadPendingMissoesPossibility(user.id),
+    loadPendingEspecificacaoPossibility(user.id),
   ]);
 
   let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
@@ -62,20 +63,20 @@ export default async function Home({
         <LogoutButton />
       </div>
 
-      {pendingMissoesPossibility ? (
+      {pendingEspecificacaoPossibility ? (
         <div className="mb-8 rounded-[var(--radius-app)] border border-gold bg-gold-soft p-5 shadow-[var(--shadow)]">
           <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
-            Missões de ativação pendentes
+            {ESPECIFICACAO_TITULO} pendente
           </span>
-          <p className="mb-2 font-serif text-lg font-medium text-ink">{pendingMissoesPossibility.titulo}</p>
+          <p className="mb-2 font-serif text-lg font-medium text-ink">{pendingEspecificacaoPossibility.titulo}</p>
           <p className="mb-3 text-[13.5px] text-ink-muted">
-            Faltam respostas nas suas missões de ativação — elas calibram o seu Plano Personalizado de Transição.
+            Faltam respostas em {ESPECIFICACAO_TITULO} — elas calibram o seu Plano Personalizado de Transição.
           </p>
           <a
-            href={`/adequacao/${pendingMissoesPossibility.id}/missoes`}
+            href={`/adequacao/${pendingEspecificacaoPossibility.id}/especificacao`}
             className="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
-            Continuar minhas missões →
+            Continuar minha rota →
           </a>
         </div>
       ) : null}
@@ -136,19 +137,19 @@ export default async function Home({
   );
 }
 
-// Possibilidade aprovada, com adequação concluída e missões já geradas, mas
-// ainda faltando resposta em alguma missão ou o feedback geral — o estado
-// transitório entre aprovar uma possibilidade e o Plano ser criado. Sem
-// isso visível no Painel, quem sai da tela de missões no meio só acha o
-// caminho de volta cavando em Meus Planos.
-function loadPendingMissoesPossibility(userId: string) {
+// Possibilidade aprovada, com adequação concluída e ações de especificação
+// já geradas, mas ainda faltando resposta em alguma ação ou o feedback
+// geral — o estado transitório entre aprovar uma possibilidade e o Plano
+// ser criado. Sem isso visível no Painel, quem sai da tela de Sua Rota
+// Específica no meio só acha o caminho de volta cavando em Meus Planos.
+function loadPendingEspecificacaoPossibility(userId: string) {
   return db.possibility.findFirst({
     where: {
       round: { diagnostic: { userId } },
       status: "APROVADA",
       plan: null,
-      missoesAtivacao: { some: {} },
-      OR: [{ missoesAtivacao: { some: { respondidoEm: null } } }, { feedbackMissoesAtivacao: { equals: Prisma.DbNull } }],
+      acoesEspecificacao: { some: {} },
+      OR: [{ acoesEspecificacao: { some: { respondidoEm: null } } }, { feedbackEspecificacao: { equals: Prisma.DbNull } }],
     },
     orderBy: { createdAt: "desc" },
   });

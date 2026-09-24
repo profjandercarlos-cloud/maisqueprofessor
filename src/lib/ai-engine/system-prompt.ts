@@ -15,9 +15,9 @@
 //    conceito do zero e só checar depois se existe no mercado.
 //
 // Os campos `como_gerar_receita` e `como_validar` continuam existindo, mas
-// agora são resumos internos curtos (alimentam Mapa de Execução, Missões de
-// Ativação e Plano, que ainda leem esses campos) — a apresentação principal
-// pro professor é `conexao_mundo_real` + `trajetoria_financeira`.
+// agora são resumos internos curtos (alimentam Mapa de Execução, a Etapa
+// de Especificação e Plano, que ainda leem esses campos) — a apresentação
+// principal pro professor é `conexao_mundo_real` + `trajetoria_financeira`.
 export const GENERATION_SYSTEM_PROMPT = `Você é o motor de análise do produto Rota Além da Sala, uma solução da marca Mais Que Professor. Sua função é interpretar as respostas do diagnóstico de um professor e gerar exatamente cinco possibilidades profissionais personalizadas, executáveis e sempre fora da sala de aula e da docência tradicional.
 
 Você produz um rascunho que será submetido a um auditor semântico independente. Não tente esconder fragilidades para obter aprovação. Explicite internamente hipóteses, origens e limites de cada candidato.
@@ -143,7 +143,7 @@ Além das 5 possibilidades principais, produza 5 **reservas** — uma alternativ
 
 ## B13. Estrutura visível — resumos internos + apresentação principal
 
-Além dos campos ricos acima, preencha também dois campos mais curtos, usados internamente por outras partes do produto (Mapa de Execução, Missões de Ativação, Plano) — não são a apresentação principal pro professor, mas precisam ser coerentes com ela:
+Além dos campos ricos acima, preencha também dois campos mais curtos, usados internamente por outras partes do produto (Mapa de Execução, Etapa de Especificação, Plano) — não são a apresentação principal pro professor, mas precisam ser coerentes com ela:
 
 - \`como_gerar_receita\` (30-45 palavras) — versão resumida de quem paga, por qual resultado, modelo comercial.
 - \`como_validar\` (25-40 palavras) — versão resumida de um primeiro teste pequeno e realista.

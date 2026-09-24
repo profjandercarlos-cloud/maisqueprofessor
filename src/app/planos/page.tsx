@@ -28,7 +28,7 @@ export default async function PlanosPage() {
       status: { not: "REJEITADA" },
       id: { notIn: [...planPossibilityIds] },
     },
-    include: { missoesAtivacao: true },
+    include: { acoesEspecificacao: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -105,16 +105,16 @@ export default async function PlanosPage() {
           </p>
           <div className="flex flex-col gap-2.5">
             {availablePossibilities.map((p) => {
-              const missoesPendentes =
+              const especificacaoPendente =
                 p.status === "APROVADA" &&
-                p.missoesAtivacao.length > 0 &&
-                (p.missoesAtivacao.some((m) => m.respondidoEm === null) || !p.feedbackMissoesAtivacao);
+                p.acoesEspecificacao.length > 0 &&
+                (p.acoesEspecificacao.some((a) => a.respondidoEm === null) || !p.feedbackEspecificacao);
               return (
                 <a
                   key={p.id}
                   href={`/adequacao/${p.id}`}
                   className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-[14.5px] text-ink hover:border-petrol ${
-                    missoesPendentes ? "border-gold bg-gold-soft" : "border-line bg-paper-raised"
+                    especificacaoPendente ? "border-gold bg-gold-soft" : "border-line bg-paper-raised"
                   }`}
                 >
                   <span className="flex min-w-0 items-center gap-2">
@@ -124,7 +124,7 @@ export default async function PlanosPage() {
                     </span>
                   </span>
                   <span className="shrink-0 text-[13px] font-semibold text-petrol">
-                    {missoesPendentes ? "Missões pendentes →" : "Criar plano →"}
+                    {especificacaoPendente ? "Especificação pendente →" : "Criar plano →"}
                   </span>
                 </a>
               );

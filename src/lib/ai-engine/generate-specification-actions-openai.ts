@@ -1,6 +1,9 @@
-// Gera as 3 Missões de Ativação (Bloco 0) — depois do Mapa de Execução e da
-// Adequação, antes do Plano de Execução Personalizado. Mesmo padrão de
-// saída estruturada (json_schema strict) das outras chamadas do motor.
+// Gera a Etapa de Especificação ("Sua Rota Específica") — depois do Mapa
+// de Execução e da Adequação, antes do Plano de Execução Personalizado.
+// Substitui generate-activation-missions-openai.ts: em vez de 3 missões de
+// tipo fixo, analisa 4 dimensões de especificidade (público/problema/
+// formato/evidência) e gera só uma ação pra dimensão que a própria
+// possibilidade ainda não resolve.
 import { z } from "zod";
 import type {
   AcaoAceita,
@@ -10,14 +13,15 @@ import type {
   DistribuicaoTempo,
 } from "@/generated/prisma/client";
 import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
-import { ACTIVATION_MISSIONS_SYSTEM_PROMPT } from "./activation-missions-prompt";
+import { SPECIFICATION_ACTIONS_SYSTEM_PROMPT } from "./specification-actions-prompt";
 import type { MapaExecucao } from "./generate-mapa-execucao-openai";
 import { logAiUsage } from "./log-ai-usage";
 
-const MISSAO_TIPO_VALUES = ["capacidade", "realidade", "validacao"] as const;
+const DIMENSAO_VALUES = ["publico", "problema", "formato", "evidencia"] as const;
+export type DimensaoEspecificacaoValue = (typeof DIMENSAO_VALUES)[number];
 
-const missaoSchema = z.object({
-  tipo: z.enum(MISSAO_TIPO_VALUES),
+const acaoSchema = z.object({
+  dimensao: z.enum(DIMENSAO_VALUES),
   nome: z.string().min(1),
   objetivo: z.string().min(1),
   por_que_existe: z.string().min(1),
@@ -32,16 +36,24 @@ const missaoSchema = z.object({
   exemplo_resultado: z.string().min(1),
 });
 
-const responseSchema = z.object({
-  missoes: z.array(missaoSchema).length(3),
+const dimensoesResolvidasSchema = z.object({
+  publico: z.string().nullable(),
+  problema: z.string().nullable(),
+  formato: z.string().nullable(),
+  evidencia: z.string().nullable(),
 });
 
-export type ActivationMissionsResult = z.infer<typeof responseSchema>;
+const responseSchema = z.object({
+  dimensoes_resolvidas: dimensoesResolvidasSchema,
+  acoes: z.array(acaoSchema).min(1).max(4),
+});
 
-const MISSAO_JSON_SCHEMA = {
+export type SpecificationActionsResult = z.infer<typeof responseSchema>;
+
+const ACAO_JSON_SCHEMA = {
   type: "object",
   properties: {
-    tipo: { type: "string", enum: MISSAO_TIPO_VALUES },
+    dimensao: { type: "string", enum: DIMENSAO_VALUES },
     nome: { type: "string" },
     objetivo: { type: "string" },
     por_que_existe: { type: "string" },
@@ -56,7 +68,7 @@ const MISSAO_JSON_SCHEMA = {
     exemplo_resultado: { type: "string" },
   },
   required: [
-    "tipo",
+    "dimensao",
     "nome",
     "objetivo",
     "por_que_existe",
@@ -76,9 +88,20 @@ const MISSAO_JSON_SCHEMA = {
 const JSON_SCHEMA = {
   type: "object",
   properties: {
-    missoes: { type: "array", items: MISSAO_JSON_SCHEMA },
+    dimensoes_resolvidas: {
+      type: "object",
+      properties: {
+        publico: { type: ["string", "null"] },
+        problema: { type: ["string", "null"] },
+        formato: { type: ["string", "null"] },
+        evidencia: { type: ["string", "null"] },
+      },
+      required: ["publico", "problema", "formato", "evidencia"],
+      additionalProperties: false,
+    },
+    acoes: { type: "array", items: ACAO_JSON_SCHEMA },
   },
-  required: ["missoes"],
+  required: ["dimensoes_resolvidas", "acoes"],
   additionalProperties: false,
 } as const;
 
@@ -106,7 +129,7 @@ const REGRA_FINANCEIRA_LABELS: Record<RegraSegurancaFinanceira, string> = {
   NAO_SE_APLICA: "Regra financeira não se aplica à situação da pessoa.",
 };
 
-const ACAO_LABELS: Record<AcaoAceita, string> = {
+const ACAO_ACEITA_LABELS: Record<AcaoAceita, string> = {
   PESQUISAR: "Pesquisar vagas, compradores, organizações ou concorrentes",
   CONVERSAR: "Conversar com profissionais, potenciais usuários ou possíveis clientes",
   PRODUZIR_AMOSTRA: "Produzir uma amostra, estudo de caso ou portfólio",
@@ -134,7 +157,7 @@ Competências a desenvolver: ${mapa.competenciasADesenvolver.join("; ") || "nenh
 Primeiro resultado observável esperado: ${mapa.primeiroResultadoObservavel}`;
 }
 
-export async function generateActivationMissionsOpenAI(params: {
+export async function generateSpecificationActionsOpenAI(params: {
   diagnosticInput: string;
   possibility: {
     titulo: string;
@@ -150,7 +173,7 @@ export async function generateActivationMissionsOpenAI(params: {
   orcamentoFaixa: OrcamentoFaixa;
   regraSegurancaFinanceira: RegraSegurancaFinanceira;
   distribuicaoTempo: DistribuicaoTempo;
-}): Promise<ActivationMissionsResult> {
+}): Promise<SpecificationActionsResult> {
   const userMessage = `${params.diagnosticInput}
 
 POSSIBILIDADE APROVADA
@@ -166,7 +189,7 @@ ${formatMapaExecucao(params.mapaExecucao)}
 
 RESPOSTAS DE ADEQUAÇÃO RELEVANTES
 Estágio inicial: ${ESTAGIO_LABELS[params.estagioInicial]}
-Ações que a pessoa aceita realizar: ${params.acoesAceitas.map((a) => ACAO_LABELS[a]).join("; ")}
+Ações que a pessoa aceita realizar: ${params.acoesAceitas.map((a) => ACAO_ACEITA_LABELS[a]).join("; ")}
 Orçamento disponível: ${ORCAMENTO_LABELS[params.orcamentoFaixa]}
 Regra de segurança financeira: ${REGRA_FINANCEIRA_LABELS[params.regraSegurancaFinanceira]}
 Distribuição do tempo na semana: ${DISTRIBUICAO_LABELS[params.distribuicaoTempo]}`;
@@ -175,20 +198,32 @@ Distribuição do tempo na semana: ${DISTRIBUICAO_LABELS[params.distribuicaoTemp
     model: OPENAI_GENERATION_MODEL,
     max_completion_tokens: 10000,
     messages: [
-      { role: "system", content: ACTIVATION_MISSIONS_SYSTEM_PROMPT },
+      { role: "system", content: SPECIFICATION_ACTIONS_SYSTEM_PROMPT },
       { role: "user", content: userMessage },
     ],
     response_format: {
       type: "json_schema",
-      json_schema: { name: "missoes_ativacao", strict: true, schema: JSON_SCHEMA },
+      json_schema: { name: "etapa_especificacao", strict: true, schema: JSON_SCHEMA },
     },
   });
-  await logAiUsage("generate-activation-missions", OPENAI_GENERATION_MODEL, completion.usage);
+  await logAiUsage("generate-specification-actions", OPENAI_GENERATION_MODEL, completion.usage);
 
   const content = completion.choices[0]?.message?.content;
   if (!content) {
     throw new Error("Resposta da OpenAI não contém texto.");
   }
 
-  return responseSchema.parse(JSON.parse(content));
+  const result = responseSchema.parse(JSON.parse(content));
+
+  for (const dimensao of DIMENSAO_VALUES) {
+    const resolvida = result.dimensoes_resolvidas[dimensao] !== null;
+    const temAcao = result.acoes.some((a) => a.dimensao === dimensao);
+    if (resolvida === temAcao) {
+      throw new Error(
+        `Inconsistência na Etapa de Especificação: dimensão "${dimensao}" está ${resolvida ? "resolvida" : "em aberto"} mas ${temAcao ? "tem" : "não tem"} ação correspondente.`,
+      );
+    }
+  }
+
+  return result;
 }

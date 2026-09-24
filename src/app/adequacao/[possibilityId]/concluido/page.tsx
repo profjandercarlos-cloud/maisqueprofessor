@@ -35,19 +35,25 @@ export default async function AdequacaoConcluidoPage({
     redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
   }
 
-  // Se as missões já existem mas ainda faltam respostas (ou o feedback
-  // geral), manda direto pra lá em vez de esperar o clique em "Continuar
-  // minha rota" pra só então perceber isso — quem sai da tela de missões e
-  // volta por aqui depois não devia precisar de um clique a mais só pra
-  // ser redirecionado de novo. Não gera nada aqui (isso só acontece no
-  // clique, na 1ª vez) — é só leitura do que já existe.
-  const missoesExistentes = await db.missaoAtivacao.findMany({ where: { possibilityId } });
-  if (missoesExistentes.length > 0) {
-    const missoesIncompletas = missoesExistentes.some((m) => m.respondidoEm === null);
-    if (missoesIncompletas || !possibility.feedbackMissoesAtivacao) {
-      redirect(`/adequacao/${possibilityId}/missoes`);
+  // Se as ações de especificação já existem mas ainda faltam respostas (ou
+  // o feedback geral), manda direto pra lá em vez de esperar o clique em
+  // "Continuar minha rota" pra só então perceber isso — quem sai da tela
+  // de Sua Rota Específica e volta por aqui depois não devia precisar de
+  // um clique a mais só pra ser redirecionado de novo. Não gera nada aqui
+  // (isso só acontece no clique, na 1ª vez) — é só leitura do que já existe.
+  const acoesExistentes = await db.acaoEspecificacao.findMany({ where: { possibilityId } });
+  const acoesIncompletas = acoesExistentes.some((a) => a.respondidoEm === null);
+  if (acoesExistentes.length > 0) {
+    if (acoesIncompletas || !possibility.feedbackEspecificacao) {
+      redirect(`/adequacao/${possibilityId}/especificacao`);
     }
   }
+
+  // Vontade de continuar caiu depois da Etapa de Especificação — em vez de
+  // insistir na mesma possibilidade sem um recorte que sustente um plano,
+  // recomenda tentar outra das 5 possibilidades ainda disponíveis.
+  const feedback = possibility.feedbackEspecificacao as { vontadeContinuar?: string } | null;
+  const semRecorteViavel = acoesExistentes.length > 0 && !acoesIncompletas && feedback?.vontadeContinuar === "diminuiu";
 
   const action = generatePlan.bind(null, possibilityId);
 
@@ -61,21 +67,41 @@ export default async function AdequacaoConcluidoPage({
       <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
         {possibility.titulo}
       </h1>
-      <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
-        Antes do seu Plano Personalizado de Transição, você vai passar por 3 Missões de Ativação — pequenos
-        testes reais dessa possibilidade. Os resultados delas calibram o plano; a duração e a profundidade se
-        ajustam a você, produzindo evidências reais sem ultrapassar sua disponibilidade.
-      </p>
 
-      <form action={action}>
-        {error ? <p className="mb-4 text-sm text-role-3">{error}</p> : null}
-        <SubmitButton
-          pendingText="Preparando... isso pode levar até 1 minuto, não recarregue a página"
-          className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
-        >
-          Continuar minha rota →
-        </SubmitButton>
-      </form>
+      {semRecorteViavel ? (
+        <>
+          <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
+            Depois de Sua Rota Específica, sua vontade de continuar com esta possibilidade caiu. Em vez de forçar
+            um plano em cima de um recorte que não convenceu, vale mais a pena testar outra das suas 5
+            possibilidades.
+          </p>
+          <a
+            href={`/diagnostico/possibilidades/${possibility.roundId}`}
+            className="inline-block rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+          >
+            Ver minhas outras possibilidades →
+          </a>
+        </>
+      ) : (
+        <>
+          <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
+            Antes do seu Plano Personalizado de Transição, você vai passar por Sua Rota Específica — ações
+            rápidas e reais que confirmam quem é seu público, qual problema específico atacar e como o contato
+            acontece, antes do plano existir. A duração e a profundidade se ajustam a você, produzindo
+            evidências reais sem ultrapassar sua disponibilidade.
+          </p>
+
+          <form action={action}>
+            {error ? <p className="mb-4 text-sm text-role-3">{error}</p> : null}
+            <SubmitButton
+              pendingText="Preparando... isso pode levar até 1 minuto, não recarregue a página"
+              className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+            >
+              Continuar minha rota →
+            </SubmitButton>
+          </form>
+        </>
+      )}
     </div>
   );
 }

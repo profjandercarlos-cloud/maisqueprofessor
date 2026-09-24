@@ -254,9 +254,9 @@ Principais dependências: ${mapa.principaisDependencias.join("; ") || "nenhuma"}
 Primeiro resultado observável esperado: ${mapa.primeiroResultadoObservavel}`;
 }
 
-export type MissaoAtivacaoResultado = {
+export type AcaoEspecificacaoResultado = {
   ordem: number;
-  tipo: string;
+  dimensao: string;
   nome: string;
   conseguiuConcluir: string | null; // TOTAL | PARCIAL | NAO
   tempoRealMinutos: number | null;
@@ -264,26 +264,41 @@ export type MissaoAtivacaoResultado = {
   reflexao: string | null;
 };
 
-export type FeedbackMissoesAtivacao = {
+export type FeedbackEspecificacao = {
   vontadeContinuar: string; // aumentou | igual | diminuiu
   horasReaisPorSemana: number | null;
   dificuldadePrincipal: string | null;
 };
 
-function formatMissoesAtivacao(
-  missoes: MissaoAtivacaoResultado[],
-  feedback: FeedbackMissoesAtivacao | null,
+export type RecorteEspecificado = {
+  publico: string;
+  problema: string;
+  formato: string;
+  evidencia: string;
+};
+
+function formatRecorteEspecificado(recorte: RecorteEspecificado): string {
+  return `\n\nRECORTE ESPECÍFICO JÁ VALIDADO (Etapa de Especificação — use exatamente este recorte, não peça pra pessoa escolher outro)
+Público: ${recorte.publico}
+Problema: ${recorte.problema}
+Formato/canal: ${recorte.formato}
+Evidência de demanda: ${recorte.evidencia}`;
+}
+
+function formatAcoesEspecificacao(
+  acoes: AcaoEspecificacaoResultado[],
+  feedback: FeedbackEspecificacao | null,
 ): string {
-  if (missoes.length === 0) return "";
-  const missoesTexto = missoes
+  if (acoes.length === 0) return "";
+  const acoesTexto = acoes
     .map(
-      (m) => `Missão ${m.ordem} (${m.tipo}) — "${m.nome}": conseguiu concluir: ${m.conseguiuConcluir ?? "não respondido"}; tempo real: ${m.tempoRealMinutos ?? "não informado"} min; o que aconteceu: ${m.oQueAconteceu ?? "não informado"}; reflexão da pessoa: ${m.reflexao ?? "não informado"}`,
+      (a) => `Ação ${a.ordem} (dimensão ${a.dimensao}) — "${a.nome}": conseguiu concluir: ${a.conseguiuConcluir ?? "não respondido"}; tempo real: ${a.tempoRealMinutos ?? "não informado"} min; o que aconteceu: ${a.oQueAconteceu ?? "não informado"}; reflexão da pessoa: ${a.reflexao ?? "não informado"}`,
     )
     .join("\n");
   const feedbackTexto = feedback
-    ? `\nDepois das 3 missões, a vontade de continuar explorando esta possibilidade: ${feedback.vontadeContinuar}. Horas reais por semana que a pessoa consegue dedicar, depois de experimentar: ${feedback.horasReaisPorSemana ?? "igual ao declarado na adequação"}. Principal dificuldade relatada: ${feedback.dificuldadePrincipal ?? "nenhuma relatada"}.`
+    ? `\nDepois da Etapa de Especificação, a vontade de continuar explorando esta possibilidade: ${feedback.vontadeContinuar}. Horas reais por semana que a pessoa consegue dedicar, depois de experimentar: ${feedback.horasReaisPorSemana ?? "igual ao declarado na adequação"}. Principal dificuldade relatada: ${feedback.dificuldadePrincipal ?? "nenhuma relatada"}.`
     : "";
-  return `\n\nRESULTADOS DAS MISSÕES DE ATIVAÇÃO (já executadas antes deste plano)\n${missoesTexto}${feedbackTexto}`;
+  return `\n\nRESULTADOS DA ETAPA DE ESPECIFICAÇÃO (já executada antes deste plano)\n${acoesTexto}${feedbackTexto}`;
 }
 
 export async function generateReportAndPlanOpenAI(params: {
@@ -307,8 +322,9 @@ export async function generateReportAndPlanOpenAI(params: {
   equilibrioAprenderExecutar: EquilibrioAprenderExecutar;
   ritmoDesejado: RitmoDesejado;
   condicaoAdicionalExecucao?: string | null;
-  missoesAtivacao?: MissaoAtivacaoResultado[];
-  feedbackMissoesAtivacao?: FeedbackMissoesAtivacao | null;
+  recorteEspecificado: RecorteEspecificado;
+  acoesEspecificacao?: AcaoEspecificacaoResultado[];
+  feedbackEspecificacao?: FeedbackEspecificacao | null;
 }): Promise<ReportAndPlan> {
   const userMessage = `${params.diagnosticInput}
 
@@ -336,7 +352,7 @@ Regra de segurança financeira: ${REGRA_FINANCEIRA_LABELS[params.regraSegurancaF
 Ações que a pessoa aceita realizar: ${params.acoesAceitas.map((a) => ACAO_LABELS[a]).join("; ")}
 Equilíbrio entre aprender e executar: ${EQUILIBRIO_LABELS[params.equilibrioAprenderExecutar]}
 Ritmo desejado: ${RITMO_LABELS[params.ritmoDesejado]}
-Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "nenhuma"}${formatMissoesAtivacao(params.missoesAtivacao ?? [], params.feedbackMissoesAtivacao ?? null)}`;
+Condição adicional declarada: ${params.condicaoAdicionalExecucao?.trim() || "nenhuma"}${formatRecorteEspecificado(params.recorteEspecificado)}${formatAcoesEspecificacao(params.acoesEspecificacao ?? [], params.feedbackEspecificacao ?? null)}`;
 
   // Uma única tentativa, de propósito: cada chamada já leva 30-45s, e a
   // Vercel mata a função aos 60s (teto do plano Hobby) — não sobra tempo
