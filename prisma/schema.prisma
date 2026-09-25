@@ -731,3 +731,86 @@ model AiUsageLog {
 
   @@map("ai_usage_logs")
 }
+
+// =========================================================================
+// Caminhos de Renda — repositório interno, só visível ao administrador.
+// Primeiro passo de uma futura arquitetura híbrida (scoring + tags) que vai
+// substituir o motor gerador de possibilidades atual: em vez de a IA
+// inventar do zero a cada diagnóstico, o motor futuro vai selecionar entre
+// candidatos já pesquisados e aprovados aqui. Nenhuma lógica de scoring ou
+// matching existe ainda — isso é só o catálogo + a tela de aprovação.
+// =========================================================================
+enum CaminhoRendaStatus {
+  PENDENTE_REVISAO
+  APROVADO
+  REJEITADO
+
+  @@map("caminho_renda_status")
+}
+
+enum ForcaEvidencia {
+  OFERTA_PUBLICADA // fornecedor anuncia a categoria, sem pedido específico
+  PEDIDO_DOCUMENTADO // comprador publicou um pedido real, pagamento não visível
+  SELECAO_CONCLUIDA // projeto marcado concluído com vencedor visível, valor privado
+  CONTRATO_COM_VALOR // preço efetivamente pago é conhecido
+  PILOTO_PAGO_DO_PROFESSOR // o próprio professor já testou e vendeu
+
+  @@map("forca_evidencia")
+}
+
+enum RelacaoComDocencia {
+  ENSINO_FORA_DA_ESCOLA // ensino direto, só que fora do vínculo escolar
+  EDUCACAO_SEM_AULA // setor educacional, mas sem dar aula (ex.: fornecedor de material)
+  OUTRO_SETOR // nenhuma relação com educação
+
+  @@map("relacao_com_docencia")
+}
+
+model CaminhoRenda {
+  id          String             @id @default(uuid())
+  status      CaminhoRendaStatus @default(PENDENTE_REVISAO)
+  notaRevisao String?            @db.Text // motivo do admin ao deixar pendente/rejeitar — insumo do "Ajustar com IA"
+
+  titulo           String
+  posicionamento   String @db.Text // frase-tagline curta; preenchido por IA quando ausente na importação
+  categoriaMercado String
+
+  compradorSegmento String
+  compradorPersona  String @db.Text
+  gatilho           String @db.Text
+  forcaEvidencia    ForcaEvidencia
+  fontes            Json // [{ url, natureza, afirma }]
+
+  capacidadeAVerificar String             @db.Text
+  relacaoComDocencia   RelacaoComDocencia // preenchido por IA quando ausente na importação
+  restricoes           String?            @db.Text
+
+  primeiraEntregaVendavel String @db.Text
+  canalDeAcesso           String @db.Text
+  modeloDeReceita         String
+  comoCresce              String @db.Text
+  riscoEstrutural         String @db.Text // preenchido por IA quando ausente na importação
+
+  precoReferenciaExterna      Json? // { valorBrl, unidade, escopoComparavel, fonte } — nunca prometido ao professor
+  precoPrimeiroContratoReal   Float?
+  horasReaisPorEntrega        Float?
+  rendaMensalLiquidaObservada Float?
+
+  // Tags pro scoring futuro — texto livre por ora, de propósito: não vale
+  // desenhar enums pra um mecanismo de matching que ainda não existe.
+  habilidadeNuclear         String
+  modalidade                String
+  capital                   String
+  mecanismoRenda            String
+  investigavelNoDiagnostico Boolean @default(true)
+  grupoDeOfertasSemelhantes String?
+
+  principalLacuna       String @db.Text
+  testePilotoNecessario String @db.Text
+
+  origem    String // ex.: "acervo_v1_lote_1" — rastreia de onde veio cada registro
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("caminhos_renda")
+}

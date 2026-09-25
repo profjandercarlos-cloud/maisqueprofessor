@@ -13,17 +13,20 @@ export function SubmitButton({
   pendingText,
   className,
   disabled,
+  formAction,
 }: {
   children: ReactNode;
   pendingText: string;
   className: string;
   disabled?: boolean; // condição extra do chamador (ex.: validação de formulário) — combinada com o estado de envio, nunca o substitui
+  formAction?: (formData: FormData) => void; // permite vários botões na mesma <form> (mesmos campos), cada um chamando uma Server Action diferente
 }) {
   const { pending } = useFormStatus();
 
   return (
     <button
       type="submit"
+      formAction={formAction}
       disabled={pending || disabled}
       className={`${className} disabled:cursor-not-allowed disabled:opacity-70`}
     >

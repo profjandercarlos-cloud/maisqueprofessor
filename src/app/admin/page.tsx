@@ -36,6 +36,7 @@ export default async function AdminDashboardPage({
     lateWeeks,
     approvedNoUser,
     recentTransactions,
+    caminhosRendaPendentes,
   ] = await Promise.all([
     db.user.count(),
     db.user.count({ where: { accessRevokedAt: null, OR: [{ accessExpiresAt: null }, { accessExpiresAt: { gt: now } }] } }),
@@ -58,6 +59,7 @@ export default async function AdminDashboardPage({
       take: 10,
       include: { user: { select: { email: true } } },
     }),
+    db.caminhoRenda.count({ where: { status: "PENDENTE_REVISAO" } }),
   ]);
 
   return (
@@ -113,6 +115,10 @@ export default async function AdminDashboardPage({
             <div className={kpiValueClass}>{plansPaused}</div>
             <div className={kpiLabelClass}>Planos pausados</div>
           </div>
+          <a href="/admin/caminhos-de-renda" className={`${cardClass} transition-colors hover:border-petrol`}>
+            <div className={kpiValueClass}>{caminhosRendaPendentes}</div>
+            <div className={kpiLabelClass}>Caminhos de Renda pendentes →</div>
+          </a>
         </div>
       </section>
 
