@@ -7,6 +7,18 @@ const STATUS_LABELS: Record<CaminhoRendaStatus, string> = {
   REJEITADO: "Rejeitado",
 };
 
+const STATUS_ROW_COLORS: Record<CaminhoRendaStatus, string> = {
+  PENDENTE_REVISAO: "border-yellow-300 bg-yellow-50",
+  APROVADO: "border-green-300 bg-green-50",
+  REJEITADO: "border-red-300 bg-red-50",
+};
+
+const STATUS_BADGE_COLORS: Record<CaminhoRendaStatus, string> = {
+  PENDENTE_REVISAO: "bg-yellow-200 text-yellow-900",
+  APROVADO: "bg-green-200 text-green-900",
+  REJEITADO: "bg-red-200 text-red-900",
+};
+
 const STATUS_FILTER_MAP: Record<string, CaminhoRendaStatus> = {
   pendente: "PENDENTE_REVISAO",
   aprovado: "APROVADO",
@@ -79,7 +91,7 @@ export default async function CaminhosDeRendaPage({
           <a
             key={c.id}
             href={`/admin/caminhos-de-renda/${c.id}`}
-            className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[13.5px] transition-colors hover:border-petrol"
+            className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-[13.5px] transition-colors hover:border-petrol ${STATUS_ROW_COLORS[c.status]}`}
           >
             <span className="flex min-w-0 flex-col gap-0.5">
               <span className="truncate font-medium text-ink">{c.titulo}</span>
@@ -87,7 +99,9 @@ export default async function CaminhosDeRendaPage({
                 {c.compradorSegmento} · {FORCA_EVIDENCIA_LABELS[c.forcaEvidencia] ?? c.forcaEvidencia}
               </span>
             </span>
-            <span className="shrink-0 font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-[3px] font-mono text-[10.5px] tracking-wide uppercase ${STATUS_BADGE_COLORS[c.status]}`}
+            >
               {STATUS_LABELS[c.status]}
             </span>
           </a>

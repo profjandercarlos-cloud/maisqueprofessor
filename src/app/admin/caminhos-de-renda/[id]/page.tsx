@@ -13,6 +13,12 @@ const STATUS_LABELS: Record<string, string> = {
   REJEITADO: "Rejeitado",
 };
 
+const STATUS_BADGE_COLORS: Record<string, string> = {
+  PENDENTE_REVISAO: "bg-yellow-200 text-yellow-900",
+  APROVADO: "bg-green-200 text-green-900",
+  REJEITADO: "bg-red-200 text-red-900",
+};
+
 const FORCA_EVIDENCIA_LABELS: Record<string, string> = {
   OFERTA_PUBLICADA: "Oferta publicada",
   PEDIDO_DOCUMENTADO: "Pedido documentado",
@@ -70,7 +76,9 @@ export default async function CaminhoRendaDetailPage({
 
       <div>
         <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
-          <span className="rounded-full bg-badge-bg px-2.5 py-[3px] font-mono text-[10.5px] tracking-wide text-badge-text uppercase">
+          <span
+            className={`rounded-full px-2.5 py-[3px] font-mono text-[10.5px] tracking-wide uppercase ${STATUS_BADGE_COLORS[caminho.status]}`}
+          >
             {STATUS_LABELS[caminho.status]}
           </span>
         </div>
