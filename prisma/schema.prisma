@@ -750,6 +750,7 @@ enum CaminhoRendaStatus {
 
 enum ForcaEvidencia {
   OFERTA_PUBLICADA // fornecedor anuncia a categoria, sem pedido específico
+  VENDA_PUBLICA_VISIVEL // anúncio com unidades vendidas, avaliações que citam o benefício ou ranking — sinal de que alguém paga, sem ser pedido individual
   PEDIDO_DOCUMENTADO // comprador publicou um pedido real, pagamento não visível
   SELECAO_CONCLUIDA // projeto marcado concluído com vencedor visível, valor privado
   CONTRATO_COM_VALOR // preço efetivamente pago é conhecido
@@ -813,4 +814,101 @@ model CaminhoRenda {
   updatedAt DateTime @updatedAt
 
   @@map("caminhos_renda")
+}
+
+// =========================================================================
+// Pequenos Negócios — segundo repositório interno (só admin), organizado por
+// o que o cliente recebe: Categoria > Subcategoria > Negócio. Substitui, com
+// o tempo, o foco em serviços avulsos do repositório de Caminhos de Renda:
+// cada negócio traz 3 formas de começar (a primeira sempre prestação de
+// serviço, a porta de entrada mais fácil) e etiquetas pra seleção futura.
+// Etiquetas ficam como texto validado na importação (valores em
+// src/lib/negocios/tags.ts), não enums, pra não exigir migração a cada
+// ajuste de vocabulário.
+// =========================================================================
+enum CategoriaNegocio {
+  ENSINAR_E_DESENVOLVER // o cliente compra conhecimento, habilidade ou evolução
+  FAZER_OU_PRODUZIR // o cliente compra um produto físico pronto
+  CUIDAR // bem-estar e conservação de pessoas, animais e espaços
+  ORGANIZAR_E_RESOLVER // tempo e tranquilidade
+  COMUNICAR_E_VENDER // atenção e vendas
+  TECNOLOGIA // ferramenta ou automação
+  CONECTAR // acesso (intermediação, comunidades, aluguel e compartilhamento)
+
+  @@map("categoria_negocio")
+}
+
+model SubcategoriaNegocio {
+  id        String           @id @default(uuid())
+  categoria CategoriaNegocio
+  slug      String
+  nome      String
+  descricao String           @db.Text
+  createdAt DateTime         @default(now())
+
+  negocios PequenoNegocio[]
+
+  @@unique([categoria, slug])
+  @@map("subcategorias_negocio")
+}
+
+model PequenoNegocio {
+  id          String             @id @default(uuid())
+  codigo      String             @unique // ex.: "CUI-PES-001" — id estável vindo da pesquisa
+  status      CaminhoRendaStatus @default(PENDENTE_REVISAO)
+  notaRevisao String?            @db.Text
+
+  subcategoriaId String
+  subcategoria   SubcategoriaNegocio @relation(fields: [subcategoriaId], references: [id])
+  categoria      CategoriaNegocio // redundante com a subcategoria, de propósito: filtro direto sem join
+
+  nome             String
+  posicionamento   String @db.Text
+  oQueOClienteRecebe String @db.Text
+
+  compradorSegmento    String
+  compradorPersona     String @db.Text
+  gatilhoDeCompra      String @db.Text
+  clientePagaParaResolver String @db.Text
+  sinalObservado       String @db.Text
+  nivelEvidencia       ForcaEvidencia
+  fontes               Json // [{ url, natureza, afirma, paginaAbertaNestaRodada, consultadoEm }]
+
+  modeloDeReceita      String @db.Text
+  faixaDePreco         Json? // { valorMinBrl, valorMaxBrl, unidade, tipo, fonteOuBase, ePrecoDeIniciante }
+  comoCresce           String @db.Text
+  riscoEstrutural      String @db.Text
+  exigenciasLegais     String? @db.Text
+
+  // Etiquetas (valores permitidos em src/lib/negocios/tags.ts)
+  tagOnde                 String
+  tagQuemExecuta          String
+  tagPreparo              String
+  tagInvestimentoInicial  String
+  tagEscala               String
+  tagRetorno              String
+  tagReceita              String
+  tagCliente              String
+  habilidadesDoProfessor  String[]
+  relacaoComDocencia      RelacaoComDocencia
+  enquadramentoMei        String
+  horasSemanaisMin        Float?
+  horasSemanaisMax        Float?
+
+  formasDeComecar Json // exatamente 3, ordem 1..3; a 1 é sempre prestação de serviço
+
+  // Auditoria. Nulos quando a pesquisa devolveu só texto-padrão (o mesmo
+  // nos 105 itens), que não informa nada sobre o negócio específico.
+  principalLacuna       String? @db.Text
+  testePilotoNecessario String? @db.Text
+  conclusao             String? @db.Text
+
+  grupoSemelhante    String?
+  fontesCompartilhadas Boolean @default(false) // todas as fontes também sustentam outro negócio — evidência menos independente
+
+  origem    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pequenos_negocios")
 }
