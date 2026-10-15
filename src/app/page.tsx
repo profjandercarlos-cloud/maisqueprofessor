@@ -14,7 +14,7 @@ export default async function Home({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const user = await requireActiveAccess();
+  const user = await requireActiveAccess({ gratuitoVaiPara: "/negocios" });
   const query = await searchParams;
   const expandedTaskId = typeof query.parcial === "string" ? query.parcial : undefined;
 

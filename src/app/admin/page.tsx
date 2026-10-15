@@ -38,9 +38,10 @@ export default async function AdminDashboardPage({
     recentTransactions,
     caminhosRendaPendentes,
     negociosPendentes,
+    contasGratuitas,
   ] = await Promise.all([
     db.user.count(),
-    db.user.count({ where: { accessRevokedAt: null, OR: [{ accessExpiresAt: null }, { accessExpiresAt: { gt: now } }] } }),
+    db.user.count({ where: { accessRevokedAt: null, accessExpiresAt: { gt: now } } }),
     db.user.count({ where: { accessRevokedAt: { not: null } } }),
     db.user.count({ where: { accessRevokedAt: null, accessExpiresAt: { gte: now, lt: in7d } } }),
     db.user.count({ where: { accessRevokedAt: null, accessExpiresAt: { gte: in7d, lt: in30d } } }),
@@ -62,6 +63,7 @@ export default async function AdminDashboardPage({
     }),
     db.caminhoRenda.count({ where: { status: "PENDENTE_REVISAO" } }),
     db.pequenoNegocio.count({ where: { status: "PENDENTE_REVISAO" } }),
+    db.user.count({ where: { accessRevokedAt: null, accessExpiresAt: null, isAdmin: false } }),
   ]);
 
   return (
@@ -83,7 +85,11 @@ export default async function AdminDashboardPage({
           </div>
           <div className={cardClass}>
             <div className={kpiValueClass}>{activeUsers}</div>
-            <div className={kpiLabelClass}>Com acesso ativo</div>
+            <div className={kpiLabelClass}>Com acesso pago ativo</div>
+          </div>
+          <div className={cardClass}>
+            <div className={kpiValueClass}>{contasGratuitas}</div>
+            <div className={kpiLabelClass}>Contas gratuitas</div>
           </div>
           <div className={cardClass}>
             <div className={kpiValueClass}>{revokedUsers}</div>

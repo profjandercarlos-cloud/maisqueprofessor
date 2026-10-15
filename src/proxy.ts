@@ -6,6 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // consumidor externo não deve receber uma página HTML de login como resposta.
 const PUBLIC_PATHS = [
   "/login",
+  "/cadastro",
   "/esqueci-senha",
   "/definir-senha",
   "/auth",

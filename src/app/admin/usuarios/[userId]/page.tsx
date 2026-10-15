@@ -61,7 +61,7 @@ export default async function AdminUserDetailPage({
           </div>
           <div>
             <p className={fieldLabel}>Status</p>
-            <p className={fieldValue}>{isRevoked ? "Revogado" : isExpired ? "Expirado" : "Ativo"}</p>
+            <p className={fieldValue}>{isRevoked ? "Revogado" : isExpired ? "Expirado" : user.accessExpiresAt || user.isAdmin ? "Ativo" : "Gratuito"}</p>
           </div>
           <div>
             <p className={fieldLabel}>Acesso até</p>

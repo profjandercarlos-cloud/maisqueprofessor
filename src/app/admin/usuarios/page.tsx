@@ -1,7 +1,10 @@
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format-date";
 
-function statusOf(user: { accessRevokedAt: Date | null; accessExpiresAt: Date | null }) {
+function statusOf(user: { accessRevokedAt: Date | null; accessExpiresAt: Date | null; isAdmin: boolean }) {
+  if (!user.isAdmin && !user.accessRevokedAt && !user.accessExpiresAt) {
+    return { label: "Gratuito", tone: "active" as const };
+  }
   if (user.accessRevokedAt) return { label: "Revogado", tone: "revoked" as const };
   if (user.accessExpiresAt && user.accessExpiresAt < new Date()) {
     return { label: "Expirado", tone: "revoked" as const };

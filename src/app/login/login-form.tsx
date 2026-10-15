@@ -53,6 +53,9 @@ export function LoginForm({ next }: { next?: string }) {
       >
         Esqueci minha senha
       </a>
+      <a href="/cadastro" className="text-center text-sm font-medium text-petrol hover:underline">
+        Criar conta gratuita
+      </a>
     </form>
   );
 }

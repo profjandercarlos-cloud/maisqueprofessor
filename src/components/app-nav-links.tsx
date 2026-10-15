@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { AppLogoMark } from "@/components/app-logo-mark";
+import { AREAS_TRANCADAS } from "@/lib/acesso-areas";
 
 function PainelIcon() {
   return (
@@ -97,6 +98,27 @@ function AdministracaoIcon() {
   );
 }
 
+function NegociosIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
+      <path d="M2.5 7l1-3.5h11l1 3.5" />
+      <path d="M3 7v7.5h12V7" />
+      <path d="M2.5 7a2.2 2.2 0 004.4 0 2.2 2.2 0 004.4 0 2.2 2.2 0 004.2 0" />
+    </svg>
+  );
+}
+
+function CadeadoIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className={`${className} shrink-0`} aria-hidden>
+      <rect x="3.5" y="8" width="11" height="7" rx="1.6" />
+      <path d="M6 8V5.8a3 3 0 016 0V8" />
+    </svg>
+  );
+}
+
+const NEGOCIOS_ITEM = { href: "/negocios", label: "Pequenos Negócios", Icon: NegociosIcon };
+
 const BASE_ITEMS = [
   { href: "/", label: "Painel", Icon: PainelIcon },
   { href: "/mapa", label: "Mapa", Icon: MapaIcon },
@@ -132,13 +154,29 @@ function isActiveHref(pathname: string, href: string) {
 // novo individualmente.
 export function AppNavLinks({
   isAdmin,
+  pago,
   variant,
 }: {
   isAdmin: boolean;
+  pago: boolean;
   variant: "sidebar" | "mobile";
 }) {
   const pathname = usePathname();
-  const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
+
+  // Conta gratuita: Pequenos Negócios primeiro e liberado; as áreas do
+  // produto continuam no menu, com cadeado, apontando pra página de compra.
+  // Conta paga: tudo liberado, com Pequenos Negócios logo depois de Possibilidades.
+  const base = pago
+    ? [...BASE_ITEMS.slice(0, 3), NEGOCIOS_ITEM, ...BASE_ITEMS.slice(3)]
+    : [NEGOCIOS_ITEM, ...BASE_ITEMS];
+  const items = (isAdmin ? [...base, ADMIN_ITEM] : base).map((item) => {
+    const trancado = !pago && item.href in AREAS_TRANCADAS;
+    return {
+      ...item,
+      trancado,
+      destino: trancado ? `/area-bloqueada?de=${encodeURIComponent(item.href)}` : item.href,
+    };
+  });
 
   if (variant === "mobile") {
     return (
@@ -146,22 +184,26 @@ export function AppNavLinks({
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t border-line bg-paper xl:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        {items.map(({ href, label, Icon }) => {
-          const active = isActiveHref(pathname, href);
+        {items.map(({ href, label, Icon, trancado, destino }) => {
+          const active = !trancado && isActiveHref(pathname, href);
           return (
             <a
               key={href}
-              href={href}
-              aria-label={label}
+              href={destino}
+              aria-label={trancado ? `${label} (acesso completo)` : label}
               aria-current={active ? "page" : undefined}
               className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2"
-              style={{ color: active ? "var(--petrol)" : "var(--ink-muted)" }}
+              style={{ color: active ? "var(--petrol)" : "var(--ink-muted)", opacity: trancado ? 0.6 : 1 }}
             >
               <Icon />
-              <span
-                className="h-1 w-1 rounded-full"
-                style={{ background: active ? "var(--gold)" : "transparent" }}
-              />
+              {trancado ? (
+                <CadeadoIcon className="h-2.5 w-2.5" />
+              ) : (
+                <span
+                  className="h-1 w-1 rounded-full"
+                  style={{ background: active ? "var(--gold)" : "transparent" }}
+                />
+              )}
             </a>
           );
         })}
@@ -186,19 +228,20 @@ export function AppNavLinks({
           <span className="text-[10.5px] text-ink-muted">Planejador de transição para professores</span>
         </span>
       </a>
-      {items.map(({ href, label, Icon }) => {
-        const active = isActiveHref(pathname, href);
+      {items.map(({ href, label, Icon, trancado, destino }) => {
+        const active = !trancado && isActiveHref(pathname, href);
         return (
           <a
             key={href}
-            href={href}
+            href={destino}
             aria-current={active ? "page" : undefined}
             className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-semibold transition-colors ${
               active ? "bg-gold-soft text-petrol" : "text-petrol hover:bg-gold-soft"
-            }`}
+            } ${trancado ? "opacity-60" : ""}`}
           >
             <Icon />
             {label}
+            {trancado ? <CadeadoIcon className="ml-auto h-3.5 w-3.5" /> : null}
           </a>
         );
       })}

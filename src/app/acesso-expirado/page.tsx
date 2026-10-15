@@ -1,7 +1,9 @@
 import { AppHeader } from "@/components/app-header";
 import { LogoutButton } from "@/app/logout-button";
+import { montarLinkCompra } from "@/lib/hotmart/checkout";
 
 export default function AcessoExpiradoPage() {
+  const linkCompra = montarLinkCompra();
   return (
     <div className="mx-auto w-full max-w-[600px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="ACESSO EXPIRADO" />
@@ -12,10 +14,18 @@ export default function AcessoExpiradoPage() {
         Seus dados continuam salvos — diagnóstico, planos e diário não foram apagados. Renove sua
         compra para voltar a acessar tudo.
       </p>
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
+        {linkCompra ? (
+          <a
+            href={linkCompra}
+            className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+          >
+            Renovar meu acesso →
+          </a>
+        ) : null}
         <a
           href="/configuracoes"
-          className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+          className="rounded-lg border border-petrol px-5 py-2.5 text-sm font-semibold text-petrol transition-colors hover:bg-gold-soft"
         >
           Ver status de acesso
         </a>

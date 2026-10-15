@@ -48,8 +48,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-paper font-sans text-ink">
         {navContext ? (
           <>
-            <AppNavLinks isAdmin={navContext.isAdmin} variant="sidebar" />
-            <AppNavLinks isAdmin={navContext.isAdmin} variant="mobile" />
+            <AppNavLinks isAdmin={navContext.isAdmin} pago={navContext.pago} variant="sidebar" />
+            <AppNavLinks isAdmin={navContext.isAdmin} pago={navContext.pago} variant="mobile" />
           </>
         ) : null}
         {/* xl:pl reserva o espaço da sidebar fixa (left-10 + w-60 = 280px,
