@@ -64,7 +64,7 @@ export function FichaProfessorView({ ficha, numeros }: { ficha: FichaProfessor; 
       <Bloco titulo="Em números">
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <Numero rotulo="Seu tempo" valor={numeros.horas} />
-          <Numero rotulo="Para começar" valor={numeros.investimento} />
+          <Numero rotulo="Investimento para começar" valor={numeros.investimento} />
           <Numero rotulo="Primeiro cliente" valor={numeros.primeiroCliente} />
           <Numero rotulo="Preparo" valor={numeros.preparo} />
         </div>
