@@ -102,7 +102,7 @@ export default async function PequenosNegociosPage({
           disabled={semFicha === 0}
           className="rounded-lg bg-gold px-4 py-2 text-[13.5px] font-semibold text-paper hover:opacity-90 disabled:opacity-50"
         >
-          Gerar fichas pendentes (6 por vez)
+          Gerar fichas pendentes (4 por vez)
         </SubmitButton>
         <span className="text-[13px] text-ink-muted">
           {semFicha === 0 ? "Todos os negócios têm ficha." : `${semFicha} negócio(s) ainda sem ficha.`}

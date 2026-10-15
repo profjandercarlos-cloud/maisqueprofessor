@@ -58,7 +58,7 @@ export async function gerarFichaNegocio(returnTo: string, id: string, formData: 
 // Quantos negócios uma chamada processa: cada ficha leva de dezenas de segundos
 // a ~1 min, e a tela tem teto de 300 s (maxDuration). Rodar de novo continua
 // de onde parou, porque só pega quem ainda não tem ficha.
-const LOTE_FICHAS = 6;
+const LOTE_FICHAS = 4;
 
 export async function gerarFichasPendentes(returnTo: string) {
   await requireAdmin();

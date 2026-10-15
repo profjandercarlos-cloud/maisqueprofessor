@@ -1,11 +1,11 @@
-import { openai } from "./openai-client";
+import { openai, OPENAI_GENERATION_MODEL } from "./openai-client";
 import { GERAR_FICHA_PROFESSOR_SYSTEM_PROMPT } from "./gerar-ficha-professor-prompt";
 import { logAiUsage } from "./log-ai-usage";
 import { comLinhaMei, fichaSchema, FICHA_VERSAO, type FichaProfessor } from "@/lib/negocios/ficha";
 
-// Modelo equilibrado (ver comentário em openai-client.ts): a ficha é texto
-// curto e estruturado, não precisa do nível mais caro. Dá para trocar por env.
-const FICHA_MODEL = process.env.FICHA_OPENAI_MODEL ?? "gpt-5.6-terra";
+// Mesmo modelo do resto do motor ("Sol", ver openai-client.ts), por decisão do
+// dono do produto: qualidade da ficha acima de custo e velocidade.
+const FICHA_MODEL = OPENAI_GENERATION_MODEL;
 
 const str = { type: "string" } as const;
 const strNull = { type: ["string", "null"] } as const;
