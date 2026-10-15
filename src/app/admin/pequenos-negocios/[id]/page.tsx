@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { SubmitButton } from "@/components/submit-button";
-import { alternarLiberadoGratuito, revisarNegocio } from "../actions";
+import { FichaProfessorView } from "@/components/ficha-professor";
+import { lerFicha, numerosDaFicha } from "@/lib/negocios/ficha";
+import { gerarFichaNegocio, revisarNegocio } from "../actions";
+
+// Gerar a ficha chama a IA (dezenas de segundos até ~1 min).
+export const maxDuration = 300;
 import {
   CATEGORIA_LABELS,
   EVIDENCIA_LABELS,
@@ -84,6 +89,7 @@ export default async function PequenoNegocioDetailPage({
   if (!n) notFound();
 
   const returnTo = `/admin/pequenos-negocios/${id}`;
+  const ficha = lerFicha(n.ficha);
   const fontes = (Array.isArray(n.fontes) ? n.fontes : []) as Fonte[];
   const formas = (Array.isArray(n.formasDeComecar) ? n.formasDeComecar : []) as Forma[];
   const preco = n.faixaDePreco as Preco | null;
@@ -270,23 +276,43 @@ export default async function PequenoNegocioDetailPage({
       </section>
 
       <section className={sectionClass}>
-        <p className="mb-1 font-serif text-lg font-medium tracking-tight text-petrol">Visão para contas gratuitas</p>
+        <p className="mb-1 font-serif text-lg font-medium tracking-tight text-petrol">Ficha do professor</p>
         <p className="mb-3 text-[13.5px] text-ink-muted">
-          {n.liberadoGratuito
-            ? "Este negócio está liberado: todas as contas gratuitas veem a visão completa, sem gastar o limite de desbloqueios."
-            : "Contas gratuitas veem só o básico e podem desbloquear a visão completa de alguns negócios. Liberar abre este para todas, sem gastar o limite."}
-          {n.status !== "APROVADO" ? " Só aparece para os usuários depois de aprovado." : ""}
+          É o que o usuário lê. O negócio só aparece para os usuários quando está aprovado e tem ficha.
+          {ficha ? "" : " Ainda não há ficha: gere uma abaixo."}
         </p>
-        <form>
-          <SubmitButton
-            pendingText="Salvando..."
-            formAction={alternarLiberadoGratuito.bind(null, returnTo, id, !n.liberadoGratuito)}
-            className="rounded-lg border border-petrol px-4 py-2 text-[13.5px] font-semibold text-petrol hover:bg-gold-soft"
-          >
-            {n.liberadoGratuito ? "Desfazer liberação" : "Liberar visão completa para gratuitos"}
-          </SubmitButton>
+        <form className="flex flex-col gap-3">
+          <label className="flex flex-col gap-1 text-[13.5px]">
+            <span className="font-semibold text-petrol">
+              Observação para a IA (opcional, ao {ficha ? "regenerar" : "gerar"})
+            </span>
+            <textarea
+              name="observacao"
+              rows={2}
+              placeholder="Ex.: o preço sugerido está alto; destaque o risco X nos cuidados."
+              className="rounded-md border border-line px-3 py-2 text-[13.5px]"
+            />
+          </label>
+          <div>
+            <SubmitButton
+              pendingText="Gerando ficha (até 1 minuto)..."
+              formAction={gerarFichaNegocio.bind(null, returnTo, id)}
+              className="rounded-lg border border-petrol px-4 py-2 text-[13.5px] font-semibold text-petrol hover:bg-gold-soft"
+            >
+              {ficha ? "Regenerar ficha" : "Gerar ficha"}
+            </SubmitButton>
+          </div>
         </form>
       </section>
+
+      {ficha ? (
+        <section>
+          <p className="mb-3 font-mono text-[10.5px] tracking-[0.06em] text-gold uppercase">
+            Prévia: como o professor vê esta ficha
+          </p>
+          <FichaProfessorView ficha={ficha} numeros={numerosDaFicha(n)} />
+        </section>
+      ) : null}
     </div>
   );
 }

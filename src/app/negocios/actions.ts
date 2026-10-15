@@ -3,44 +3,58 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getTipoAcesso, requireUser } from "@/lib/auth/require-active-access";
-import { LIMITE_DESBLOQUEIOS_GRATUITOS } from "@/lib/negocios/visibilidade";
+import { requireUser } from "@/lib/auth/require-active-access";
+import { listaCheia } from "@/lib/negocios/lista";
 
-// Desbloqueia a visão completa de um negócio para uma conta gratuita. O
-// limite é conferido AQUI (não só escondendo o botão na tela): sem isso, dava
-// pra desbloquear mais do que o limite chamando a action direto.
-export async function desbloquearNegocio(codigo: string) {
+function destinoSeguro(voltarPara: string, codigo: string): string {
+  // Só caminho relativo dentro do site (mesma proteção do login e do /auth/confirm).
+  return voltarPara.startsWith("/") && !voltarPara.startsWith("//") ? voltarPara : `/negocios/${encodeURIComponent(codigo)}`;
+}
+
+// O limite é conferido AQUI (não só escondendo o botão): sem isso, dava para
+// passar do limite chamando a action direto.
+export async function adicionarNaLista(codigo: string, voltarPara: string) {
   const user = await requireUser();
-  const destino = `/negocios/${encodeURIComponent(codigo)}`;
+  const destino = destinoSeguro(voltarPara, codigo);
 
   const negocio = await db.pequenoNegocio.findFirst({
-    where: { codigo, status: "APROVADO" },
-    select: { id: true, liberadoGratuito: true },
+    where: { codigo, status: "APROVADO", fichaGeradaEm: { not: null } },
+    select: { id: true },
   });
   if (!negocio) redirect("/negocios");
 
-  // Conta paga e negócio já liberado pelo admin não gastam desbloqueio.
-  const tipo = await getTipoAcesso(user.id);
-  if (tipo === "pago" || negocio.liberadoGratuito) redirect(destino);
-
-  const jaDesbloqueado = await db.negocioDesbloqueado.findUnique({
+  const jaEsta = await db.negocioNaLista.findUnique({
     where: { userId_negocioId: { userId: user.id, negocioId: negocio.id } },
   });
-  if (jaDesbloqueado) redirect(destino);
+  if (jaEsta) redirect(destino);
 
-  const usados = await db.negocioDesbloqueado.count({ where: { userId: user.id } });
-  if (usados >= LIMITE_DESBLOQUEIOS_GRATUITOS) {
-    redirect(`${destino}?erro=limite`);
-  }
+  const qtd = await db.negocioNaLista.count({ where: { userId: user.id } });
+  if (listaCheia(qtd)) redirect(`${destino}${destino.includes("?") ? "&" : "?"}erro=lista-cheia`);
 
   try {
-    await db.negocioDesbloqueado.create({ data: { userId: user.id, negocioId: negocio.id } });
+    await db.negocioNaLista.create({ data: { userId: user.id, negocioId: negocio.id } });
   } catch (err) {
     // Clique duplo: a unicidade (userId, negocioId) já garante um registro só.
-    console.error("desbloquearNegocio", err);
+    console.error("adicionarNaLista", err);
   }
 
   revalidatePath("/negocios");
-  revalidatePath(destino);
+  revalidatePath("/negocios/lista");
+  revalidatePath(`/negocios/${codigo}`);
+  redirect(destino);
+}
+
+export async function removerDaLista(codigo: string, voltarPara: string) {
+  const user = await requireUser();
+  const destino = destinoSeguro(voltarPara, codigo);
+
+  const negocio = await db.pequenoNegocio.findUnique({ where: { codigo }, select: { id: true } });
+  if (negocio) {
+    await db.negocioNaLista.deleteMany({ where: { userId: user.id, negocioId: negocio.id } });
+  }
+
+  revalidatePath("/negocios");
+  revalidatePath("/negocios/lista");
+  revalidatePath(`/negocios/${codigo}`);
   redirect(destino);
 }

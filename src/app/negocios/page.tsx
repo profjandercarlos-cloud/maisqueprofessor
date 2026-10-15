@@ -1,9 +1,8 @@
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
-import { getTipoAcesso, requireUser } from "@/lib/auth/require-active-access";
-import { montarLinkCompra } from "@/lib/hotmart/checkout";
+import { requireUser } from "@/lib/auth/require-active-access";
+import { LIMITE_LISTA } from "@/lib/negocios/lista";
 import { CATEGORIA_LABELS, CATEGORIA_ORDEM, TAG_LABELS } from "@/lib/negocios/tags";
-import { LIMITE_DESBLOQUEIOS_GRATUITOS, desbloqueiosRestantes } from "@/lib/negocios/visibilidade";
 import type { CategoriaNegocio, Prisma } from "@/generated/prisma/client";
 
 const selectClass =
@@ -23,14 +22,10 @@ export default async function NegociosPage({
   const onde = texto("onde");
 
   const user = await requireUser();
-  const [tipo, dbUser] = await Promise.all([
-    getTipoAcesso(user.id),
-    db.user.findUnique({ where: { id: user.id }, select: { name: true, email: true } }),
-  ]);
-  const pago = tipo === "pago";
 
   const where: Prisma.PequenoNegocioWhereInput = {
     status: "APROVADO",
+    fichaGeradaEm: { not: null },
     ...(categoriaParam && CATEGORIA_LABELS[categoriaParam] ? { categoria: categoriaParam as CategoriaNegocio } : {}),
     ...(TAG_LABELS.preparo[preparo] ? { tagPreparo: preparo } : {}),
     ...(TAG_LABELS.investimentoInicial[investimento] ? { tagInvestimentoInicial: investimento } : {}),
@@ -46,19 +41,15 @@ export default async function NegociosPage({
       : {}),
   };
 
-  const [negocios, desbloqueios] = await Promise.all([
+  const [negocios, naLista] = await Promise.all([
     db.pequenoNegocio.findMany({
       where,
       include: { subcategoria: true },
       orderBy: [{ codigo: "asc" }],
     }),
-    pago
-      ? Promise.resolve([])
-      : db.negocioDesbloqueado.findMany({ where: { userId: user.id }, select: { negocioId: true } }),
+    db.negocioNaLista.findMany({ where: { userId: user.id }, select: { negocioId: true } }),
   ]);
-  const desbloqueados = new Set(desbloqueios.map((d) => d.negocioId));
-  const restantes = desbloqueiosRestantes(desbloqueios.length);
-  const linkCompra = montarLinkCompra(dbUser?.email ?? user.email, dbUser?.name);
+  const idsNaLista = new Set(naLista.map((l) => l.negocioId));
 
   const grupos = CATEGORIA_ORDEM.map((cat) => {
     const doGrupo = negocios.filter((n) => n.categoria === cat);
@@ -82,31 +73,20 @@ export default async function NegociosPage({
     <div className="mx-auto w-full max-w-[860px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="PEQUENOS NEGÓCIOS" />
 
-      <h1 className="mb-2 font-serif text-2xl font-medium tracking-tight text-petrol">Pequenos negócios</h1>
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
+        <h1 className="font-serif text-2xl font-medium tracking-tight text-petrol">Pequenos negócios</h1>
+        <a
+          href="/negocios/lista"
+          className="rounded-full border border-petrol px-3.5 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
+        >
+          Minha lista · {idsNaLista.size} de {LIMITE_LISTA}
+        </a>
+      </div>
       <p className="mb-6 max-w-[62ch] text-[14.5px] text-ink-muted">
-        Ideias de renda extra fora da sala de aula, organizadas por o que o cliente recebe. Abra cada uma para
-        ver quem compra, o que é preciso para começar e uma primeira forma de começar.
+        Ideias de renda extra fora da sala de aula, organizadas por o que o cliente recebe. Abra cada uma para ver
+        quem compra, quanto dá para cobrar, como começar pequeno e como o negócio pode crescer. Escolha até{" "}
+        {LIMITE_LISTA} para a sua lista.
       </p>
-
-      {!pago ? (
-        <div className="mb-6 rounded-[var(--radius-app)] border border-gold bg-gold-soft p-4 text-[13.5px] text-ink">
-          <p className="mb-1 font-semibold text-petrol">Conta gratuita</p>
-          <p className="text-ink-muted">
-            Você vê o essencial de todos os negócios e pode abrir a visão completa de até{" "}
-            {LIMITE_DESBLOQUEIOS_GRATUITOS} deles de graça
-            {restantes < LIMITE_DESBLOQUEIOS_GRATUITOS ? ` (restam ${restantes})` : ""}. O acesso completo
-            libera também o questionário que indica o que combina com você e o plano personalizado.
-            {linkCompra ? (
-              <>
-                {" "}
-                <a href={linkCompra} className="font-semibold text-petrol hover:underline">
-                  Quero o acesso completo →
-                </a>
-              </>
-            ) : null}
-          </p>
-        </div>
-      ) : null}
 
       <form action="/negocios" className="mb-8 flex flex-wrap items-end gap-2.5">
         <input
@@ -151,7 +131,7 @@ export default async function NegociosPage({
                   <p className="mb-2 font-mono text-[11px] tracking-[0.06em] text-gold uppercase">{s.nome}</p>
                   <div className="flex flex-col gap-2">
                     {s.itens.map((n) => {
-                      const aberto = pago || n.liberadoGratuito || desbloqueados.has(n.id);
+                      const naMinhaLista = idsNaLista.has(n.id);
                       return (
                         <a
                           key={n.id}
@@ -166,9 +146,9 @@ export default async function NegociosPage({
                               {TAG_LABELS.onde[n.tagOnde] ?? n.tagOnde}
                             </span>
                           </span>
-                          {!pago && aberto ? (
+                          {naMinhaLista ? (
                             <span className="shrink-0 rounded-full bg-gold-soft px-2.5 py-[3px] font-mono text-[10px] font-semibold tracking-wide text-petrol uppercase">
-                              Visão completa
+                              Na sua lista
                             </span>
                           ) : null}
                         </a>

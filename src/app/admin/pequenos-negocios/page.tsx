@@ -1,6 +1,11 @@
+import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import type { CaminhoRendaStatus, CategoriaNegocio } from "@/generated/prisma/client";
 import { CATEGORIA_LABELS, CATEGORIA_ORDEM, EVIDENCIA_LABELS, TAG_LABELS } from "@/lib/negocios/tags";
+import { gerarFichasPendentes } from "./actions";
+
+// Gerar as fichas pendentes roda várias chamadas de IA numa só requisição.
+export const maxDuration = 300;
 
 const STATUS_LABELS: Record<CaminhoRendaStatus, string> = {
   PENDENTE_REVISAO: "Pendente",
@@ -44,8 +49,9 @@ export default async function PequenosNegociosPage({
   const categoriaParam = typeof query.categoria === "string" ? query.categoria : undefined;
   const status = statusParam ? STATUS_FILTER_MAP[statusParam] : undefined;
   const categoria = categoriaParam && CATEGORIA_LABELS[categoriaParam] ? (categoriaParam as CategoriaNegocio) : undefined;
+  const msg = typeof query.msg === "string" ? query.msg : undefined;
 
-  const [negocios, porStatus, porCategoria] = await Promise.all([
+  const [negocios, porStatus, porCategoria, semFicha] = await Promise.all([
     db.pequenoNegocio.findMany({
       where: { ...(status ? { status } : {}), ...(categoria ? { categoria } : {}) },
       include: { subcategoria: true },
@@ -53,6 +59,7 @@ export default async function PequenosNegociosPage({
     }),
     db.pequenoNegocio.groupBy({ by: ["status"], _count: true }),
     db.pequenoNegocio.groupBy({ by: ["categoria"], _count: true }),
+    db.pequenoNegocio.count({ where: { fichaGeradaEm: null } }),
   ]);
 
   const countStatus = Object.fromEntries(porStatus.map((c) => [c.status, c._count])) as Record<string, number>;
@@ -79,9 +86,28 @@ export default async function PequenosNegociosPage({
     <div>
       <h1 className="mb-1 font-serif text-2xl font-medium tracking-tight text-petrol">Pequenos Negócios</h1>
       <p className="mb-6 max-w-[65ch] text-[13.5px] text-ink-muted">
-        Repositório interno organizado por o que o cliente recebe. Cada negócio traz 3 formas de começar (a
-        primeira é sempre prestação de serviço). Revise, aprove ou rejeite um por um.
+        Repositório interno organizado por o que o cliente recebe. Cada negócio tem o registro de pesquisa (só
+        aqui) e a ficha do professor, que é o que o usuário lê. Um negócio só aparece para os usuários quando está
+        aprovado e tem ficha.
       </p>
+
+      {msg ? (
+        <p className="mb-4 rounded-lg border border-gold bg-gold-soft px-4 py-2.5 text-[13.5px] text-ink">{msg}</p>
+      ) : null}
+
+      <form className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3">
+        <SubmitButton
+          pendingText="Gerando fichas (pode levar alguns minutos)..."
+          formAction={gerarFichasPendentes.bind(null, filtroHref(statusParam, categoriaParam))}
+          disabled={semFicha === 0}
+          className="rounded-lg bg-gold px-4 py-2 text-[13.5px] font-semibold text-paper hover:opacity-90 disabled:opacity-50"
+        >
+          Gerar fichas pendentes (6 por vez)
+        </SubmitButton>
+        <span className="text-[13px] text-ink-muted">
+          {semFicha === 0 ? "Todos os negócios têm ficha." : `${semFicha} negócio(s) ainda sem ficha.`}
+        </span>
+      </form>
 
       <div className="mb-3 flex flex-wrap gap-2">
         <a href={filtroHref(undefined, categoriaParam)} className={chip(!status)}>
@@ -127,7 +153,7 @@ export default async function PequenosNegociosPage({
                             {EVIDENCIA_LABELS[n.nivelEvidencia]} · {TAG_LABELS.preparo[n.tagPreparo] ?? n.tagPreparo} ·{" "}
                             {TAG_LABELS.investimentoInicial[n.tagInvestimentoInicial] ?? n.tagInvestimentoInicial}
                             {n.fontesCompartilhadas ? " · fontes compartilhadas" : ""}
-                            {n.liberadoGratuito ? " · liberado para gratuitos" : ""}
+                            {n.fichaGeradaEm ? " · com ficha" : " · sem ficha"}
                           </span>
                         </span>
                         <span

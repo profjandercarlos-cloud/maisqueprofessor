@@ -34,6 +34,7 @@ model User {
   pushSubscriptions   PushSubscription[]
   agendaEntries       AgendaEntry[]
   negociosDesbloqueados NegocioDesbloqueado[]
+  negociosNaLista     NegocioNaLista[]
 
   @@map("users")
 }
@@ -910,6 +911,11 @@ model PequenoNegocio {
 
   desbloqueios NegocioDesbloqueado[]
 
+  ficha         Json?     // ficha do professor (src/lib/negocios/ficha.ts) — é o que o usuário lê
+  fichaGeradaEm DateTime?
+
+  naLista NegocioNaLista[]
+
   origem    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -917,8 +923,23 @@ model PequenoNegocio {
   @@map("pequenos_negocios")
 }
 
-// Negócios que uma conta gratuita desbloqueou (visão completa) — limite em
-// src/lib/negocios/visibilidade.ts. O desbloqueio é permanente.
+// "Minha lista": até LIMITE_LISTA negócios que a conta escolheu — é a base dos
+// planos de execução (ver src/lib/negocios/lista.ts). Exige conta, gratuita ou paga.
+model NegocioNaLista {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  negocioId String
+  negocio   PequenoNegocio @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@unique([userId, negocioId])
+  @@map("negocios_na_lista")
+}
+
+// LEGADO, sem uso: o desbloqueio por níveis foi abandonado (a página de
+// negócios agora é toda gratuita). Mantido só para não precisar de migração
+// destrutiva; pode ser removido junto com PequenoNegocio.liberadoGratuito.
 model NegocioDesbloqueado {
   id        String         @id @default(uuid())
   userId    String
