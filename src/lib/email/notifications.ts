@@ -24,6 +24,23 @@ function wrapEmailHtml(bodyHtml: string): string {
 </div>`;
 }
 
+// E-mail do cadastro gratuito. Não usa o convite do Supabase de propósito: o
+// template dele é o da compra ("Sua compra foi confirmada") e o link passa pelo
+// verificador do Supabase, que gasta o token no primeiro acesso — um antivírus
+// de e-mail que "abra" o link antes da pessoa já o deixava expirado. Aqui o link
+// cai numa tela com botão (/auth/continuar): só o clique de uma pessoa confirma.
+export async function sendBoasVindasGratuita(params: { to: string; name: string; link: string }) {
+  await getResend().emails.send({
+    from: EMAIL_FROM,
+    to: params.to,
+    subject: "Confirme seu e-mail para entrar no Rota Além da Sala",
+    html: wrapEmailHtml(`<p>Olá, ${params.name}.</p>
+<p>Sua conta gratuita está quase pronta. Confirme seu e-mail e escolha uma senha para explorar os pequenos negócios:</p>
+<p style="text-align:center;margin:28px 0;"><a href="${params.link}" style="background:#00838f;color:#ffffff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:8px;display:inline-block;">Confirmar e definir minha senha</a></p>
+<p style="color:#666666;font-size:13px;">Se você não pediu esta conta, pode ignorar este e-mail.</p>`),
+  });
+}
+
 export async function sendCheckinReminder(params: {
   to: string;
   name: string;
