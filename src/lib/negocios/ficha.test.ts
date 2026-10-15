@@ -65,6 +65,12 @@ describe("comLinhaMei", () => {
   it("acrescenta a linha quando o enquadramento não foi verificado", () => {
     expect(comLinhaMei(semMei, "nao_verificado").cuidados.at(-1)).toBe(LINHA_MEI_NAO_VERIFICADO);
   });
+  it("uma ficha com 8 cuidados continua válida depois de receber a linha do MEI", () => {
+    const oito = { ...semMei, cuidados: Array.from({ length: 8 }, (_, i) => `Cuidado ${i + 1}`) };
+    const final = comLinhaMei(oito, "nao_verificado");
+    expect(final.cuidados).toHaveLength(9);
+    expect(fichaSchema.safeParse(final).success).toBe(true);
+  });
   it("não duplica se já existe, nem acrescenta quando foi verificado", () => {
     expect(comLinhaMei(base, "nao_verificado").cuidados).toEqual(base.cuidados);
     expect(comLinhaMei(semMei, "permitido_confirmado_em_fonte_oficial").cuidados).toEqual(semMei.cuidados);

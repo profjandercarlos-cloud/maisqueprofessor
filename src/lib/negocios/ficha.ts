@@ -36,7 +36,9 @@ export const fichaSchema = z.object({
     c5: z.string().min(1),
     alem: z.string().min(1),
   }),
-  cuidados: lista(3, 8),
+  // O prompt pede 3 a 8; o teto aqui é maior porque a linha do MEI é acrescentada
+  // DEPOIS (comLinhaMei). Com teto 8, uma ficha de 8 virava 9 e era rejeitada na leitura.
+  cuidados: lista(3, 12),
   // Amostra do formato do plano de execução (semana 1) — vai no fim da ficha
   // para mostrar o TIPO de estrutura do plano pago, sem entregá-lo.
   amostraPlano: z.object({
