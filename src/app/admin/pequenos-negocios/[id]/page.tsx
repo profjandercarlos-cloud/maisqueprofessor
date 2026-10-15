@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { SubmitButton } from "@/components/submit-button";
-import { revisarNegocio } from "../actions";
+import { alternarLiberadoGratuito, revisarNegocio } from "../actions";
 import {
   CATEGORIA_LABELS,
   EVIDENCIA_LABELS,
@@ -266,6 +266,25 @@ export default async function PequenoNegocioDetailPage({
               Rejeitar
             </SubmitButton>
           </div>
+        </form>
+      </section>
+
+      <section className={sectionClass}>
+        <p className="mb-1 font-serif text-lg font-medium tracking-tight text-petrol">Visão para contas gratuitas</p>
+        <p className="mb-3 text-[13.5px] text-ink-muted">
+          {n.liberadoGratuito
+            ? "Este negócio está liberado: todas as contas gratuitas veem a visão completa, sem gastar o limite de desbloqueios."
+            : "Contas gratuitas veem só o básico e podem desbloquear a visão completa de alguns negócios. Liberar abre este para todas, sem gastar o limite."}
+          {n.status !== "APROVADO" ? " Só aparece para os usuários depois de aprovado." : ""}
+        </p>
+        <form>
+          <SubmitButton
+            pendingText="Salvando..."
+            formAction={alternarLiberadoGratuito.bind(null, returnTo, id, !n.liberadoGratuito)}
+            className="rounded-lg border border-petrol px-4 py-2 text-[13.5px] font-semibold text-petrol hover:bg-gold-soft"
+          >
+            {n.liberadoGratuito ? "Desfazer liberação" : "Liberar visão completa para gratuitos"}
+          </SubmitButton>
         </form>
       </section>
     </div>

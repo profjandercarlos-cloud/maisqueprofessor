@@ -127,6 +127,7 @@ export default async function PequenosNegociosPage({
                             {EVIDENCIA_LABELS[n.nivelEvidencia]} · {TAG_LABELS.preparo[n.tagPreparo] ?? n.tagPreparo} ·{" "}
                             {TAG_LABELS.investimentoInicial[n.tagInvestimentoInicial] ?? n.tagInvestimentoInicial}
                             {n.fontesCompartilhadas ? " · fontes compartilhadas" : ""}
+                            {n.liberadoGratuito ? " · liberado para gratuitos" : ""}
                           </span>
                         </span>
                         <span

@@ -33,6 +33,7 @@ model User {
   hotmartTransactions HotmartTransaction[]
   pushSubscriptions   PushSubscription[]
   agendaEntries       AgendaEntry[]
+  negociosDesbloqueados NegocioDesbloqueado[]
 
   @@map("users")
 }
@@ -905,10 +906,27 @@ model PequenoNegocio {
 
   grupoSemelhante    String?
   fontesCompartilhadas Boolean @default(false) // todas as fontes também sustentam outro negócio — evidência menos independente
+  liberadoGratuito   Boolean @default(false) // admin libera a visão completa deste negócio para qualquer conta gratuita
+
+  desbloqueios NegocioDesbloqueado[]
 
   origem    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("pequenos_negocios")
+}
+
+// Negócios que uma conta gratuita desbloqueou (visão completa) — limite em
+// src/lib/negocios/visibilidade.ts. O desbloqueio é permanente.
+model NegocioDesbloqueado {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  negocioId String
+  negocio   PequenoNegocio @relation(fields: [negocioId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+
+  @@unique([userId, negocioId])
+  @@map("negocios_desbloqueados")
 }
