@@ -93,6 +93,7 @@ export const PREPARO_LABELS: Record<string, string> = {
 
 export const ONDE_LABELS: Record<string, string> = {
   online: "Online",
+  online_ou_presencial: "Online ou presencial",
   no_cliente: "Na casa ou no local do cliente",
   no_bairro: "No seu bairro",
   casa_do_professor: "Na sua casa",

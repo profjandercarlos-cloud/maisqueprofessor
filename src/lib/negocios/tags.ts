@@ -49,6 +49,7 @@ export const TAG_LABELS: Record<string, Record<string, string>> = {
     no_cliente: "No cliente",
     no_bairro: "No bairro",
     online: "Online",
+    online_ou_presencial: "Online ou presencial",
     espaco_proprio: "Espaço próprio",
   },
   quemExecuta: { so_eu: "Só eu", com_ajudante: "Com ajudante", com_equipe: "Com equipe" },
