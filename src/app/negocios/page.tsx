@@ -83,7 +83,9 @@ export default async function NegociosPage({
       <AppHeader progressLabel="PEQUENOS NEGÓCIOS" />
 
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="font-serif text-2xl font-medium tracking-tight text-petrol">Pequenos negócios</h1>
+        <h1 className="font-serif text-[clamp(28px,5.5vw,38px)] leading-[1.1] font-medium tracking-tight text-petrol">
+          Pequenos negócios <span className="text-gold">para professores</span>
+        </h1>
         <a
           href="/negocios/favoritos"
           className="inline-flex items-center gap-2 rounded-full border border-petrol px-3.5 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
