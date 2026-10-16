@@ -190,7 +190,7 @@ export function AppNavLinks({
             <a
               key={href}
               href={destino}
-              aria-label={trancado ? `${label} (acesso completo)` : label}
+              aria-label={trancado ? `${label} (Plano Prof+)` : label}
               aria-current={active ? "page" : undefined}
               className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2"
               style={{ color: active ? "var(--petrol)" : "var(--ink-muted)", opacity: trancado ? 0.6 : 1 }}

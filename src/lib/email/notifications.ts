@@ -104,6 +104,6 @@ export async function sendAccessExpiringReminder(params: {
     to: params.to,
     subject: `Seu acesso expira em ${params.daysRemaining} dias`,
     html: wrapEmailHtml(`<p>Olá, ${params.name}.</p>
-<p>Seu acesso ao Rota Além da Sala expira em ${params.daysRemaining} dias. Renove sua compra para não perder o acesso ao seu plano.</p>`),
+<p>Seu Plano Prof+ do Rota Além da Sala expira em ${params.daysRemaining} dias. Renove sua compra para não perder o acesso ao seu plano.</p>`),
   });
 }

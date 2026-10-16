@@ -3,6 +3,7 @@ import { FavoritoButton } from "@/components/favorito-button";
 import { db } from "@/lib/db";
 import { getTipoAcesso, requireUser } from "@/lib/auth/require-active-access";
 import { montarLinkCompra } from "@/lib/hotmart/checkout";
+import { NOME_PLANO_PAGO } from "@/lib/hotmart/oferta";
 import { lerFicha } from "@/lib/negocios/ficha";
 import { PLANOS_DOS_FAVORITOS_DISPONIVEIS, PLANOS_POR_CONTA } from "@/lib/negocios/favoritos";
 import { CATEGORIA_LABELS } from "@/lib/negocios/tags";
@@ -102,14 +103,14 @@ export default async function MeusFavoritosPage() {
               </h2>
               <p className="text-[14.5px] leading-[1.6] text-ink">
                 Volte quando quiser para comparar e decidir por onde começar.
-                {!pago ? " O acesso completo libera o questionário e o plano personalizado de execução." : ""}
+                {!pago ? ` O ${NOME_PLANO_PAGO} libera o questionário e o plano personalizado de execução.` : ""}
               </p>
               {!pago && linkCompra ? (
                 <a
                   href={linkCompra}
                   className="mt-3 inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
                 >
-                  Conhecer o acesso completo →
+                  Conhecer o {NOME_PLANO_PAGO} →
                 </a>
               ) : null}
             </>

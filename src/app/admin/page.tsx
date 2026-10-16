@@ -85,7 +85,7 @@ export default async function AdminDashboardPage({
           </div>
           <div className={cardClass}>
             <div className={kpiValueClass}>{activeUsers}</div>
-            <div className={kpiLabelClass}>Com acesso pago ativo</div>
+            <div className={kpiLabelClass}>Com Plano Prof+ ativo</div>
           </div>
           <div className={cardClass}>
             <div className={kpiValueClass}>{contasGratuitas}</div>

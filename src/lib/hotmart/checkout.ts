@@ -1,4 +1,4 @@
-// Link de compra do acesso completo na Hotmart. A URL vem de
+// Link de compra do Plano Prof+ na Hotmart. A URL vem de
 // NEXT_PUBLIC_HOTMART_CHECKOUT_URL (não existe link de checkout no código).
 // Anexa e-mail e nome como parâmetros pra o formulário da Hotmart já vir
 // preenchido — assim a compra cai no mesmo e-mail da conta gratuita e a conta

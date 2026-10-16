@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { FavoritoButton } from "@/components/favorito-button";
 import { FichaProfessorView } from "@/components/ficha-professor";
+import { CardPlanoProf } from "@/components/card-plano-prof";
 import { db } from "@/lib/db";
-import { requireUser } from "@/lib/auth/require-active-access";
+import { getTipoAcesso, requireUser } from "@/lib/auth/require-active-access";
+import { montarLinkCompra } from "@/lib/hotmart/checkout";
 import { lerFicha, numerosDaFicha } from "@/lib/negocios/ficha";
 import { CATEGORIA_LABELS } from "@/lib/negocios/tags";
 
@@ -18,9 +20,15 @@ export default async function NegocioPage({ params }: { params: Promise<{ codigo
   const ficha = negocio ? lerFicha(negocio.ficha) : null;
   if (!negocio || !ficha) notFound();
 
-  const favoritos = await db.negocioNaLista.count({ where: { userId: user.id } });
-  const eFavorito =
-    (await db.negocioNaLista.count({ where: { userId: user.id, negocioId: negocio.id } })) > 0;
+  const [favoritos, eFavoritoQtd, tipo, dbUser] = await Promise.all([
+    db.negocioNaLista.count({ where: { userId: user.id } }),
+    db.negocioNaLista.count({ where: { userId: user.id, negocioId: negocio.id } }),
+    getTipoAcesso(user.id),
+    db.user.findUnique({ where: { id: user.id }, select: { name: true, email: true } }),
+  ]);
+  const eFavorito = eFavoritoQtd > 0;
+  const pago = tipo === "pago";
+  const linkCompra = montarLinkCompra(dbUser?.email ?? user.email, dbUser?.name);
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
@@ -43,6 +51,8 @@ export default async function NegocioPage({ params }: { params: Promise<{ codigo
       </div>
 
       <FichaProfessorView ficha={ficha} numeros={numerosDaFicha(negocio)} />
+
+      {!pago ? <CardPlanoProf linkCompra={linkCompra} /> : null}
 
       <section className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
         <p className="text-[14.5px] text-ink">Gostou? Favorite para voltar a este negócio depois.</p>
