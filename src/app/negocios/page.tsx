@@ -82,7 +82,7 @@ export default async function NegociosPage({
         dos que você quiser guardar.
       </p>
 
-      <nav aria-label="Categorias" className="-mx-5 mb-2 flex gap-2 overflow-x-auto px-5 pb-2">
+      <nav aria-label="Categorias" className="mb-3 flex flex-wrap gap-2">
         <a href="/negocios" className={chip(!categoriaAtiva)} aria-current={!categoriaAtiva ? "page" : undefined}>
           Todos · {totalVisiveis}
         </a>
