@@ -1,9 +1,9 @@
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-active-access";
+import { FavoritoButton } from "@/components/favorito-button";
 import { LivroIcon, LugarIcon, RelogioIcon } from "@/components/ficha-icons";
 import { ONDE_LABELS, PREPARO_LABELS, lerFicha, numerosDaFicha } from "@/lib/negocios/ficha";
-import { LIMITE_LISTA } from "@/lib/negocios/lista";
 import { CATEGORIA_LABELS, CATEGORIA_ORDEM } from "@/lib/negocios/tags";
 import type { CategoriaNegocio, Prisma } from "@/generated/prisma/client";
 
@@ -85,16 +85,19 @@ export default async function NegociosPage({
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="font-serif text-2xl font-medium tracking-tight text-petrol">Pequenos negócios</h1>
         <a
-          href="/negocios/lista"
-          className="rounded-full border border-petrol px-3.5 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
+          href="/negocios/favoritos"
+          className="inline-flex items-center gap-2 rounded-full border border-petrol px-3.5 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
         >
-          Minha lista · {idsNaLista.size} de {LIMITE_LISTA}
+          <svg viewBox="0 0 18 18" fill="currentColor" className="h-4 w-4 text-role-3" aria-hidden>
+            <path d="M9 15.5s-6-3.6-6-8.1A3.4 3.4 0 019 5.6a3.4 3.4 0 016 1.8c0 4.5-6 8.1-6 8.1z" />
+          </svg>
+          Meus favoritos · {idsNaLista.size}
         </a>
       </div>
       <p className="mb-6 max-w-[62ch] text-[14.5px] text-ink-muted">
         Ideias de renda extra fora da sala de aula, organizadas por o que o cliente recebe. Abra cada uma para ver
-        quem compra, quanto dá para cobrar, como começar pequeno e como o negócio pode crescer. Escolha até{" "}
-        {LIMITE_LISTA} para a sua lista.
+        quem compra, quanto dá para cobrar, como começar pequeno e como o negócio pode crescer. Toque no coração
+        dos que você quiser guardar.
       </p>
 
       <form action="/negocios" className="mb-8 flex flex-wrap items-end gap-2.5">
@@ -136,14 +139,13 @@ export default async function NegociosPage({
                   <p className="mb-2 font-mono text-[11px] tracking-[0.06em] text-gold uppercase">{s.nome}</p>
                   <div className="flex flex-col gap-2">
                     {s.itens.map((n) => {
-                      const naMinhaLista = idsNaLista.has(n.id);
                       const ficha = lerFicha(n.ficha);
                       const numeros = numerosDaFicha(n);
                       return (
+                        <div key={n.id} className="relative">
                         <a
-                          key={n.id}
                           href={`/negocios/${n.codigo}`}
-                          className="flex items-start justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3.5 transition-colors hover:border-petrol"
+                          className="flex items-start gap-3 rounded-lg border border-line bg-paper-raised py-3.5 pr-14 pl-4 transition-colors hover:border-petrol"
                         >
                           <span className="flex min-w-0 flex-col gap-1.5">
                             <span className="text-[15px] font-medium text-ink">{n.nome}</span>
@@ -159,12 +161,12 @@ export default async function NegociosPage({
                               />
                             </span>
                           </span>
-                          {naMinhaLista ? (
-                            <span className="shrink-0 rounded-full bg-gold-soft px-2.5 py-[3px] font-mono text-[10px] font-semibold tracking-wide text-petrol uppercase">
-                              Na sua lista
-                            </span>
-                          ) : null}
                         </a>
+                        {/* Fora do <a>: botão dentro de link navegaria ao clicar. */}
+                        <div className="absolute top-2.5 right-2.5">
+                          <FavoritoButton codigo={n.codigo} favorito={idsNaLista.has(n.id)} />
+                        </div>
+                        </div>
                       );
                     })}
                   </div>

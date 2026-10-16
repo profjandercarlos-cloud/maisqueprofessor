@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { FICHAS_EXEMPLO } from "./ficha-exemplos";
 import { LINHA_MEI_NAO_VERIFICADO, comLinhaMei, fichaSchema, lerFicha, numerosDaFicha } from "./ficha";
-import { LIMITE_LISTA, listaCheia, vagasNaLista } from "./lista";
 
 const forma1 = {
   ordem: 1,
@@ -74,16 +73,5 @@ describe("comLinhaMei", () => {
   it("não duplica se já existe, nem acrescenta quando foi verificado", () => {
     expect(comLinhaMei(base, "nao_verificado").cuidados).toEqual(base.cuidados);
     expect(comLinhaMei(semMei, "permitido_confirmado_em_fonte_oficial").cuidados).toEqual(semMei.cuidados);
-  });
-});
-
-describe("lista", () => {
-  it("o limite é 5 e as vagas nunca ficam negativas", () => {
-    expect(LIMITE_LISTA).toBe(5);
-    expect(vagasNaLista(0)).toBe(5);
-    expect(vagasNaLista(3)).toBe(2);
-    expect(vagasNaLista(9)).toBe(0);
-    expect(listaCheia(4)).toBe(false);
-    expect(listaCheia(5)).toBe(true);
   });
 });
