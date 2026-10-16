@@ -14,6 +14,35 @@ export const CATEGORIA_LABELS: Record<string, string> = {
 
 export const CATEGORIA_ORDEM = Object.keys(CATEGORIA_LABELS);
 
+// Para a fileira de categorias da página do professor (os rótulos acima são longos demais).
+export const CATEGORIA_CURTO: Record<string, string> = {
+  ENSINAR_E_DESENVOLVER: "Ensinar",
+  FAZER_OU_PRODUZIR: "Fazer ou produzir",
+  CUIDAR: "Cuidar",
+  ORGANIZAR_E_RESOLVER: "Organizar e resolver",
+  COMUNICAR_E_VENDER: "Comunicar e vender",
+  TECNOLOGIA: "Tecnologia",
+  CONECTAR: "Conectar",
+};
+
+// Uma linha por categoria, mostrada sob a fileira quando ela está selecionada:
+// os nomes ("Organizar e resolver", "Conectar") não são óbvios para quem chega.
+export const CATEGORIA_DESCRICAO: Record<string, string> = {
+  ENSINAR_E_DESENVOLVER:
+    "Dar aulas particulares, treinamentos e oficinas, usando o que você já sabe ensinar, só que fora da escola.",
+  FAZER_OU_PRODUZIR: "Produzir comida, artesanato e produtos personalizados em casa e vender sob encomenda.",
+  CUIDAR:
+    "Cuidar de animais, de pessoas (sem atendimento clínico) e de casas e carros, no seu bairro ou na casa do cliente.",
+  ORGANIZAR_E_RESOLVER:
+    "Organizar o que o cliente não tem tempo de organizar: agendas, documentos, mudanças, eventos e a rotina de pequenas empresas.",
+  COMUNICAR_E_VENDER:
+    "Cuidar da comunicação de pequenos comércios: redes sociais, textos, vídeos, anúncios e materiais de venda.",
+  TECNOLOGIA:
+    "Resolver problemas de tecnologia para quem não tem tempo: sites, automações, planilhas, suporte e configurações.",
+  CONECTAR:
+    "Juntar quem precisa com quem oferece: aluguel de itens, intermediação de serviços e encontros, como feiras e clubes de contatos.",
+};
+
 export const TAG_LABELS: Record<string, Record<string, string>> = {
   onde: {
     casa_do_professor: "Da própria casa",

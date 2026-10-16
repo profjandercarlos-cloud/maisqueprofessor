@@ -3,8 +3,8 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-active-access";
 import { FavoritoButton } from "@/components/favorito-button";
 import { LivroIcon, LugarIcon, RelogioIcon } from "@/components/ficha-icons";
-import { ONDE_LABELS, PREPARO_LABELS, lerFicha, numerosDaFicha } from "@/lib/negocios/ficha";
-import { CATEGORIA_LABELS, CATEGORIA_ORDEM } from "@/lib/negocios/tags";
+import { ONDE_LABELS, lerFicha, numerosDaFicha } from "@/lib/negocios/ficha";
+import { CATEGORIA_CURTO, CATEGORIA_DESCRICAO, CATEGORIA_LABELS, CATEGORIA_ORDEM } from "@/lib/negocios/tags";
 import type { CategoriaNegocio, Prisma } from "@/generated/prisma/client";
 
 function Selo({ icone, texto }: { icone: React.ReactNode; texto: string }) {
@@ -16,48 +16,30 @@ function Selo({ icone, texto }: { icone: React.ReactNode; texto: string }) {
   );
 }
 
-const selectClass =
-  "rounded-lg border border-line bg-paper px-3 py-2 text-[13.5px] text-ink outline-none focus:border-petrol";
-
 export default async function NegociosPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
-  const texto = (k: string) => (typeof query[k] === "string" ? (query[k] as string).trim() : "");
-  const q = texto("q");
-  const categoriaParam = texto("categoria");
-  const preparo = texto("preparo");
-  const onde = texto("onde");
+  const categoriaParam = typeof query.categoria === "string" ? query.categoria : "";
+  const categoriaAtiva = CATEGORIA_LABELS[categoriaParam] ? (categoriaParam as CategoriaNegocio) : null;
 
   const user = await requireUser();
 
-  const where: Prisma.PequenoNegocioWhereInput = {
-    status: "APROVADO",
-    fichaGeradaEm: { not: null },
-    ...(categoriaParam && CATEGORIA_LABELS[categoriaParam] ? { categoria: categoriaParam as CategoriaNegocio } : {}),
-    ...(PREPARO_LABELS[preparo] ? { tagPreparo: preparo } : {}),
-    ...(ONDE_LABELS[onde] ? { tagOnde: onde } : {}),
-    ...(q
-      ? {
-          OR: [
-            { nome: { contains: q, mode: "insensitive" } },
-            { posicionamento: { contains: q, mode: "insensitive" } },
-            { oQueOClienteRecebe: { contains: q, mode: "insensitive" } },
-          ],
-        }
-      : {}),
-  };
+  const visiveis: Prisma.PequenoNegocioWhereInput = { status: "APROVADO", fichaGeradaEm: { not: null } };
 
-  const [negocios, naLista] = await Promise.all([
+  const [negocios, porCategoria, naLista] = await Promise.all([
     db.pequenoNegocio.findMany({
-      where,
+      where: { ...visiveis, ...(categoriaAtiva ? { categoria: categoriaAtiva } : {}) },
       include: { subcategoria: true },
       orderBy: [{ codigo: "asc" }],
     }),
+    db.pequenoNegocio.groupBy({ by: ["categoria"], where: visiveis, _count: true }),
     db.negocioNaLista.findMany({ where: { userId: user.id }, select: { negocioId: true } }),
   ]);
+  const contagem = Object.fromEntries(porCategoria.map((c) => [c.categoria, c._count])) as Record<string, number>;
+  const totalVisiveis = Object.values(contagem).reduce((a, b) => a + b, 0);
   const idsNaLista = new Set(naLista.map((l) => l.negocioId));
 
   const grupos = CATEGORIA_ORDEM.map((cat) => {
@@ -71,12 +53,10 @@ export default async function NegociosPage({
     return { cat, subs: [...subs.values()], qtd: doGrupo.length };
   }).filter((g) => g.qtd > 0);
 
-  const opcoes = (m: Record<string, string>) =>
-    Object.entries(m).map(([v, l]) => (
-      <option key={v} value={v}>
-        {l}
-      </option>
-    ));
+  const chip = (ativo: boolean) =>
+    `shrink-0 rounded-full border px-3.5 py-1.5 text-[13.5px] font-medium whitespace-nowrap transition-colors ${
+      ativo ? "border-gold bg-gold-soft text-petrol" : "border-line bg-paper-raised text-ink hover:border-petrol"
+    }`;
 
   return (
     <div className="mx-auto w-full max-w-[860px] flex-1 px-5 pb-20">
@@ -102,32 +82,24 @@ export default async function NegociosPage({
         dos que você quiser guardar.
       </p>
 
-      <form action="/negocios" className="mb-8 flex flex-wrap items-end gap-2.5">
-        <input
-          name="q"
-          defaultValue={q}
-          placeholder="Buscar por nome ou assunto…"
-          className="min-w-[220px] flex-1 rounded-lg border border-line bg-paper px-3.5 py-2 text-[13.5px] text-ink outline-none focus:border-petrol"
-        />
-        <select name="categoria" defaultValue={categoriaParam} className={selectClass}>
-          <option value="">Todas as categorias</option>
-          {opcoes(CATEGORIA_LABELS)}
-        </select>
-        <select name="preparo" defaultValue={preparo} className={selectClass}>
-          <option value="">Qualquer preparo</option>
-          {opcoes(PREPARO_LABELS)}
-        </select>
-        <select name="onde" defaultValue={onde} className={selectClass}>
-          <option value="">De qualquer lugar</option>
-          {opcoes(ONDE_LABELS)}
-        </select>
-        <button
-          type="submit"
-          className="rounded-lg border border-petrol px-4 py-2 text-[13.5px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
-        >
-          Filtrar
-        </button>
-      </form>
+      <nav aria-label="Categorias" className="-mx-5 mb-2 flex gap-2 overflow-x-auto px-5 pb-2">
+        <a href="/negocios" className={chip(!categoriaAtiva)} aria-current={!categoriaAtiva ? "page" : undefined}>
+          Todos · {totalVisiveis}
+        </a>
+        {CATEGORIA_ORDEM.map((cat) => (
+          <a
+            key={cat}
+            href={`/negocios?categoria=${cat}`}
+            className={chip(categoriaAtiva === cat)}
+            aria-current={categoriaAtiva === cat ? "page" : undefined}
+          >
+            {CATEGORIA_CURTO[cat]} · {contagem[cat] ?? 0}
+          </a>
+        ))}
+      </nav>
+      <p className="mb-8 min-h-[1.5em] max-w-[62ch] text-[14px] text-ink-muted">
+        {categoriaAtiva ? CATEGORIA_DESCRICAO[categoriaAtiva] : ""}
+      </p>
 
       <div className="flex flex-col gap-8">
         {grupos.map((g) => (
