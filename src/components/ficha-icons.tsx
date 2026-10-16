@@ -97,6 +97,13 @@ export const CarteiraIcon = (p: P) => (
   </Icone>
 );
 
+export const LugarIcon = (p: P) => (
+  <Icone {...p}>
+    <path d="M9 16s5-4.4 5-8.2A5 5 0 004 7.8C4 11.6 9 16 9 16z" />
+    <circle cx="9" cy="7.8" r="1.8" />
+  </Icone>
+);
+
 export const ClienteIcon = (p: P) => (
   <Icone {...p}>
     <circle cx="7.5" cy="6" r="2.6" />

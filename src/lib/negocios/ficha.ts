@@ -83,10 +83,20 @@ export type NumerosDaFicha = {
   preparo: string;
 };
 
-const PREPARO_LABELS: Record<string, string> = {
+// Rótulos na linguagem do professor (os de tags.ts são do admin). Usados na
+// ficha, nos selos da lista e nos filtros — um vocabulário só.
+export const PREPARO_LABELS: Record<string, string> = {
   comeca_ja: "Pode começar já",
   precisa_curso_curto: "Exige um curso curto",
   precisa_licenca_ou_registro: "Exige licença ou registro antes de vender",
+};
+
+export const ONDE_LABELS: Record<string, string> = {
+  online: "Online",
+  no_cliente: "Na casa ou no local do cliente",
+  no_bairro: "No seu bairro",
+  casa_do_professor: "Na sua casa",
+  espaco_proprio: "Em espaço próprio",
 };
 
 const NAO_INFORMADO = "Não informado";

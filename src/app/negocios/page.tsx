@@ -1,9 +1,20 @@
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-active-access";
+import { LivroIcon, LugarIcon, RelogioIcon } from "@/components/ficha-icons";
+import { ONDE_LABELS, PREPARO_LABELS, lerFicha, numerosDaFicha } from "@/lib/negocios/ficha";
 import { LIMITE_LISTA } from "@/lib/negocios/lista";
-import { CATEGORIA_LABELS, CATEGORIA_ORDEM, TAG_LABELS } from "@/lib/negocios/tags";
+import { CATEGORIA_LABELS, CATEGORIA_ORDEM } from "@/lib/negocios/tags";
 import type { CategoriaNegocio, Prisma } from "@/generated/prisma/client";
+
+function Selo({ icone, texto }: { icone: React.ReactNode; texto: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12.5px] text-ink-muted">
+      <span className="text-gold">{icone}</span>
+      {texto}
+    </span>
+  );
+}
 
 const selectClass =
   "rounded-lg border border-line bg-paper px-3 py-2 text-[13.5px] text-ink outline-none focus:border-petrol";
@@ -18,7 +29,6 @@ export default async function NegociosPage({
   const q = texto("q");
   const categoriaParam = texto("categoria");
   const preparo = texto("preparo");
-  const investimento = texto("investimento");
   const onde = texto("onde");
 
   const user = await requireUser();
@@ -27,9 +37,8 @@ export default async function NegociosPage({
     status: "APROVADO",
     fichaGeradaEm: { not: null },
     ...(categoriaParam && CATEGORIA_LABELS[categoriaParam] ? { categoria: categoriaParam as CategoriaNegocio } : {}),
-    ...(TAG_LABELS.preparo[preparo] ? { tagPreparo: preparo } : {}),
-    ...(TAG_LABELS.investimentoInicial[investimento] ? { tagInvestimentoInicial: investimento } : {}),
-    ...(TAG_LABELS.onde[onde] ? { tagOnde: onde } : {}),
+    ...(PREPARO_LABELS[preparo] ? { tagPreparo: preparo } : {}),
+    ...(ONDE_LABELS[onde] ? { tagOnde: onde } : {}),
     ...(q
       ? {
           OR: [
@@ -101,15 +110,11 @@ export default async function NegociosPage({
         </select>
         <select name="preparo" defaultValue={preparo} className={selectClass}>
           <option value="">Qualquer preparo</option>
-          {opcoes(TAG_LABELS.preparo)}
-        </select>
-        <select name="investimento" defaultValue={investimento} className={selectClass}>
-          <option value="">Qualquer investimento</option>
-          {opcoes(TAG_LABELS.investimentoInicial)}
+          {opcoes(PREPARO_LABELS)}
         </select>
         <select name="onde" defaultValue={onde} className={selectClass}>
           <option value="">De qualquer lugar</option>
-          {opcoes(TAG_LABELS.onde)}
+          {opcoes(ONDE_LABELS)}
         </select>
         <button
           type="submit"
@@ -132,18 +137,26 @@ export default async function NegociosPage({
                   <div className="flex flex-col gap-2">
                     {s.itens.map((n) => {
                       const naMinhaLista = idsNaLista.has(n.id);
+                      const ficha = lerFicha(n.ficha);
+                      const numeros = numerosDaFicha(n);
                       return (
                         <a
                           key={n.id}
                           href={`/negocios/${n.codigo}`}
-                          className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[13.5px] transition-colors hover:border-petrol"
+                          className="flex items-start justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3.5 transition-colors hover:border-petrol"
                         >
-                          <span className="flex min-w-0 flex-col gap-0.5">
-                            <span className="truncate font-medium text-ink">{n.nome}</span>
-                            <span className="text-[12px] text-ink-muted">
-                              {TAG_LABELS.preparo[n.tagPreparo] ?? n.tagPreparo} ·{" "}
-                              {TAG_LABELS.investimentoInicial[n.tagInvestimentoInicial] ?? n.tagInvestimentoInicial} ·{" "}
-                              {TAG_LABELS.onde[n.tagOnde] ?? n.tagOnde}
+                          <span className="flex min-w-0 flex-col gap-1.5">
+                            <span className="text-[15px] font-medium text-ink">{n.nome}</span>
+                            {ficha ? (
+                              <span className="line-clamp-2 text-[13.5px] leading-[1.5] text-ink-muted">{ficha.vende}</span>
+                            ) : null}
+                            <span className="mt-0.5 flex flex-wrap gap-x-4 gap-y-1">
+                              <Selo icone={<RelogioIcon className="h-4 w-4" />} texto={numeros.horas} />
+                              <Selo icone={<LivroIcon className="h-4 w-4" />} texto={numeros.preparo} />
+                              <Selo
+                                icone={<LugarIcon className="h-4 w-4" />}
+                                texto={ONDE_LABELS[n.tagOnde] ?? "Local não informado"}
+                              />
                             </span>
                           </span>
                           {naMinhaLista ? (
