@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth/require-active-access";
 import { logDebugError } from "@/lib/debug-error-log";
 import { gerarFichaProfessorOpenAI } from "@/lib/ai-engine/gerar-ficha-professor-openai";
 import { FICHAS_EXEMPLO } from "@/lib/negocios/ficha-exemplos";
+import { lerFicha } from "@/lib/negocios/ficha";
 import type { CaminhoRendaStatus, Prisma } from "@/generated/prisma/client";
 
 export async function revisarNegocio(
@@ -28,17 +29,32 @@ export async function revisarNegocio(
   redirect(returnTo);
 }
 
-// Gera (ou regenera) a ficha do professor de UM negócio. Observação opcional do
-// revisor orienta a reescrita. Erro volta para a tela como mensagem, sem 500.
-export async function gerarFichaNegocio(returnTo: string, id: string, formData: FormData) {
+// Gera a ficha do professor de UM negócio. Dois modos:
+//  - "regenerar": ficha nova do zero (a observação, se houver, só orienta);
+//  - "ajustar": a IA recebe a ficha atual e muda só o que a observação pede, então
+//    a observação é obrigatória e é preciso já existir uma ficha.
+// Erro volta para a tela como mensagem, sem 500.
+export async function gerarFichaNegocio(
+  returnTo: string,
+  id: string,
+  modo: "regenerar" | "ajustar",
+  formData: FormData,
+) {
   await requireAdmin();
   const observacao = String(formData.get("observacao") ?? "").trim();
+  const voltarComErro = (msg: string) => redirect(`${returnTo}?error=${encodeURIComponent(msg)}`);
 
   const negocio = await db.pequenoNegocio.findUnique({ where: { id } });
   if (!negocio) redirect("/admin/pequenos-negocios");
 
+  const fichaAtual = modo === "ajustar" ? lerFicha(negocio.ficha) : null;
+  if (modo === "ajustar") {
+    if (!fichaAtual) voltarComErro("Não há ficha válida para ajustar. Use “Regenerar do zero”.");
+    if (!observacao) voltarComErro("Escreva na observação o que deve mudar. Sem ela não há o que ajustar.");
+  }
+
   try {
-    const ficha = await gerarFichaProfessorOpenAI(negocio, observacao || undefined);
+    const ficha = await gerarFichaProfessorOpenAI(negocio, observacao || undefined, fichaAtual ?? undefined);
     await db.pequenoNegocio.update({
       where: { id },
       data: { ficha: ficha as unknown as Prisma.InputJsonValue, fichaGeradaEm: new Date() },

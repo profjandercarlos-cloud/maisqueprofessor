@@ -75,9 +75,13 @@ export type NegocioParaFicha = {
   formasDeComecar: unknown;
 };
 
+// Sem `fichaAtual`: gera uma ficha nova do zero (a observação só orienta).
+// Com `fichaAtual`: modo ajuste — a IA recebe a ficha aprovada e muda só o que a
+// observação pede, mantendo o resto literalmente.
 export async function gerarFichaProfessorOpenAI(
   negocio: NegocioParaFicha,
   observacao?: string,
+  fichaAtual?: FichaProfessor,
 ): Promise<FichaProfessor> {
   // Fontes e evidência ficam de fora de propósito: a ficha não cita links.
   const registro = {
@@ -102,9 +106,18 @@ export async function gerarFichaProfessorOpenAI(
     formasDeComecar: negocio.formasDeComecar,
   };
 
-  const userMessage = `REGISTRO DO NEGÓCIO\n${JSON.stringify(registro, null, 1)}${
-    observacao?.trim() ? `\n\nOBSERVAÇÃO DO REVISOR (siga ao reescrever a ficha):\n${observacao.trim()}` : ""
-  }`;
+  const partes = [`REGISTRO DO NEGÓCIO\n${JSON.stringify(registro, null, 1)}`];
+  if (fichaAtual) {
+    partes.push(
+      `FICHA ATUAL (já revisada; modo de ajuste: mude só o que a observação pede)\n${JSON.stringify(fichaAtual, null, 1)}`,
+    );
+  }
+  if (observacao?.trim()) {
+    partes.push(
+      `OBSERVAÇÃO DO REVISOR${fichaAtual ? " (aplique somente isto)" : " (siga ao escrever a ficha)"}:\n${observacao.trim()}`,
+    );
+  }
+  const userMessage = partes.join("\n\n");
 
   const completion = await openai.chat.completions.create({
     model: FICHA_MODEL,

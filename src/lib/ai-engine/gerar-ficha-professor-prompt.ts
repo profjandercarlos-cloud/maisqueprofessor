@@ -41,6 +41,10 @@ ${exemplos}
 
 Os exemplos mostram o nível de concretude e o tom. Não copie frases deles: cada negócio tem os seus próprios fatos.
 
+## Modo de ajuste
+
+Às vezes a mensagem do usuário traz também a "FICHA ATUAL" e uma "OBSERVAÇÃO DO REVISOR". Nesse caso a ficha atual já foi revisada e aprovada em quase tudo: NÃO a reescreva. Devolva a ficha completa copiando LITERALMENTE, palavra por palavra, todo campo e todo item de lista que a observação não afeta, e altere somente o que a observação pede (e o que for consequência direta dela, como uma conta que depende de um preço alterado). Não troque sinônimos, não reorganize itens, não melhore o que não foi pedido. Se a observação pedir algo que contrarie os fatos do registro, mantenha o fato do registro e ajuste o mínimo possível.
+
 ## Formato de saída
 
 Retorne exclusivamente o JSON da ficha, com "versao": 1, sem texto fora dele.`;

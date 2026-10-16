@@ -284,7 +284,7 @@ export default async function PequenoNegocioDetailPage({
         <form className="flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-[13.5px]">
             <span className="font-semibold text-petrol">
-              Observação para a IA (opcional, ao {ficha ? "regenerar" : "gerar"})
+              Observação para a IA {ficha ? "(obrigatória para ajustar; opcional para regenerar)" : "(opcional)"}
             </span>
             <textarea
               name="observacao"
@@ -293,15 +293,30 @@ export default async function PequenoNegocioDetailPage({
               className="rounded-md border border-line px-3 py-2 text-[13.5px]"
             />
           </label>
-          <div>
+          <div className="flex flex-wrap gap-2.5">
+            {ficha ? (
+              <SubmitButton
+                pendingText="Ajustando ficha (até 1 minuto)..."
+                formAction={gerarFichaNegocio.bind(null, returnTo, id, "ajustar")}
+                className="rounded-lg bg-gold px-4 py-2 text-[13.5px] font-semibold text-paper hover:opacity-90"
+              >
+                Ajustar ficha (mantém o resto)
+              </SubmitButton>
+            ) : null}
             <SubmitButton
               pendingText="Gerando ficha (até 1 minuto)..."
-              formAction={gerarFichaNegocio.bind(null, returnTo, id)}
+              formAction={gerarFichaNegocio.bind(null, returnTo, id, "regenerar")}
               className="rounded-lg border border-petrol px-4 py-2 text-[13.5px] font-semibold text-petrol hover:bg-gold-soft"
             >
-              {ficha ? "Regenerar ficha" : "Gerar ficha"}
+              {ficha ? "Regenerar do zero" : "Gerar ficha"}
             </SubmitButton>
           </div>
+          {ficha ? (
+            <p className="text-[12.5px] text-ink-muted">
+              <b>Ajustar</b> muda só o que a observação pede e preserva o texto que você já revisou.{" "}
+              <b>Regenerar do zero</b> escreve a ficha inteira de novo e descarta a atual.
+            </p>
+          ) : null}
         </form>
       </section>
 
