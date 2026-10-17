@@ -50,7 +50,7 @@ export default async function NegocioPage({ params }: { params: Promise<{ codigo
         <FavoritoButton codigo={negocio.codigo} favorito={eFavorito} />
       </div>
 
-      <FichaProfessorView ficha={ficha} numeros={numerosDaFicha(negocio)} />
+      <FichaProfessorView ficha={ficha} numeros={numerosDaFicha(negocio)} visao={pago ? "pago" : "gratuito"} />
 
       {!pago ? <CardPlanoProf linkCompra={linkCompra} /> : null}
 

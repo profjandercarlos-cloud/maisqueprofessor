@@ -325,7 +325,7 @@ export default async function PequenoNegocioDetailPage({
           <p className="mb-3 font-mono text-[10.5px] tracking-[0.06em] text-gold uppercase">
             Prévia: como o professor vê esta ficha
           </p>
-          <FichaProfessorView ficha={ficha} numeros={numerosDaFicha(n)} />
+          <FichaProfessorView ficha={ficha} numeros={numerosDaFicha(n)} visao="admin" />
         </section>
       ) : null}
     </div>

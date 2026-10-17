@@ -18,14 +18,29 @@ const sectionClass = "rounded-[var(--radius-app)] border border-line bg-paper-ra
 const titleClass = "font-serif text-[17px] font-medium tracking-tight text-petrol";
 const textClass = "text-[14.5px] leading-[1.6] text-ink";
 
-function Bloco({ titulo, icone, children }: { titulo: string; icone: ReactNode; children: ReactNode }) {
+function Bloco({
+  titulo,
+  icone,
+  children,
+  soAdmin,
+}: {
+  titulo: string;
+  icone: ReactNode;
+  children: ReactNode;
+  soAdmin?: boolean;
+}) {
   return (
-    <section className={sectionClass}>
+    <section className={`${sectionClass} ${soAdmin ? "border-dashed" : ""}`}>
       <div className="mb-3 flex items-center gap-2.5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold-soft text-gold">
           {icone}
         </span>
         <h2 className={titleClass}>{titulo}</h2>
+        {soAdmin ? (
+          <span className="ml-auto rounded-full bg-paper px-2.5 py-[3px] font-mono text-[10px] tracking-wide text-ink-muted uppercase">
+            Só no admin
+          </span>
+        ) : null}
       </div>
       {children}
     </section>
@@ -66,9 +81,26 @@ function Numero({ rotulo, valor, icone }: { rotulo: string; valor: string; icone
 
 const ICONE_PEQUENO = "h-4 w-4";
 
-// Ficha do professor: o conteúdo é o mesmo para qualquer conta (é todo gratuito).
-// O que vai abaixo dela (lista, plano) é responsabilidade de quem usa o componente.
-export function FichaProfessorView({ ficha, numeros }: { ficha: FichaProfessor; numeros: NumerosDaFicha }) {
+// Ficha do professor. O que vai abaixo dela (favoritos, plano) é responsabilidade
+// de quem usa o componente.
+//
+// visao "gratuito" (padrão): versão enxuta — só para quem é, números (tempo,
+//   investimento, primeiro cliente), quanto cobrar, como começar e como crescer.
+// visao "pago": a ficha completa (acrescenta "por que você", preparo, "o que
+//   aprender" e cuidados).
+// visao "admin": a completa, com os blocos que o gratuito NÃO vê marcados "só no admin",
+//   para a revisão. Os blocos omitidos continuam sendo gerados e guardados.
+export function FichaProfessorView({
+  ficha,
+  numeros,
+  visao = "gratuito",
+}: {
+  ficha: FichaProfessor;
+  numeros: NumerosDaFicha;
+  visao?: "gratuito" | "pago" | "admin";
+}) {
+  const admin = visao === "admin";
+  const completo = visao !== "gratuito";
   const { preco, comeco, cresce } = ficha;
   const etapas = [
     { quando: "Começo", texto: cresce.c0, destaque: false },
@@ -85,12 +117,14 @@ export function FichaProfessorView({ ficha, numeros }: { ficha: FichaProfessor; 
         <Rotulo rotulo="Quando procura">{ficha.quando}</Rotulo>
       </Bloco>
 
-      <Bloco titulo="Por que você, professor" icone={<CapelaIcon />}>
-        <Lista itens={ficha.porque} />
-      </Bloco>
+      {completo ? (
+        <Bloco titulo="Por que você, professor" icone={<CapelaIcon />} soAdmin={admin}>
+          <Lista itens={ficha.porque} />
+        </Bloco>
+      ) : null}
 
       <Bloco titulo="Em números" icone={<NumerosIcon />}>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+        <div className={`grid grid-cols-2 gap-2.5 ${completo ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
           <Numero rotulo="Seu tempo" valor={numeros.horas} icone={<RelogioIcon className={ICONE_PEQUENO} />} />
           <Numero
             rotulo="Investimento para começar"
@@ -102,7 +136,13 @@ export function FichaProfessorView({ ficha, numeros }: { ficha: FichaProfessor; 
             valor={numeros.primeiroCliente}
             icone={<ClienteIcon className={ICONE_PEQUENO} />}
           />
-          <Numero rotulo="Preparo" valor={numeros.preparo} icone={<LivroIcon className={ICONE_PEQUENO} />} />
+          {completo ? (
+            <Numero
+              rotulo={admin ? "Preparo (só no admin)" : "Preparo"}
+              valor={numeros.preparo}
+              icone={<LivroIcon className={ICONE_PEQUENO} />}
+            />
+          ) : null}
         </div>
       </Bloco>
 
@@ -118,9 +158,11 @@ export function FichaProfessorView({ ficha, numeros }: { ficha: FichaProfessor; 
         {preco.conta ? <p className="text-[13px] text-ink-muted">{preco.conta}</p> : null}
       </Bloco>
 
-      <Bloco titulo="O que aprender e preparar antes" icone={<LivroIcon />}>
-        <Lista itens={ficha.preparar} />
-      </Bloco>
+      {completo ? (
+        <Bloco titulo="O que aprender e preparar antes" icone={<LivroIcon />} soAdmin={admin}>
+          <Lista itens={ficha.preparar} />
+        </Bloco>
+      ) : null}
 
       <Bloco titulo="A melhor forma de começar pequeno" icone={<BandeiraIcon />}>
         <Rotulo rotulo="O que fazer primeiro">{comeco.fazer}</Rotulo>
@@ -152,9 +194,11 @@ export function FichaProfessorView({ ficha, numeros }: { ficha: FichaProfessor; 
         <p className="mt-2.5 text-[12.5px] text-ink-muted">Cenário possível, não previsão nem promessa de renda.</p>
       </Bloco>
 
-      <Bloco titulo="Cuidados antes de vender" icone={<EscudoIcon />}>
-        <Lista itens={ficha.cuidados} />
-      </Bloco>
+      {completo ? (
+        <Bloco titulo="Cuidados antes de vender" icone={<EscudoIcon />} soAdmin={admin}>
+          <Lista itens={ficha.cuidados} />
+        </Bloco>
+      ) : null}
     </div>
   );
 }
