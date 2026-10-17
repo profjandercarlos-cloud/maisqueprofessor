@@ -72,6 +72,10 @@ export default async function ConfiguracoesPage({
           <p className="text-[14.5px] text-ink-muted">{dbUser.email}</p>
         </div>
 
+        {/* Dia do check-in e canais de notificação só fazem sentido para quem tem plano
+            de execução. Conta gratuita não vê estes campos (e updateSettings os ignora). */}
+        {tipoAcesso !== "gratuito" ? (
+          <>
         <div>
           <label htmlFor="checkinWeekday" className={fieldLabel}>
             Dia da semana do check-in
@@ -108,6 +112,8 @@ export default async function ConfiguracoesPage({
           </div>
           <p className="mt-1 text-[12.5px] text-ink-muted">Pelo menos um precisa ficar ativo.</p>
         </div>
+          </>
+        ) : null}
 
         {error ? <StepErrorBanner error={error} /> : null}
 

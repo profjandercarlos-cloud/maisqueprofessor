@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { tipoDeAcesso } from "@/lib/auth/acesso";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -17,6 +18,19 @@ export async function updateSettings(formData: FormData) {
   if (!user) redirect("/login");
 
   const name = String(formData.get("name") ?? "").trim();
+
+  // Conta gratuita não tem plano nem check-in: a tela nem mostra esses campos,
+  // então só o nome é salvo (decidido aqui no servidor, não por campo da tela).
+  const dbUser = await db.user.findUnique({
+    where: { id: user.id },
+    select: { accessExpiresAt: true, accessRevokedAt: true, isAdmin: true },
+  });
+  if (tipoDeAcesso(dbUser) === "gratuito") {
+    if (!name) fail("O nome não pode ficar em branco.");
+    await db.user.update({ where: { id: user.id }, data: { name } });
+    redirect("/configuracoes?saved=1");
+  }
+
   const checkinWeekday = Number(formData.get("checkinWeekday"));
   const notifyEmail = formData.get("notifyEmail") === "on";
   const notifyPush = formData.get("notifyPush") === "on";
