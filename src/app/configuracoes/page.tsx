@@ -2,7 +2,10 @@ import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth/require-active-access";
+import { tipoDeAcesso } from "@/lib/auth/acesso";
 import { formatDate } from "@/lib/format-date";
+import { montarLinkCompra } from "@/lib/hotmart/checkout";
+import { NOME_PLANO_PAGO } from "@/lib/hotmart/oferta";
 import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { updateSettings } from "./actions";
 import { DeleteAccountForm } from "./delete-account-form";
@@ -28,11 +31,20 @@ export default async function ConfiguracoesPage({
   const dbUser = await db.user.findUnique({ where: { id: user.id } });
   if (!dbUser) redirect("/login");
 
-  const accessStatus = dbUser.accessRevokedAt
-    ? "revogado"
-    : dbUser.accessExpiresAt && dbUser.accessExpiresAt < new Date()
-      ? "expirado"
-      : "ativo";
+  // Mesma regra do resto do app (pago / expirado / gratuito). Antes só havia
+  // "revogado, expirado, ativo com data": conta gratuita (sem data) caía em "revogado".
+  const tipoAcesso = tipoDeAcesso(dbUser);
+  const linkCompra = montarLinkCompra(dbUser.email, dbUser.name);
+  const mensagemAcesso =
+    tipoAcesso === "pago"
+      ? dbUser.accessExpiresAt
+        ? `${NOME_PLANO_PAGO} ativo até ${formatDate(dbUser.accessExpiresAt)}`
+        : `${NOME_PLANO_PAGO} ativo`
+      : tipoAcesso === "gratuito"
+        ? `Conta gratuita. Você pode explorar os pequenos negócios e favoritar os que gostar. O ${NOME_PLANO_PAGO} libera o questionário, o plano personalizado de execução, a agenda e o acompanhamento.`
+        : dbUser.accessRevokedAt
+          ? "Seu acesso foi revogado."
+          : `Seu ${NOME_PLANO_PAGO} expirou. Renove sua compra para continuar.`;
 
   return (
     <div className="mx-auto w-full max-w-[600px] flex-1 px-5 pb-20">
@@ -109,13 +121,15 @@ export default async function ConfiguracoesPage({
 
       <div className="mb-10 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
         <p className={fieldLabel}>Status de acesso</p>
-        <p className="text-[14.5px] text-ink">
-          {accessStatus === "ativo" && dbUser.accessExpiresAt
-            ? `Ativo até ${formatDate(dbUser.accessExpiresAt)}`
-            : accessStatus === "expirado"
-              ? "Seu acesso expirou. Renove sua compra para continuar."
-              : "Seu acesso foi revogado."}
-        </p>
+        <p className="text-[14.5px] text-ink">{mensagemAcesso}</p>
+        {tipoAcesso !== "pago" && !dbUser.accessRevokedAt && linkCompra ? (
+          <a
+            href={linkCompra}
+            className="mt-3 inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+          >
+            {tipoAcesso === "gratuito" ? `Conhecer o ${NOME_PLANO_PAGO}` : `Renovar meu ${NOME_PLANO_PAGO}`} →
+          </a>
+        ) : null}
       </div>
 
       <div className="mb-10 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
