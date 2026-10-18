@@ -5,7 +5,7 @@ export default function CadastroPage() {
   return (
     <AuthShell
       title="Criar conta gratuita"
-      subtitle="Explore pequenos negócios para ter uma renda extra fora da sala de aula."
+      subtitle="Explore ideias de negócios para professores."
     >
       <CadastroForm />
     </AuthShell>

@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { href: "/admin/usuarios", label: "Usuários" },
   { href: "/admin/hotmart", label: "Transações Hotmart" },
   { href: "/admin/caminhos-de-renda", label: "Caminhos de Renda" },
-  { href: "/admin/pequenos-negocios", label: "Pequenos Negócios" },
+  { href: "/admin/pequenos-negocios", label: "Ideias de Negócios" },
 ];
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {

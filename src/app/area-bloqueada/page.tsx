@@ -52,7 +52,7 @@ export default async function AreaBloqueadaPage({
           </a>
         ) : null}
         <a href="/negocios" className="text-sm font-semibold text-petrol hover:underline">
-          Continuar explorando pequenos negócios
+          Continuar explorando ideias de negócios
         </a>
       </div>
       {linkCompra ? (

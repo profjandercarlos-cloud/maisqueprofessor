@@ -39,7 +39,7 @@ function entregaveis(): { titulo: string; texto: string }[] {
   return [
     PLANOS_DOS_FAVORITOS_DISPONIVEIS
       ? {
-          titulo: `Teste até ${PLANOS_POR_CONTA} pequenos negócios`,
+          titulo: `Teste até ${PLANOS_POR_CONTA} ideias de negócios`,
           texto: "Escolha entre os seus favoritos e receba um plano de execução para cada um.",
         }
       : {

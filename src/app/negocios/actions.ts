@@ -6,34 +6,34 @@ import { requireUser } from "@/lib/auth/require-active-access";
 
 // Favorita ou desfavorita (um clique no coração). Devolve o estado final.
 // Não redireciona: a tela atualiza no lugar, sem recarregar a página.
-export async function alternarFavorito(codigo: string): Promise<boolean> {
+export async function alternarFavorito(slug: string): Promise<boolean> {
   const user = await requireUser();
 
-  const negocio = await db.pequenoNegocio.findFirst({
-    where: { codigo, status: "APROVADO", fichaGeradaEm: { not: null } },
+  const ideia = await db.ideiaNegocio.findFirst({
+    where: { slug, status: "APROVADO" },
     select: { id: true },
   });
-  if (!negocio) return false;
+  if (!ideia) return false;
 
-  const chave = { userId: user.id, negocioId: negocio.id };
-  const jaFavorito = await db.negocioNaLista.findFirst({ where: chave, select: { id: true } });
+  const chave = { userId: user.id, ideiaId: ideia.id };
+  const jaFavorita = await db.ideiaFavorita.findFirst({ where: chave, select: { id: true } });
 
-  let favorito: boolean;
-  if (jaFavorito) {
-    await db.negocioNaLista.deleteMany({ where: chave });
-    favorito = false;
+  let favorita: boolean;
+  if (jaFavorita) {
+    await db.ideiaFavorita.deleteMany({ where: chave });
+    favorita = false;
   } else {
     try {
-      await db.negocioNaLista.create({ data: chave });
+      await db.ideiaFavorita.create({ data: chave });
     } catch (err) {
-      // Clique duplo: a unicidade (userId, negocioId) já garante um registro só.
+      // Clique duplo: a unicidade (userId, ideiaId) já garante um registro só.
       console.error("alternarFavorito", err);
     }
-    favorito = true;
+    favorita = true;
   }
 
   revalidatePath("/negocios");
   revalidatePath("/negocios/favoritos");
-  revalidatePath(`/negocios/${codigo}`);
-  return favorito;
+  revalidatePath(`/negocios/${slug}`);
+  return favorita;
 }

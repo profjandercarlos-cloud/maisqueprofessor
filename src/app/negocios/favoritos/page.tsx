@@ -4,9 +4,8 @@ import { db } from "@/lib/db";
 import { getTipoAcesso, requireUser } from "@/lib/auth/require-active-access";
 import { montarLinkCompra } from "@/lib/hotmart/checkout";
 import { NOME_PLANO_PAGO } from "@/lib/hotmart/oferta";
-import { lerFicha } from "@/lib/negocios/ficha";
+import { categoriaDaIdeia } from "@/lib/ideias/categorias";
 import { PLANOS_DOS_FAVORITOS_DISPONIVEIS, PLANOS_POR_CONTA } from "@/lib/negocios/favoritos";
-import { CATEGORIA_LABELS } from "@/lib/negocios/tags";
 
 export default async function MeusFavoritosPage() {
   const user = await requireUser();
@@ -14,9 +13,9 @@ export default async function MeusFavoritosPage() {
   const [tipo, dbUser, itens] = await Promise.all([
     getTipoAcesso(user.id),
     db.user.findUnique({ where: { id: user.id }, select: { name: true, email: true } }),
-    db.negocioNaLista.findMany({
-      where: { userId: user.id, negocio: { status: "APROVADO", fichaGeradaEm: { not: null } } },
-      include: { negocio: true },
+    db.ideiaFavorita.findMany({
+      where: { userId: user.id, ideia: { status: "APROVADO" } },
+      include: { ideia: true },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -26,52 +25,47 @@ export default async function MeusFavoritosPage() {
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="PEQUENOS NEGÓCIOS" />
+      <AppHeader progressLabel="IDEIAS DE NEGÓCIOS" />
 
       <a href="/negocios" className="mb-4 inline-block text-[13px] font-semibold text-petrol hover:underline">
-        ← Todos os pequenos negócios
+        ← Todas as ideias de negócios
       </a>
 
       <h1 className="mb-1 font-serif text-2xl font-medium tracking-tight text-petrol">Meus favoritos</h1>
       <p className="mb-6 text-[14.5px] text-ink-muted">
         {qtd === 0
-          ? "Os negócios que você favoritar aparecem aqui."
-          : `${qtd} ${qtd === 1 ? "negócio favoritado" : "negócios favoritados"}.`}
+          ? "As ideias que você favoritar aparecem aqui."
+          : `${qtd} ${qtd === 1 ? "ideia favoritada" : "ideias favoritadas"}.`}
       </p>
 
       {qtd === 0 ? (
         <div className="rounded-[var(--radius-app)] border border-dashed border-line bg-paper-raised p-6 text-[14.5px] text-ink-muted">
-          Você ainda não favoritou nenhum negócio. Toque no coração de um negócio para guardá-lo aqui.{" "}
+          Você ainda não favoritou nenhuma ideia. Toque no coração de uma ideia para guardá-la aqui.{" "}
           <a href="/negocios" className="font-semibold text-petrol hover:underline">
-            Ver os negócios
+            Ver as ideias de negócios
           </a>
         </div>
       ) : (
         <ul className="flex flex-col gap-2.5">
-          {itens.map(({ id, negocio }) => {
-            const ficha = lerFicha(negocio.ficha);
-            return (
-              <li key={id} className="relative">
-                <a
-                  href={`/negocios/${negocio.codigo}`}
-                  className="block rounded-[var(--radius-app)] border border-line bg-paper-raised py-4 pr-14 pl-4 transition-colors hover:border-petrol"
-                >
-                  <span className="mb-0.5 block font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
-                    {CATEGORIA_LABELS[negocio.categoria]}
-                  </span>
-                  <span className="block font-serif text-[18px] font-medium text-petrol">{negocio.nome}</span>
-                  {ficha ? (
-                    <span className="mt-1 line-clamp-2 block text-[13.5px] leading-[1.5] text-ink-muted">
-                      {ficha.vende}
-                    </span>
-                  ) : null}
-                </a>
-                <div className="absolute top-3 right-3">
-                  <FavoritoButton codigo={negocio.codigo} favorito />
-                </div>
-              </li>
-            );
-          })}
+          {itens.map(({ id, ideia }) => (
+            <li key={id} className="relative">
+              <a
+                href={`/negocios/${ideia.slug}`}
+                className="block rounded-[var(--radius-app)] border border-line bg-paper-raised py-4 pr-14 pl-4 transition-colors hover:border-petrol"
+              >
+                <span className="mb-0.5 block font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
+                  {categoriaDaIdeia(ideia.categoria)?.curto}
+                </span>
+                <span className="block font-serif text-[18px] font-medium text-petrol">{ideia.nome}</span>
+                <span className="mt-1 line-clamp-2 block text-[13.5px] leading-[1.5] text-ink-muted">
+                  {ideia.resumo}
+                </span>
+              </a>
+              <div className="absolute top-3 right-3">
+                <FavoritoButton slug={ideia.slug} favorito />
+              </div>
+            </li>
+          ))}
         </ul>
       )}
 

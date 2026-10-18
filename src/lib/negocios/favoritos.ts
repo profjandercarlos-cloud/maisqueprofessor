@@ -1,4 +1,4 @@
-// "Meus favoritos": o professor favorita (coração) os pequenos negócios que lhe
+// "Meus favoritos": o professor favorita (coração) as ideias de negócios que lhe
 // interessam, sem limite — exige conta, gratuita ou paga. É a matéria-prima dos
 // planos de execução: na etapa paga ele escolhe, entre os favoritos, até
 // PLANOS_POR_CONTA para virarem plano.

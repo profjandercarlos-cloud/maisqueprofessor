@@ -41,7 +41,7 @@ export default async function ConfiguracoesPage({
         ? `${NOME_PLANO_PAGO} ativo até ${formatDate(dbUser.accessExpiresAt)}`
         : `${NOME_PLANO_PAGO} ativo`
       : tipoAcesso === "gratuito"
-        ? `Conta gratuita. Você pode explorar os pequenos negócios e favoritar os que gostar. O ${NOME_PLANO_PAGO} libera o questionário, o plano personalizado de execução, a agenda e o acompanhamento.`
+        ? `Conta gratuita. Você pode explorar as ideias de negócios e favoritar as que gostar. O ${NOME_PLANO_PAGO} libera o questionário, o plano personalizado de execução, a agenda e o acompanhamento.`
         : dbUser.accessRevokedAt
           ? "Seu acesso foi revogado."
           : `Seu ${NOME_PLANO_PAGO} expirou. Renove sua compra para continuar.`;

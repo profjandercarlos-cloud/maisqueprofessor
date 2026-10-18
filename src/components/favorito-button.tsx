@@ -24,11 +24,11 @@ function Coracao({ cheio }: { cheio: boolean }) {
 // se a gravação falhar, a tela volta ao estado real quando a página revalida.
 // variante "icone": só o coração (cartões); "botao": coração com texto (ficha).
 export function FavoritoButton({
-  codigo,
+  slug,
   favorito,
   variante = "icone",
 }: {
-  codigo: string;
+  slug: string;
   favorito: boolean;
   variante?: "icone" | "botao";
 }) {
@@ -38,7 +38,7 @@ export function FavoritoButton({
   function alternar() {
     iniciar(async () => {
       setOtimista(!otimista);
-      await alternarFavorito(codigo);
+      await alternarFavorito(slug);
     });
   }
 

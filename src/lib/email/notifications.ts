@@ -35,7 +35,7 @@ export async function sendBoasVindasGratuita(params: { to: string; name: string;
     to: params.to,
     subject: "Confirme seu e-mail para entrar no Rota Além da Sala",
     html: wrapEmailHtml(`<p>Olá, ${params.name}.</p>
-<p>Sua conta gratuita está quase pronta. Confirme seu e-mail e escolha uma senha para explorar os pequenos negócios:</p>
+<p>Sua conta gratuita está quase pronta. Confirme seu e-mail e escolha uma senha para explorar as ideias de negócios para professores:</p>
 <p style="text-align:center;margin:28px 0;"><a href="${params.link}" style="background:#00838f;color:#ffffff;text-decoration:none;font-weight:700;padding:14px 28px;border-radius:8px;display:inline-block;">Confirmar e definir minha senha</a></p>
 <p style="color:#666666;font-size:13px;">Se você não pediu esta conta, pode ignorar este e-mail.</p>`),
   });

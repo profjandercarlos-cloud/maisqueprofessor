@@ -97,6 +97,29 @@ export const CarteiraIcon = (p: P) => (
   </Icone>
 );
 
+export const LampadaIcon = (p: P) => (
+  <Icone {...p}>
+    <path d="M9 2.5a4.8 4.8 0 00-2.8 8.7c.5.4.8 1 .8 1.6v.7h4v-.7c0-.6.3-1.2.8-1.6A4.8 4.8 0 009 2.5z" />
+    <path d="M7.3 15.5h3.4" />
+  </Icone>
+);
+
+export const EmpresaIcon = (p: P) => (
+  <Icone {...p}>
+    <rect x="3.5" y="3" width="8" height="12" rx="1" />
+    <path d="M11.5 7.5H15V15h-3.5" />
+    <path d="M6 6h3M6 9h3M6 12h3" />
+  </Icone>
+);
+
+export const AlvoIcon = (p: P) => (
+  <Icone {...p}>
+    <circle cx="9" cy="9" r="6.5" />
+    <circle cx="9" cy="9" r="3.5" />
+    <circle cx="9" cy="9" r=".8" />
+  </Icone>
+);
+
 export const LugarIcon = (p: P) => (
   <Icone {...p}>
     <path d="M9 16s5-4.4 5-8.2A5 5 0 004 7.8C4 11.6 9 16 9 16z" />

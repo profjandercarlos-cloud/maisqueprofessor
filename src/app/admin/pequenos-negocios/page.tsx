@@ -1,10 +1,11 @@
+import { BotaoConfirmar } from "@/components/botao-confirmar";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
-import type { CaminhoRendaStatus, CategoriaNegocio } from "@/generated/prisma/client";
-import { CATEGORIA_LABELS, CATEGORIA_ORDEM, EVIDENCIA_LABELS, TAG_LABELS } from "@/lib/negocios/tags";
-import { gerarFichasPendentes } from "./actions";
+import { CATEGORIAS_IDEIAS, categoriaValida } from "@/lib/ideias/categorias";
+import type { CaminhoRendaStatus } from "@/generated/prisma/client";
+import { importarRepositorio } from "./actions";
 
-// Gerar as fichas pendentes roda várias chamadas de IA numa só requisição.
+// Importar cria 105 registros e pode apagar o repositório antigo.
 export const maxDuration = 300;
 
 const STATUS_LABELS: Record<CaminhoRendaStatus, string> = {
@@ -39,7 +40,7 @@ function filtroHref(status?: string, categoria?: string) {
   return `/admin/pequenos-negocios${qs ? `?${qs}` : ""}`;
 }
 
-export default async function PequenosNegociosPage({
+export default async function IdeiasAdminPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -48,70 +49,78 @@ export default async function PequenosNegociosPage({
   const statusParam = typeof query.status === "string" ? query.status : undefined;
   const categoriaParam = typeof query.categoria === "string" ? query.categoria : undefined;
   const status = statusParam ? STATUS_FILTER_MAP[statusParam] : undefined;
-  const categoria = categoriaParam && CATEGORIA_LABELS[categoriaParam] ? (categoriaParam as CategoriaNegocio) : undefined;
+  const categoria = categoriaParam && categoriaValida(categoriaParam) ? categoriaParam : undefined;
   const msg = typeof query.msg === "string" ? query.msg : undefined;
+  const error = typeof query.error === "string" ? query.error : undefined;
 
-  const [negocios, porStatus, porCategoria, semFicha] = await Promise.all([
-    db.pequenoNegocio.findMany({
+  const [ideias, porStatus, porCategoria, antigos] = await Promise.all([
+    db.ideiaNegocio.findMany({
       where: { ...(status ? { status } : {}), ...(categoria ? { categoria } : {}) },
-      include: { subcategoria: true },
-      orderBy: [{ codigo: "asc" }],
+      orderBy: [{ ordem: "asc" }],
+      select: { id: true, nome: true, resumo: true, categoria: true, status: true, conteudoEditadoEm: true },
     }),
-    db.pequenoNegocio.groupBy({ by: ["status"], _count: true }),
-    db.pequenoNegocio.groupBy({ by: ["categoria"], _count: true }),
-    db.pequenoNegocio.count({ where: { fichaGeradaEm: null } }),
+    db.ideiaNegocio.groupBy({ by: ["status"], _count: true }),
+    db.ideiaNegocio.groupBy({ by: ["categoria"], _count: true }),
+    db.pequenoNegocio.count(),
   ]);
 
   const countStatus = Object.fromEntries(porStatus.map((c) => [c.status, c._count])) as Record<string, number>;
   const countCategoria = Object.fromEntries(porCategoria.map((c) => [c.categoria, c._count])) as Record<string, number>;
   const total = Object.values(countStatus).reduce((a, b) => a + b, 0);
+  const returnTo = filtroHref(statusParam, categoriaParam);
 
   const chip = (ativo: boolean) =>
     `rounded-full border px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
       ativo ? "border-petrol text-petrol" : "border-line text-ink hover:border-petrol"
     }`;
 
-  const grupos = CATEGORIA_ORDEM.map((cat) => {
-    const doGrupo = negocios.filter((n) => n.categoria === cat);
-    const subs = new Map<string, { nome: string; itens: typeof doGrupo }>();
-    for (const n of doGrupo) {
-      const s = subs.get(n.subcategoriaId) ?? { nome: n.subcategoria.nome, itens: [] };
-      s.itens.push(n);
-      subs.set(n.subcategoriaId, s);
-    }
-    return { cat, subs: [...subs.values()], qtd: doGrupo.length };
-  }).filter((g) => g.qtd > 0);
+  const grupos = CATEGORIAS_IDEIAS.map((cat) => ({ cat, itens: ideias.filter((i) => i.categoria === cat.id) })).filter(
+    (g) => g.itens.length > 0,
+  );
 
   return (
     <div>
-      <h1 className="mb-1 font-serif text-2xl font-medium tracking-tight text-petrol">Pequenos Negócios</h1>
+      <h1 className="mb-1 font-serif text-2xl font-medium tracking-tight text-petrol">Ideias de negócios</h1>
       <p className="mb-6 max-w-[65ch] text-[13.5px] text-ink-muted">
-        Repositório interno organizado por o que o cliente recebe. Cada negócio tem o registro de pesquisa (só
-        aqui) e a ficha do professor, que é o que o usuário lê. Um negócio só aparece para os usuários quando está
-        aprovado e tem ficha.
+        Cada ideia aparece para os professores quando está aprovada. Abra uma para ler os 5 cards, ajustar o texto e
+        aprovar, deixar pendente ou rejeitar.
       </p>
 
       {msg ? (
         <p className="mb-4 rounded-lg border border-gold bg-gold-soft px-4 py-2.5 text-[13.5px] text-ink">{msg}</p>
       ) : null}
+      {error ? (
+        <p className="mb-4 rounded-lg border border-role-3 bg-paper px-4 py-2.5 text-[13.5px] text-role-3">{error}</p>
+      ) : null}
 
-      <form className="mb-6 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3">
-        <SubmitButton
-          pendingText="Gerando fichas (pode levar alguns minutos)..."
-          formAction={gerarFichasPendentes.bind(null, filtroHref(statusParam, categoriaParam))}
-          disabled={semFicha === 0}
-          className="rounded-lg bg-gold px-4 py-2 text-[13.5px] font-semibold text-paper hover:opacity-90 disabled:opacity-50"
-        >
-          Gerar fichas pendentes (4 por vez)
-        </SubmitButton>
-        <span className="text-[13px] text-ink-muted">
-          {semFicha === 0 ? "Todos os negócios têm ficha." : `${semFicha} negócio(s) ainda sem ficha.`}
-        </span>
-      </form>
+      <section className="mb-6 rounded-lg border border-line bg-paper-raised p-4">
+        <p className="mb-1 font-serif text-[17px] font-medium text-petrol">Importar repositório</p>
+        <p className="mb-3 text-[13px] text-ink-muted">
+          {total} ideia(s) no banco · {antigos} negócio(s) do repositório antigo ainda guardado(s). Ideias já importadas
+          nunca são sobrescritas. Tudo entra como pendente.
+        </p>
+        <form className="flex flex-wrap items-center gap-2.5">
+          <SubmitButton
+            pendingText="Importando..."
+            formAction={importarRepositorio.bind(null, returnTo, "teste")}
+            className="rounded-lg border border-petrol px-4 py-2 text-[13.5px] font-semibold text-petrol hover:bg-gold-soft"
+          >
+            Importar 5 de teste
+          </SubmitButton>
+          <BotaoConfirmar
+            pendingText="Importando e apagando..."
+            confirmacao="Importar as 105 ideias e APAGAR o repositório antigo de negócios? Isso não pode ser desfeito."
+            formAction={importarRepositorio.bind(null, returnTo, "todos")}
+            className="rounded-lg border border-role-3 px-4 py-2 text-[13.5px] font-semibold text-role-3 hover:bg-paper"
+          >
+            Importar as 105 e apagar os antigos
+          </BotaoConfirmar>
+        </form>
+      </section>
 
       <div className="mb-3 flex flex-wrap gap-2">
         <a href={filtroHref(undefined, categoriaParam)} className={chip(!status)}>
-          Todos ({total})
+          Todas ({total})
         </a>
         {Object.entries(STATUS_FILTER_MAP).map(([key, valor]) => (
           <a key={key} href={filtroHref(key, categoriaParam)} className={chip(statusParam === key)}>
@@ -123,53 +132,48 @@ export default async function PequenosNegociosPage({
         <a href={filtroHref(statusParam, undefined)} className={chip(!categoria)}>
           Todas as categorias
         </a>
-        {CATEGORIA_ORDEM.map((cat) => (
-          <a key={cat} href={filtroHref(statusParam, cat)} className={chip(categoriaParam === cat)}>
-            {CATEGORIA_LABELS[cat]} ({countCategoria[cat] ?? 0})
+        {CATEGORIAS_IDEIAS.map((cat) => (
+          <a key={cat.id} href={filtroHref(statusParam, cat.id)} className={chip(categoriaParam === cat.id)}>
+            {cat.curto} ({countCategoria[cat.id] ?? 0})
           </a>
         ))}
       </div>
 
       <div className="flex flex-col gap-8">
         {grupos.map((g) => (
-          <section key={g.cat}>
+          <section key={g.cat.id}>
             <h2 className="mb-3 font-serif text-lg font-medium tracking-tight text-petrol">
-              {CATEGORIA_LABELS[g.cat]} ({g.qtd})
+              {g.cat.nome} ({g.itens.length})
             </h2>
-            <div className="flex flex-col gap-5">
-              {g.subs.map((s) => (
-                <div key={s.nome}>
-                  <p className="mb-2 font-mono text-[11px] tracking-[0.06em] text-gold uppercase">{s.nome}</p>
-                  <div className="flex flex-col gap-2">
-                    {s.itens.map((n) => (
-                      <a
-                        key={n.id}
-                        href={`/admin/pequenos-negocios/${n.id}`}
-                        className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-[13.5px] transition-colors hover:border-petrol ${STATUS_ROW_COLORS[n.status]}`}
-                      >
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          <span className="truncate font-medium text-ink">{n.nome}</span>
-                          <span className="text-[12px] text-ink-muted">
-                            {EVIDENCIA_LABELS[n.nivelEvidencia]} · {TAG_LABELS.preparo[n.tagPreparo] ?? n.tagPreparo} ·{" "}
-                            {TAG_LABELS.investimentoInicial[n.tagInvestimentoInicial] ?? n.tagInvestimentoInicial}
-                            {n.fontesCompartilhadas ? " · fontes compartilhadas" : ""}
-                            {n.fichaGeradaEm ? " · com ficha" : " · sem ficha"}
-                          </span>
-                        </span>
-                        <span
-                          className={`shrink-0 rounded-full px-2.5 py-[3px] font-mono text-[10.5px] tracking-wide uppercase ${STATUS_BADGE_COLORS[n.status]}`}
-                        >
-                          {STATUS_LABELS[n.status]}
-                        </span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
+            <div className="flex flex-col gap-2">
+              {g.itens.map((i) => (
+                <a
+                  key={i.id}
+                  href={`/admin/pequenos-negocios/${i.id}`}
+                  className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-[13.5px] transition-colors hover:border-petrol ${STATUS_ROW_COLORS[i.status]}`}
+                >
+                  <span className="flex min-w-0 flex-col gap-0.5">
+                    <span className="truncate font-medium text-ink">{i.nome}</span>
+                    <span className="truncate text-[12px] text-ink-muted">
+                      {i.resumo}
+                      {i.conteudoEditadoEm ? " · texto ajustado" : ""}
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-[3px] font-mono text-[10.5px] tracking-wide uppercase ${STATUS_BADGE_COLORS[i.status]}`}
+                  >
+                    {STATUS_LABELS[i.status]}
+                  </span>
+                </a>
               ))}
             </div>
           </section>
         ))}
-        {grupos.length === 0 ? <p className="text-[13.5px] text-ink-muted">Nenhum negócio nesse filtro.</p> : null}
+        {grupos.length === 0 ? (
+          <p className="text-[14px] text-ink-muted">
+            Nenhuma ideia encontrada. Se ainda não importou, use &quot;Importar 5 de teste&quot; acima.
+          </p>
+        ) : null}
       </div>
     </div>
   );

@@ -62,7 +62,7 @@ export default async function AdminDashboardPage({
       include: { user: { select: { email: true } } },
     }),
     db.caminhoRenda.count({ where: { status: "PENDENTE_REVISAO" } }),
-    db.pequenoNegocio.count({ where: { status: "PENDENTE_REVISAO" } }),
+    db.ideiaNegocio.count({ where: { status: "PENDENTE_REVISAO" } }),
     db.user.count({ where: { accessRevokedAt: null, accessExpiresAt: null, isAdmin: false } }),
   ]);
 
@@ -129,7 +129,7 @@ export default async function AdminDashboardPage({
           </a>
           <a href="/admin/pequenos-negocios" className={`${cardClass} transition-colors hover:border-petrol`}>
             <div className={kpiValueClass}>{negociosPendentes}</div>
-            <div className={kpiLabelClass}>Pequenos Negócios pendentes →</div>
+            <div className={kpiLabelClass}>Ideias de negócios pendentes →</div>
           </a>
         </div>
       </section>

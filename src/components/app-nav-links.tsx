@@ -117,7 +117,7 @@ function CadeadoIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   );
 }
 
-const NEGOCIOS_ITEM = { href: "/negocios", label: "Pequenos Negócios", Icon: NegociosIcon };
+const NEGOCIOS_ITEM = { href: "/negocios", label: "Ideias de negócios", Icon: NegociosIcon };
 
 const BASE_ITEMS = [
   { href: "/", label: "Painel", Icon: PainelIcon },

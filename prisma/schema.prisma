@@ -35,6 +35,7 @@ model User {
   agendaEntries       AgendaEntry[]
   negociosDesbloqueados NegocioDesbloqueado[]
   negociosNaLista     NegocioNaLista[]
+  ideiasFavoritas     IdeiaFavorita[]
 
   @@map("users")
 }
@@ -935,6 +936,47 @@ model NegocioNaLista {
 
   @@unique([userId, negocioId])
   @@map("negocios_na_lista")
+}
+
+// Repositório "Ideias de negócios para professores" (importado de
+// src/data/repositorio-ideias.json). Substitui PequenoNegocio, que fica como
+// legado sem uso. Cada ideia guarda DUAS cópias do conteúdo:
+//  - dados: o negócio exatamente como veio do arquivo — nunca editado; é a base
+//    de "reverter ao original" e de "regenerar do zero";
+//  - conteudo: a versão que o professor lê (ver src/lib/ideias/conteudo.ts),
+//    editável pela IA ("Ajustar") e revisada no admin.
+model IdeiaNegocio {
+  id                String             @id @default(uuid())
+  origemId          String             @unique // id estável do arquivo ("neg_001"): chave de importação, nunca exibido
+  slug              String             @unique
+  categoria         String // "cat_01".."cat_07" — ver src/lib/ideias/categorias.ts
+  ordem             Int // ordem geral aprovada no arquivo
+  nome              String
+  resumo            String
+  dados             Json
+  conteudo          Json
+  status            CaminhoRendaStatus @default(PENDENTE_REVISAO)
+  notaRevisao       String?
+  conteudoEditadoEm DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  favoritos IdeiaFavorita[]
+
+  @@map("ideias_negocio")
+}
+
+// Favoritos do professor (coração), sem limite. Exige conta, gratuita ou paga.
+model IdeiaFavorita {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideiaId   String
+  ideia     IdeiaNegocio @relation(fields: [ideiaId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now())
+
+  @@unique([userId, ideiaId])
+  @@map("ideias_favoritas")
 }
 
 // LEGADO, sem uso: o desbloqueio por níveis foi abandonado (a página de
