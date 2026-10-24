@@ -122,8 +122,8 @@ const NEGOCIOS_ITEM = { href: "/negocios", label: "Ideias de negócios", Icon: N
 const BASE_ITEMS = [
   { href: "/", label: "Painel", Icon: PainelIcon },
   { href: "/mapa", label: "Mapa", Icon: MapaIcon },
-  { href: "/diagnostico/concluido", label: "Possibilidades", Icon: PossibilidadesIcon },
-  { href: "/planos", label: "Meus planos", Icon: PlanosIcon },
+  { href: "/diagnostico/concluido", label: "Meus negócios", Icon: PossibilidadesIcon },
+  { href: "/planos", label: "Planos de execução", Icon: PlanosIcon },
   { href: "/agenda", label: "Agenda", Icon: AgendaIcon },
   { href: "/evolucao", label: "Evolução", Icon: EvolucaoIcon },
   { href: "/anti-procrastinacao", label: "Antiprocrastinação", Icon: AntiProcrastinacaoIcon },

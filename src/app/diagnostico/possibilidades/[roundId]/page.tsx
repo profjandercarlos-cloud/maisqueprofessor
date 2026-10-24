@@ -98,6 +98,15 @@ export default async function PossibilitiesReviewPage({
         </p>
       </div>
 
+      <div className="mb-7 rounded-[var(--radius-app)] border border-gold bg-gold-soft px-4 py-3.5 text-[13.5px] leading-[1.55] text-ink">
+        <span className="font-semibold text-petrol">Meus negócios são personalizados.</span> Eles foram gerados a
+        partir das suas respostas, do seu histórico e das suas metas. Já as{" "}
+        <a href="/negocios" className="font-semibold text-petrol hover:underline">
+          ideias de negócios
+        </a>{" "}
+        são as mesmas para todos os professores.
+      </div>
+
       {conflito ? (
         <div className="mb-7 flex items-start gap-2.5 rounded-[var(--radius-app)] border border-role-3/40 bg-role-3/10 px-4 py-3.5 text-[13.5px] text-ink">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">

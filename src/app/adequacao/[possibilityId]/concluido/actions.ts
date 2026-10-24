@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
+import { MENSAGEM_COTA_ESGOTADA, cotaDePlanos } from "@/lib/planos/cota";
 import {
   type AcaoAceita,
   type DistribuicaoTempo,
@@ -192,9 +193,9 @@ export async function generatePlan(possibilityId: string) {
     reflexao: a.reflexao,
   }));
 
-  const existingPlanCount = await db.plan.count({ where: { userId: user.id } });
-  if (existingPlanCount >= 5) {
-    fail(possibilityId, "Você já tem 5 planos salvos — o máximo permitido. Remova um plano nas configurações antes de criar outro.");
+  const cota = cotaDePlanos(await db.plan.count({ where: { userId: user.id } }));
+  if (cota.esgotada) {
+    fail(possibilityId, MENSAGEM_COTA_ESGOTADA);
   }
 
   const tempoDisponivelHoras = Number(answers.horasSemanaisDisponiveis);

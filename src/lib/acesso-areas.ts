@@ -11,13 +11,13 @@ export const AREAS_TRANCADAS: Record<string, { titulo: string; descricao: string
     descricao: "Onde você está no caminho, da escolha da possibilidade até a execução do plano.",
   },
   "/diagnostico/concluido": {
-    titulo: "Possibilidades",
+    titulo: "Meus negócios",
     descricao:
-      "O questionário que identifica quais caminhos combinam melhor com o seu perfil, e as possibilidades pensadas para o seu caso.",
+      "O questionário que identifica quais caminhos combinam melhor com o seu perfil, e os negócios personalizados pensados para o seu caso.",
   },
   "/planos": {
-    titulo: "Meus planos",
-    descricao: "O plano personalizado, semana a semana, para executar a possibilidade que você escolher.",
+    titulo: "Planos de execução",
+    descricao: "Até 5 planos personalizados, semana a semana, para colocar em prática os negócios que você escolher.",
   },
   "/agenda": {
     titulo: "Agenda",
