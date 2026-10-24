@@ -17,9 +17,9 @@ export function AuthShell({
           <AppLogoMark />
           <div className="flex flex-col leading-tight">
             <span className="font-serif text-base font-semibold tracking-tight text-petrol">
-              Rota Além da Sala
+              Renda Além da Sala
             </span>
-            <span className="text-[10.5px] text-ink-muted">Planejador de transição para professores</span>
+            <span className="text-[10.5px] text-ink-muted">Crie seu negócio a partir das suas habilidades.</span>
             {/* Atribuição à marca-mãe — só aqui (não no header/sidebar, que
                 já ficam justos com as 2 linhas existentes), pelo mesmo
                 motivo da página de vendas: reforçar a procedência sem

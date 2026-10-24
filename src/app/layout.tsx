@@ -17,9 +17,9 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Rota Além da Sala",
+  title: "Renda Além da Sala",
   description:
-    "Responda ao diagnóstico, receba cinco possibilidades profissionais e transforme a escolhida em um plano personalizado de transição. Uma solução Mais Que Professor.",
+    "Crie seu negócio a partir das suas habilidades. Uma solução Mais Que Professor.",
   manifest: "/manifest.json",
 };
 

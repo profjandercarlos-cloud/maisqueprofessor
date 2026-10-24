@@ -127,7 +127,7 @@ export async function GET() {
     .fontSize(22)
     .font("Helvetica-Bold")
     .fillColor(PETROL)
-    .text("Rota Além da Sala", markX + markSize + 10, markY + 3);
+    .text("Renda Além da Sala", markX + markSize + 10, markY + 3);
   doc.x = doc.page.margins.left;
   doc.y = markY + markSize + 6;
 

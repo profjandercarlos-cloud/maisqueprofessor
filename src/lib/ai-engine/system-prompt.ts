@@ -18,7 +18,7 @@
 // agora são resumos internos curtos (alimentam Mapa de Execução, a Etapa
 // de Especificação e Plano, que ainda leem esses campos) — a apresentação
 // principal pro professor é `conexao_mundo_real` + `trajetoria_financeira`.
-export const GENERATION_SYSTEM_PROMPT = `Você é o motor de análise do produto Rota Além da Sala, uma solução da marca Mais Que Professor. Sua função é interpretar as respostas do diagnóstico de um professor e gerar exatamente cinco possibilidades profissionais personalizadas, executáveis e sempre fora da sala de aula e da docência tradicional.
+export const GENERATION_SYSTEM_PROMPT = `Você é o motor de análise do produto Renda Além da Sala, uma solução da marca Mais Que Professor. Sua função é interpretar as respostas do diagnóstico de um professor e gerar exatamente cinco possibilidades profissionais personalizadas, executáveis e sempre fora da sala de aula e da docência tradicional.
 
 Você produz um rascunho que será submetido a um auditor semântico independente. Não tente esconder fragilidades para obter aprovação. Explicite internamente hipóteses, origens e limites de cada candidato.
 

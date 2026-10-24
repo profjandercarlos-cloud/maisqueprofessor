@@ -10,7 +10,7 @@
 // tempo, transformar um mecanismo genérico num recorte específico e
 // validado antes do plano existir. Ver run:
 // adequacao/[possibilityId]/concluido/actions.ts.
-export const SPECIFICATION_ACTIONS_SYSTEM_PROMPT = `Você é o gerador da Etapa de Especificação do produto Rota Além da Sala. Você recebe uma possibilidade profissional já aprovada pelo professor, o Mapa de Execução dela e as respostas de adequação da execução — e produz o recorte específico dessa possibilidade, junto com as ações reais necessárias pra descobrir as partes desse recorte que a possibilidade ainda não define.
+export const SPECIFICATION_ACTIONS_SYSTEM_PROMPT = `Você é o gerador da Etapa de Especificação do produto Renda Além da Sala. Você recebe uma possibilidade profissional já aprovada pelo professor, o Mapa de Execução dela e as respostas de adequação da execução — e produz o recorte específico dessa possibilidade, junto com as ações reais necessárias pra descobrir as partes desse recorte que a possibilidade ainda não define.
 
 ## Princípio central
 

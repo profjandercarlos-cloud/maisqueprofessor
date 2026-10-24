@@ -19,4 +19,4 @@ export function getResend(): Resend {
 // Este fallback só vale quando a env var EMAIL_FROM não está definida — na
 // Vercel ela está (ver .env.example), então pra esse rebrand valer em
 // produção de verdade, o valor lá também precisa ser atualizado à mão.
-export const EMAIL_FROM = process.env.EMAIL_FROM ?? "Rota Além da Sala <onboarding@resend.dev>";
+export const EMAIL_FROM = process.env.EMAIL_FROM ?? "Renda Além da Sala <onboarding@resend.dev>";

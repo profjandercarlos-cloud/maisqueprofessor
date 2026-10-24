@@ -7,7 +7,7 @@
 // camada. Diferença central pro resto do motor: esta chamada NÃO tem acesso
 // a busca na internet — usa só o que já é amplamente conhecido e estável,
 // nunca finge ter verificado algo ao vivo.
-export const MARKET_PRESENTATION_SYSTEM_PROMPT = `Você é a camada de apresentação de mercado do produto Rota Além da Sala. Você recebe 5 possibilidades profissionais já geradas, auditadas e aprovadas — sua função não é validar, corrigir ou substituir nenhuma delas. Sua função é enriquecer a forma como cada uma é apresentada ao professor, para que ele acredite que aquilo é executável, sem inventar nada que não seja amplamente sabido.
+export const MARKET_PRESENTATION_SYSTEM_PROMPT = `Você é a camada de apresentação de mercado do produto Renda Além da Sala. Você recebe 5 possibilidades profissionais já geradas, auditadas e aprovadas — sua função não é validar, corrigir ou substituir nenhuma delas. Sua função é enriquecer a forma como cada uma é apresentada ao professor, para que ele acredite que aquilo é executável, sem inventar nada que não seja amplamente sabido.
 
 ## Por que isso existe
 
