@@ -10,6 +10,7 @@ import type {
 } from "@/generated/prisma/client";
 import { approvePossibility } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
+import { SITUACAO_META, type SituacaoDoNegocio } from "@/lib/plano/situacao-do-negocio";
 
 type ConexaoMundoReal = {
   nomeDeMercado: string | null;
@@ -58,6 +59,9 @@ type PossibilityData = {
   trajetoriaFinanceira: unknown;
   tempoDedicacao: unknown;
   status: PossibilityStatus;
+  /** Em que ponto está este negócio (selo de texto) e o plano dele, se já existir. */
+  situacao: SituacaoDoNegocio;
+  planId: string | null;
 };
 
 const HORIZONTE_LABELS: Record<HorizonteEconomico, string> = {
@@ -211,6 +215,14 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     >
                       {meta.label}
                     </span>
+                    {SITUACAO_META[p.situacao] ? (
+                      <span
+                        className="inline-block rounded-full px-2 py-[3px] text-[10px] font-semibold"
+                        style={{ color: SITUACAO_META[p.situacao]!.cor, background: SITUACAO_META[p.situacao]!.corFundo }}
+                      >
+                        {SITUACAO_META[p.situacao]!.rotulo}
+                      </span>
+                    ) : null}
                     <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
                       Tempo para validar: {HORIZONTE_LABELS[p.tempoPrimeiraValidacao]}
                     </span>
@@ -328,7 +340,14 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     </div>
                   </div>
 
-                  {p.status === "REJEITADA" ? (
+                  {p.planId ? (
+                    <a
+                      href={`/planos/${p.planId}`}
+                      className="mt-[18px] inline-block rounded-lg border border-petrol px-[18px] py-[10px] text-[13.5px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
+                    >
+                      Ver o plano deste negócio →
+                    </a>
+                  ) : p.status === "REJEITADA" ? (
                     <p className="mt-[18px] text-[13px] text-ink-muted">
                       Esse negócio já foi tentado antes e não pôde ser aproveitado — escolha outro do
                       conjunto.

@@ -4,11 +4,7 @@
 export const AREAS_TRANCADAS: Record<string, { titulo: string; descricao: string }> = {
   "/": {
     titulo: "Painel",
-    descricao: "O seu painel do dia a dia: o plano ativo, a sua próxima ação e o quanto você já avançou.",
-  },
-  "/mapa": {
-    titulo: "Mapa da jornada",
-    descricao: "Onde você está no caminho, da escolha da possibilidade até a execução do plano.",
+    descricao: "O seu painel do dia a dia: o plano ativo, a sua próxima ação, o quanto você já avançou e em que ponto da jornada você está.",
   },
   "/diagnostico/concluido": {
     titulo: "Meus negócios",

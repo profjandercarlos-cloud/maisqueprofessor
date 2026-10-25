@@ -1,7 +1,7 @@
 import type { Diagnostic } from "@/generated/prisma/client";
 import { deepGet } from "@/lib/wizard/deep-set";
 import { otherDetailPath, type WizardStep } from "@/lib/wizard/step-types";
-import { getStepsForRoute } from "@/lib/diagnostico/steps";
+import { getStepsForRoute, ROTA_PROFISSIONAL_SLUG } from "@/lib/diagnostico/steps";
 
 const BLOCK_TITLES: Record<number, string> = {
   1: "DIREÇÃO DA BUSCA",
@@ -111,4 +111,41 @@ export function formatDiagnosticInput(
   }
 
   return lines.join("\n");
+}
+
+export type BlocoDeRespostas = {
+  titulo: string;
+  itens: { pergunta: string; resposta: string }[];
+};
+
+// As mesmas respostas que o motor de IA recebe, mas separadas por bloco e por
+// pergunta, para a pessoa reler o que respondeu (tela "Minhas respostas").
+export function listarRespostas(
+  diagnostic: Pick<Diagnostic, "intention" | "rotaProfissional" | "answers">,
+): BlocoDeRespostas[] {
+  const answers = diagnostic.answers as Record<string, unknown>;
+  const rota = diagnostic.rotaProfissional;
+  const blocos: BlocoDeRespostas[] = [
+    {
+      titulo: "Sua direção",
+      itens: [
+        { pergunta: "O que você deseja em relação à sala de aula neste momento?", resposta: INTENTION_LABELS[diagnostic.intention] },
+        ...(rota ? [{ pergunta: "Qual destas buscas representa melhor o que você deseja agora?", resposta: ROTA_LABELS[rota] }] : []),
+      ],
+    },
+  ];
+
+  let atual: BlocoDeRespostas | null = null;
+  let blocoAtual = 0;
+  for (const step of getStepsForRoute(rota)) {
+    // A intenção e a rota já estão em "Sua direção".
+    if (step.type === "intention" || step.slug === ROTA_PROFISSIONAL_SLUG) continue;
+    if (step.block !== blocoAtual) {
+      blocoAtual = step.block;
+      atual = { titulo: BLOCK_TITLES[blocoAtual] ?? `Bloco ${blocoAtual}`, itens: [] };
+      blocos.push(atual);
+    }
+    atual?.itens.push({ pergunta: step.question, resposta: formatAnswer(step, answers) });
+  }
+  return blocos;
 }

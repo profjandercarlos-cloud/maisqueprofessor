@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
+import { situacaoDoNegocio } from "@/lib/plano/situacao-do-negocio";
 import { PossibilityCards } from "./possibility-cards";
 import { PollingWait } from "./polling-wait";
 import { MarketPresentationRetry } from "./market-presentation-retry";
@@ -27,7 +28,10 @@ export default async function PossibilitiesReviewPage({
 
   const round = await db.generationRound.findUnique({
     where: { id: roundId },
-    include: { possibilities: true, diagnostic: true },
+    include: {
+      possibilities: { include: { plan: { select: { id: true, acoes: { select: { status: true } } } } } },
+      diagnostic: true,
+    },
   });
   if (!round || round.diagnostic.userId !== user.id) notFound();
 
@@ -161,7 +165,13 @@ export default async function PossibilitiesReviewPage({
           }
         />
       ) : null}
-      <PossibilityCards possibilities={round.possibilities} />
+      <PossibilityCards
+        possibilities={round.possibilities.map(({ plan, ...p }) => ({
+          ...p,
+          situacao: situacaoDoNegocio({ status: p.status, plan }),
+          planId: plan?.id ?? null,
+        }))}
+      />
 
       {alreadyApproved ? (
         <footer className="mt-9 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px]">

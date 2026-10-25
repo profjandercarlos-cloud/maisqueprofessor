@@ -34,6 +34,10 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Páginas que saíram do produto: quem tinha o link salvo cai no Painel, em vez de um 404.
+  async redirects() {
+    return ["/mapa", "/agenda", "/evolucao"].map((source) => ({ source, destination: "/", permanent: false }));
+  },
   async headers() {
     return [
       {
