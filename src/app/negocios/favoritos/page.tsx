@@ -87,6 +87,14 @@ export default async function MeusFavoritosPage() {
                   Quero meus planos de execução →
                 </a>
               ) : null}
+              {pago ? (
+                <a
+                  href="/planos"
+                  className="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+                >
+                  Criar um plano dos meus favoritos →
+                </a>
+              ) : null}
             </>
           ) : (
             <>

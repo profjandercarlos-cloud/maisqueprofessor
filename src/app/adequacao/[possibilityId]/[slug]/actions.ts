@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { donoDoNegocio } from "@/lib/plano/dono-do-negocio";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { Prisma } from "@/generated/prisma/client";
 import { getStepBySlug, getNextSlug } from "@/lib/adequacao/steps";
@@ -18,7 +19,7 @@ export async function saveStep(possibilityId: string, slug: string, formData: Fo
     where: { id: possibilityId },
     include: { round: { include: { diagnostic: true } }, plan: true },
   });
-  if (!possibility || possibility.round.diagnostic.userId !== user.id) redirect("/");
+  if (!possibility || donoDoNegocio(possibility) !== user.id) redirect("/");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
   const response = await getOrCreateAdequacaoResponse(possibilityId);

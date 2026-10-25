@@ -12,7 +12,8 @@ export async function approvePossibility(possibilityId: string) {
     include: { round: { include: { diagnostic: true } } },
   });
 
-  if (!possibility || possibility.round.diagnostic.userId !== user.id) {
+  // Só os negócios de uma rodada do gerador são aprovados aqui; os de favoritos nascem direto no plano.
+  if (!possibility?.round || possibility.round.diagnostic.userId !== user.id) {
     redirect("/");
   }
 

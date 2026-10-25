@@ -73,7 +73,7 @@ const JSON_SCHEMA = {
 } as const;
 
 export async function generateMapaExecucaoOpenAI(params: {
-  diagnosticInput: string;
+  diagnosticInput?: string | null; // ausente quando o negócio veio de um favorito: não há diagnóstico da pessoa
   possibility: {
     titulo: string;
     comoFunciona: string;
@@ -83,7 +83,10 @@ export async function generateMapaExecucaoOpenAI(params: {
     pontoDeAtencao: string;
   };
 }): Promise<MapaExecucao> {
-  const userMessage = `${params.diagnosticInput}
+  const perfil =
+    params.diagnosticInput ??
+    "PERFIL DA PESSOA\nNão há diagnóstico: a pessoa escolheu este negócio entre as ideias do catálogo. Não presuma competências nem histórico que não estejam no texto.";
+  const userMessage = `${perfil}
 
 POSSIBILIDADE ESCOLHIDA PELO PROFESSOR
 Título: ${params.possibility.titulo}

@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { donoDoNegocio } from "@/lib/plano/dono-do-negocio";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { MENSAGEM_COTA_ESGOTADA, cotaDePlanos } from "@/lib/planos/cota";
 import {
@@ -30,7 +31,7 @@ export async function generatePlan(possibilityId: string) {
     where: { id: possibilityId },
     include: { round: { include: { diagnostic: true } }, plan: true },
   });
-  if (!possibility || possibility.round.diagnostic.userId !== user.id) redirect("/");
+  if (!possibility || donoDoNegocio(possibility) !== user.id) redirect("/");
   if (possibility.status === "REJEITADA") redirect("/");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
@@ -54,7 +55,7 @@ export async function generatePlan(possibilityId: string) {
   if (!mapaExecucao) {
     try {
       mapaExecucao = await generateMapaExecucaoOpenAI({
-        diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
+        diagnosticInput: possibility.round ? formatDiagnosticInput(possibility.round.diagnostic) : null,
         possibility: {
           titulo: possibility.titulo,
           comoFunciona: possibility.comoFunciona,
@@ -93,7 +94,7 @@ export async function generatePlan(possibilityId: string) {
       estagioInicial,
       horasPorSemana: tempoDisponivelHoras,
       orcamentoFaixa: investimentoFaixa,
-      diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
+      diagnosticInput: possibility.round ? formatDiagnosticInput(possibility.round.diagnostic) : null,
     });
   } catch (err) {
     console.error("Erro ao gerar o plano de ações", err);
@@ -108,8 +109,11 @@ export async function generatePlan(possibilityId: string) {
   // mais cara do app indefinidamente.
   if (plano.encaixe.classificacao === "conflito_explicito") {
     await db.possibility.update({ where: { id: possibility.id }, data: { status: "REJEITADA" } });
+    const aviso = encodeURIComponent(plano.encaixe.explicacao);
     redirect(
-      `/diagnostico/possibilidades/${possibility.roundId}?conflito=${encodeURIComponent(plano.encaixe.explicacao)}`,
+      possibility.roundId
+        ? `/diagnostico/possibilidades/${possibility.roundId}?conflito=${aviso}`
+        : `/planos?conflito=${aviso}`,
     );
   }
 

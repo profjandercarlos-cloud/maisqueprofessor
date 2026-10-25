@@ -10,6 +10,7 @@ export const PAPEL_LABELS: Record<PossibilityRole, string> = {
   COMO_QUER_TRABALHAR_E_CRESCER: "Como quer trabalhar e crescer", // não é mais gerado
   NAO_CONSIDERADA: "O negócio que você não tinha considerado",
   MAIOR_CONVERGENCIA_COMERCIAL: "Maior convergência comercial",
+  IDEIA_DO_CATALOGO: "Ideia de negócio favoritada",
 };
 
 export function PapelIcon({ papel, className }: { papel: PossibilityRole; className?: string }) {
@@ -54,6 +55,12 @@ export function PapelIcon({ papel, className }: { papel: PossibilityRole; classN
         <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" className={cls}>
           <circle cx="9" cy="9" r="1.8" fill="currentColor" stroke="none" />
           <path d="M9 1.5v3M9 13.5v3M16.5 9h-3M4.5 9h-3M14 4l-2.2 2.2M6.2 11.8L4 14M14 14l-2.2-2.2M6.2 6.2L4 4" />
+        </svg>
+      );
+    case "IDEIA_DO_CATALOGO":
+      return (
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" className={cls}>
+          <path d="M9 15.2s-5.6-3.4-5.6-7.5A3 3 0 019 6a3 3 0 015.6 1.7c0 4.1-5.6 7.5-5.6 7.5z" />
         </svg>
       );
   }

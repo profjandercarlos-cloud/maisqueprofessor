@@ -6,7 +6,7 @@ import { categoriaDaIdeia } from "@/lib/ideias/categorias";
 import { PLANOS_DOS_FAVORITOS_DISPONIVEIS } from "@/lib/negocios/favoritos";
 import { LIMITE_PLANOS, cotaDePlanos } from "@/lib/planos/cota";
 import { ProgressoPlano } from "@/components/progresso-plano";
-import { activatePlan } from "./actions";
+import { activatePlan, criarPlanoDeFavorito } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -17,8 +17,10 @@ const STATUS_LABELS: Record<string, string> = {
 
 const tituloSecao = "mb-1 font-serif text-lg font-medium tracking-tight text-petrol";
 
-export default async function PlanosPage() {
+export default async function PlanosPage({ searchParams }: PageProps<"/planos">) {
   const user = await requireActiveAccess();
+  const { conflito } = await searchParams;
+  const avisoConflito = typeof conflito === "string" && conflito ? conflito : null;
 
   const plans = await db.plan.findMany({
     where: { userId: user.id },
@@ -29,7 +31,7 @@ export default async function PlanosPage() {
 
   const planPossibilityIds = new Set(plans.map((p) => p.possibilityId));
 
-  const [availablePossibilities, favoritas] = await Promise.all([
+  const [availablePossibilities, favoritas, negociosDeFavoritos] = await Promise.all([
     db.possibility.findMany({
       where: {
         round: { diagnostic: { userId: user.id } },
@@ -40,15 +42,27 @@ export default async function PlanosPage() {
     }),
     db.ideiaFavorita.findMany({
       where: { userId: user.id, ideia: { status: "APROVADO" } },
-      include: { ideia: { select: { slug: true, nome: true, resumo: true, categoria: true } } },
+      include: { ideia: { select: { id: true, slug: true, nome: true, resumo: true, categoria: true } } },
       orderBy: { createdAt: "desc" },
     }),
+    db.possibility.findMany({
+      where: { userId: user.id, ideiaId: { not: null } },
+      select: { id: true, ideiaId: true, status: true, plan: { select: { id: true } } },
+    }),
   ]);
+  const negocioDaIdeia = new Map(negociosDeFavoritos.map((n) => [n.ideiaId, n]));
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="PLANOS DE EXECUÇÃO" />
       <h1 className="mb-5 font-serif text-2xl font-medium tracking-tight text-petrol">Planos de execução</h1>
+
+      {avisoConflito ? (
+        <p className="mb-5 rounded-lg bg-gold-soft px-4 py-3 text-[13.5px] leading-[1.55] text-ink">
+          <span className="font-semibold">Este negócio não coube nas suas condições agora. </span>
+          {avisoConflito}
+        </p>
+      ) : null}
 
       {/* Cota: todo plano criado conta, mesmo sem execução (a criação usa IA). */}
       <section className="mb-9 rounded-[var(--radius-app)] border border-gold bg-paper-raised p-5">
@@ -196,28 +210,54 @@ export default async function PlanosPage() {
             </p>
           ) : null}
           <div className="flex flex-col gap-2.5">
-            {favoritas.map(({ id, ideia }) => (
-              <div
-                key={id}
-                className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[14.5px] text-ink"
-              >
-                <span className="min-w-0">
-                  <a href={`/negocios/${ideia.slug}`} className="block truncate font-medium hover:underline">
-                    {ideia.nome}
+            {favoritas.map(({ id, ideia }) => {
+              const negocio = negocioDaIdeia.get(ideia.id);
+              const botao = "shrink-0 text-[13px] font-semibold text-petrol hover:underline";
+              let acao;
+              if (!PLANOS_DOS_FAVORITOS_DISPONIVEIS) {
+                acao = <span className="shrink-0 text-[13px] text-ink-muted">Em breve</span>;
+              } else if (negocio?.plan) {
+                acao = (
+                  <a href={`/planos/${negocio.plan.id}`} className={botao}>
+                    Ver plano →
                   </a>
-                  <span className="block truncate text-[12px] text-ink-muted">
-                    {categoriaDaIdeia(ideia.categoria)?.curto}
+                );
+              } else if (negocio?.status === "REJEITADA") {
+                acao = <span className="shrink-0 text-[13px] text-ink-muted">Não coube nas suas condições</span>;
+              } else if (negocio) {
+                acao = (
+                  <a href={`/adequacao/${negocio.id}`} className={botao}>
+                    Continuar →
+                  </a>
+                );
+              } else if (cota.esgotada) {
+                acao = <span className="shrink-0 text-[13px] text-ink-muted">Sem planos disponíveis</span>;
+              } else {
+                acao = (
+                  <form action={criarPlanoDeFavorito.bind(null, ideia.id)}>
+                    <SubmitButton pendingText="Abrindo..." className={botao}>
+                      Criar plano →
+                    </SubmitButton>
+                  </form>
+                );
+              }
+              return (
+                <div
+                  key={id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[14.5px] text-ink"
+                >
+                  <span className="min-w-0">
+                    <a href={`/negocios/${ideia.slug}`} className="block truncate font-medium hover:underline">
+                      {ideia.nome}
+                    </a>
+                    <span className="block truncate text-[12px] text-ink-muted">
+                      {categoriaDaIdeia(ideia.categoria)?.curto}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 text-[13px] text-ink-muted">
-                  {!PLANOS_DOS_FAVORITOS_DISPONIVEIS
-                    ? "Em breve"
-                    : cota.esgotada
-                      ? "Sem planos disponíveis"
-                      : "Criar plano →"}
-                </span>
-              </div>
-            ))}
+                  {acao}
+                </div>
+              );
+            })}
           </div>
         </>
       )}

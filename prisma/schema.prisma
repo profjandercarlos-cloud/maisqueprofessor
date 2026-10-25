@@ -36,6 +36,7 @@ model User {
   negociosDesbloqueados NegocioDesbloqueado[]
   negociosNaLista     NegocioNaLista[]
   ideiasFavoritas     IdeiaFavorita[]
+  negociosDeFavoritos Possibility[]
 
   @@map("users")
 }
@@ -128,6 +129,7 @@ enum PossibilityRole {
   COMO_QUER_TRABALHAR_E_CRESCER // não é mais gerado (substituído por MAIOR_CONVERGENCIA_COMERCIAL) — mantido no enum só porque remover valor de enum no Postgres exige recriar o tipo
   NAO_CONSIDERADA
   MAIOR_CONVERGENCIA_COMERCIAL
+  IDEIA_DO_CATALOGO // negócio que veio de uma ideia favoritada, não do gerador
 
   @@map("possibility_role")
 }
@@ -172,8 +174,12 @@ enum NivelLastro {
 
 model Possibility {
   id                   String             @id @default(uuid())
-  roundId              String
-  round                GenerationRound    @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  roundId              String? // null quando o negócio veio de uma ideia favoritada (ideiaId), não de uma rodada do gerador
+  round                GenerationRound?   @relation(fields: [roundId], references: [id], onDelete: Cascade)
+  userId               String? // dono, só nos negócios que vieram de um favorito (nos da rodada o dono é o do diagnóstico)
+  user                 User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ideiaId              String?
+  ideia                IdeiaNegocio?      @relation(fields: [ideiaId], references: [id], onDelete: Cascade)
   papel                PossibilityRole
   titulo               String
   subtitulo            String // frase (12-24 palavras) do card fechado — o que a pessoa faria, para quem e com qual finalidade
@@ -205,6 +211,7 @@ model Possibility {
   adequacaoResponse AdequacaoResponse?
   acoesEspecificacao AcaoEspecificacao[]
 
+  @@unique([userId, ideiaId]) // um negócio por favorito de cada pessoa (nulos não colidem)
   @@map("possibilities")
 }
 
@@ -989,7 +996,8 @@ model IdeiaNegocio {
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 
-  favoritos IdeiaFavorita[]
+  favoritos     IdeiaFavorita[]
+  possibilities Possibility[]
 
   @@map("ideias_negocio")
 }

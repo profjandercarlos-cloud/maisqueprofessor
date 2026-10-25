@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
+import { donoDoNegocio } from "@/lib/plano/dono-do-negocio";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
@@ -26,7 +27,7 @@ export default async function AdequacaoConcluidoPage({
     where: { id: possibilityId },
     include: { round: { include: { diagnostic: true } }, plan: true },
   });
-  if (!possibility || possibility.round.diagnostic.userId !== user.id) notFound();
+  if (!possibility || donoDoNegocio(possibility) !== user.id) notFound();
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
   const response = await getOrCreateAdequacaoResponse(possibilityId);

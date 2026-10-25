@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { db } from "@/lib/db";
+import { donoDoNegocio } from "@/lib/plano/dono-do-negocio";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
@@ -42,7 +43,7 @@ export default async function AdequacaoEntryPage({
     where: { id: possibilityId },
     include: { round: { include: { diagnostic: true } }, plan: true },
   });
-  if (!possibility || possibility.round.diagnostic.userId !== user.id) notFound();
+  if (!possibility || donoDoNegocio(possibility) !== user.id) notFound();
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
   const response = await getOrCreateAdequacaoResponse(possibilityId);
@@ -106,7 +107,7 @@ export default async function AdequacaoEntryPage({
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Por que combina com você
+            {possibility.ideiaId ? "Por que merece atenção" : "Por que combina com você"}
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.porQueCombinaComVoce}</div>
         </div>

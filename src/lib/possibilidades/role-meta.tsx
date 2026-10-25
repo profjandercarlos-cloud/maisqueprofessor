@@ -107,4 +107,19 @@ export const ROLE_META: Record<
       </svg>
     ),
   },
+  IDEIA_DO_CATALOGO: {
+    label: "Ideia de negócio que você favoritou",
+    subtitle: "Uma ideia do catálogo que você escolheu para tirar do papel.",
+    accentVar: "var(--role-2)",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+        <path
+          d="M10 17s-6-3.8-6-8.2A3.3 3.3 0 0110 6.7a3.3 3.3 0 016 2.1C16 13.2 10 17 10 17z"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
 };
