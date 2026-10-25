@@ -47,13 +47,13 @@ export default async function AjustarConjuntoPage({
       </h1>
       <p className="mb-6 text-[14.5px] text-ink-muted">
         Esta é sua única rodada de ajuste. Capriche nas respostas que vêm a seguir, elas moldam diretamente as
-        possibilidades novas. <strong className="font-semibold text-ink">Marque a caixa só nas que você quer
-        trocar.</strong> As que você deixar sem marcar continuam exatamente como estão.
+        negócios novos. <strong className="font-semibold text-ink">Marque a caixa só nos que você quer
+        trocar.</strong> Os que você deixar sem marcar continuam exatamente como estão.
       </p>
 
       {podeTrocar.length === 0 ? (
         <div className="rounded-lg border border-line bg-paper-raised px-4 py-3.5 text-[14px] text-ink-muted">
-          Todas as suas possibilidades atuais já têm um plano criado. Não há o que ajustar aqui.
+          Todos os seus negócios atuais já têm um plano criado. Não há o que ajustar aqui.
         </div>
       ) : (
         <form action={action} className="flex flex-col gap-4">
@@ -74,7 +74,7 @@ export default async function AjustarConjuntoPage({
                       <span className="text-center font-mono text-[9px] leading-tight tracking-[0.04em] text-ink-muted uppercase">
                         Trocar
                         <br />
-                        esta
+                        este
                       </span>
                     ) : null}
                   </span>
@@ -89,7 +89,7 @@ export default async function AjustarConjuntoPage({
                     <span className="block text-[13px] text-ink-muted">{p.subtitulo}</span>
                     {travada ? (
                       <span className="mt-1 block text-[12px] font-medium text-ink-muted">
-                        Já tem um plano criado. Mantida automaticamente.
+                        Já tem um plano criado. Mantido automaticamente.
                       </span>
                     ) : null}
                   </span>

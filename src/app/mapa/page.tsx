@@ -66,9 +66,8 @@ export default async function MapaPage() {
       <AppHeader progressLabel="MAPA DA JORNADA" />
       <h1 className="mb-2 font-serif text-2xl font-medium tracking-tight text-petrol">Como o RAS funciona</h1>
       <p className="mb-9 max-w-[60ch] text-[14.5px] text-ink-muted">
-        Um diagnóstico gera cinco possibilidades. Você pode seguir qualquer uma delas até um Plano
-        Personalizado de Transição — as outras quatro continuam disponíveis, mesmo depois de você avançar
-        numa.
+        Um diagnóstico gera cinco negócios personalizados. Você pode seguir qualquer um deles até um plano de
+        execução — os outros quatro continuam disponíveis, mesmo depois de você avançar em um.
       </p>
 
       {/* Diagnóstico — o tronco do mapa */}
@@ -101,8 +100,8 @@ export default async function MapaPage() {
       {!round ? (
         <div className="ml-8 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3.5 text-[13.5px] text-ink-muted">
           {diagnostic
-            ? "Suas cinco possibilidades ainda não foram geradas."
-            : "As cinco possibilidades aparecem aqui depois do diagnóstico."}
+            ? "Seus cinco negócios ainda não foram gerados."
+            : "Os cinco negócios aparecem aqui depois do diagnóstico."}
         </div>
       ) : (
         <div className="ml-8 flex flex-col gap-4">

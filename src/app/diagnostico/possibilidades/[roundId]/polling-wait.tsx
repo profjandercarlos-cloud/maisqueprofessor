@@ -21,11 +21,11 @@ const GIVE_UP_AFTER_MS = 15 * 60 * 1000;
 const STALE_AFTER_MS = 320 * 1000;
 
 const STATUS_TEXT: Record<string, string> = {
-  PENDENTE: "Gerando suas possibilidades…",
-  GERANDO: "Gerando as cinco possibilidades…",
+  PENDENTE: "Gerando seus negócios…",
+  GERANDO: "Gerando os cinco negócios…",
   VALIDANDO: "Revisando a seleção…",
-  CORRIGINDO: "Ajustando as possibilidades marcadas…",
-  PROCESSANDO: "Gerando suas possibilidades…",
+  CORRIGINDO: "Ajustando os negócios marcados…",
+  PROCESSANDO: "Gerando seus negócios…",
 };
 
 export function PollingWait({
@@ -85,9 +85,9 @@ export function PollingWait({
   return (
     <div className="flex flex-col items-center gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-6 py-16 text-center">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-petrol" />
-      <p className="text-[14px] font-semibold text-ink">{STATUS_TEXT[status] ?? "Gerando suas possibilidades…"}</p>
+      <p className="text-[14px] font-semibold text-ink">{STATUS_TEXT[status] ?? "Gerando seus negócios…"}</p>
       <p className="max-w-[38ch] text-[13px] text-ink-muted">
-        Isso pode levar alguns minutos. Estamos construindo e revisando cada possibilidade com
+        Isso pode levar alguns minutos. Estamos construindo e revisando cada negócio com
         cuidado antes de mostrar a você.
       </p>
     </div>

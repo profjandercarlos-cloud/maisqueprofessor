@@ -50,10 +50,10 @@ export default async function DiagnosticoConcluidoPage({
             Ainda não geradas
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
-            Suas possibilidades aparecem aqui depois do diagnóstico.
+            Seus negócios personalizados aparecem aqui depois do diagnóstico.
           </h1>
           <p className="mb-7 max-w-[46ch] text-[15.5px] text-ink-muted">
-            Termine seu diagnóstico pra gerar as cinco possibilidades personalizadas.
+            Termine seu diagnóstico pra gerar seus cinco negócios personalizados.
           </p>
           <a
             href={cta.href}
@@ -86,7 +86,7 @@ export default async function DiagnosticoConcluidoPage({
           Suas respostas foram salvas.
         </h1>
         <p className="mb-7 max-w-[46ch] text-[15.5px] text-ink-muted">
-          Agora vamos gerar suas cinco possibilidades a partir do que você respondeu.
+          Agora vamos gerar seus cinco negócios a partir do que você respondeu.
         </p>
         {error ? (
           <p className="mb-5 max-w-[46ch] text-[14px] text-role-3">{error}</p>
@@ -96,7 +96,7 @@ export default async function DiagnosticoConcluidoPage({
             pendingText="Preparando sua geração..."
             className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
-            Gerar minhas 5 possibilidades →
+            Gerar meus 5 negócios →
           </SubmitButton>
         </form>
       </div>

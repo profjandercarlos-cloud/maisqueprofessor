@@ -65,7 +65,7 @@ export default async function AdequacaoEntryPage({
           mesmo raciocínio em planos/[planId]/page.tsx. */}
       <div className="mb-[18px] flex flex-wrap items-center gap-2">
         <span className="inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-          Possibilidade aprovada
+          Negócio aprovado
         </span>
         <span
           className="inline-flex items-center gap-1.5 rounded-full py-[3px] pr-[9px] pl-2 font-mono text-[10px] tracking-[0.07em] uppercase"
@@ -100,7 +100,7 @@ export default async function AdequacaoEntryPage({
       <div className="mb-8 flex flex-col gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            A possibilidade
+            O negócio
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.comoFunciona}</div>
         </div>
@@ -118,7 +118,7 @@ export default async function AdequacaoEntryPage({
         </div>
         <div>
           <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Como validar sem construir tudo
+            Primeiro serviço para colocar no mercado
           </div>
           <div className="text-[14px] leading-[1.55] text-ink">{possibility.primeiraValidacao}</div>
         </div>
@@ -159,7 +159,7 @@ export default async function AdequacaoEntryPage({
       </div>
 
       <p className="mb-4 max-w-[50ch] text-[14.5px] text-ink-muted">
-        Se essa continua sendo a possibilidade que faz sentido pra você, só mais algumas perguntas para calibrar o
+        Se esse continua sendo o negócio que faz sentido pra você, só mais algumas perguntas para calibrar o
         plano ao seu tempo, aos seus recursos e ao seu jeito de acompanhar.
       </p>
 

@@ -152,8 +152,8 @@ export async function GET() {
     for (const round of diagnostic.rounds) {
       h3(
         round.roundNumber === 1
-          ? "Possibilidades geradas"
-          : `Possibilidades geradas — rodada de ajuste ${round.roundNumber - 1}`,
+          ? "Negócios gerados"
+          : `Negócios gerados — rodada de ajuste ${round.roundNumber - 1}`,
       );
       if (round.feedbackText) meta(`Seu feedback pro conjunto anterior: "${round.feedbackText}"`);
       for (const p of round.possibilities) {

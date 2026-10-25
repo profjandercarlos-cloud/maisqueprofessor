@@ -69,13 +69,13 @@ export default async function EspecificacaoPage({
           {ROLE_META[possibility.papel].label}
         </span>
       </div>
-      <p className="mb-1.5 font-mono text-[11px] tracking-[0.06em] text-ink-muted uppercase">Possibilidade escolhida</p>
+      <p className="mb-1.5 font-mono text-[11px] tracking-[0.06em] text-ink-muted uppercase">Negócio escolhido</p>
       <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
         {possibility.titulo}
       </h1>
       <p className="mb-6 text-[13.5px] font-medium text-ink-muted">{ESPECIFICACAO_TITULO}</p>
       <p className="mb-8 max-w-[60ch] text-[14.5px] text-ink-muted">
-        Antes de montar seu plano de várias semanas, vamos descobrir o recorte específico dessa possibilidade —
+        Antes de montar seu plano de várias semanas, vamos descobrir o recorte específico desse negócio —
         quem é seu público, qual problema exato atacar, como o contato acontece — através de contato real, rápido
         e em pequena escala. Cada ação cabe numa única sessão. O que acontecer aqui vai calibrar seu plano de
         verdade.
@@ -217,7 +217,7 @@ export default async function EspecificacaoPage({
           <form action={enviarFeedbackEspecificacao.bind(null, possibilityId)} className="flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-[13.5px]">
               <span className="font-semibold text-petrol">
-                Depois de realizar essas ações, sua vontade de explorar essa possibilidade:
+                Depois de realizar essas ações, sua vontade de explorar esse negócio:
               </span>
               <select name="vontadeContinuar" required className="rounded-md border border-line px-2 py-1.5">
                 <option value="">Selecione</option>

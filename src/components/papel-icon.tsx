@@ -8,7 +8,7 @@ export const PAPEL_LABELS: Record<PossibilityRole, string> = {
   PARA_ONDE_QUER_IR: "Pra onde você quer ir",
   O_QUE_PODE_MOBILIZAR: "O que pode mobilizar você",
   COMO_QUER_TRABALHAR_E_CRESCER: "Como quer trabalhar e crescer", // não é mais gerado
-  NAO_CONSIDERADA: "A possibilidade que você não tinha considerado",
+  NAO_CONSIDERADA: "O negócio que você não tinha considerado",
   MAIOR_CONVERGENCIA_COMERCIAL: "Maior convergência comercial",
 };
 

@@ -47,8 +47,9 @@ type PossibilityData = {
   horizonteRelevanciaFinanceira: HorizonteEconomico;
   baseNoHistorico: NivelLastro;
   destaque: boolean;
-  comoFunciona: string; // "A possibilidade" — já com exemplo concreto embutido
+  comoFunciona: string; // "O negócio" — descrição da empresa, já com exemplo concreto embutido
   porQueCombinaComVoce: string;
+  primeiraValidacao: string; // "Primeiro serviço para colocar no mercado" (oferta inicial + como entregar)
   pontoDeAtencao: string;
   dominioAplicacao: string | null;
   mecanismoComercialClasse: string | null;
@@ -99,7 +100,7 @@ function ComparisonTable({ possibilities }: { possibilities: PossibilityData[] }
       <table className="w-full min-w-[560px] border-collapse text-[12.5px]">
         <thead>
           <tr className="bg-badge-bg text-badge-text">
-            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Possibilidade</th>
+            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Negócio</th>
             <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Domínio</th>
             <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Mecanismo</th>
             <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Profundidade</th>
@@ -160,16 +161,6 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
     (a, b) => ROLE_ORDER.indexOf(a.papel) - ROLE_ORDER.indexOf(b.papel),
   );
   const [openId, setOpenId] = useState<string | null>(ordered[0]?.id ?? null);
-  const [expandedInfo, setExpandedInfo] = useState<Set<string>>(new Set());
-
-  function toggleInfo(id: string) {
-    setExpandedInfo((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
 
   return (
     <>
@@ -178,7 +169,6 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
         {ordered.map((p) => {
           const meta = ROLE_META[p.papel];
           const isOpen = openId === p.id;
-          const infoOpen = expandedInfo.has(p.id);
           const conexao = p.conexaoMundoReal as ConexaoMundoReal | null;
           const trajetoria = p.trajetoriaFinanceira as TrajetoriaFinanceira | null;
           const tempoDedicacao = p.tempoDedicacao as TempoDedicacao | null;
@@ -253,10 +243,26 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                   <div className="flex flex-col gap-4">
                     <div>
                       <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                        A possibilidade
+                        O negócio
                       </div>
                       <div className="text-[14px] leading-[1.55] text-ink">{p.comoFunciona}</div>
                     </div>
+
+                    <div>
+                      <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                        Por que combina com você
+                      </div>
+                      <div className="text-[14px] leading-[1.55] text-ink">{p.porQueCombinaComVoce}</div>
+                    </div>
+
+                    {p.primeiraValidacao ? (
+                      <div className="rounded-[10px] bg-gold-soft px-3.5 py-3">
+                        <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                          Primeiro serviço para colocar no mercado
+                        </div>
+                        <div className="text-[14px] leading-[1.55] text-ink">{p.primeiraValidacao}</div>
+                      </div>
+                    ) : null}
 
                     {conexao ? (
                       <div className="rounded-[10px] border border-line bg-badge-bg p-3.5">
@@ -286,7 +292,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     {trajetoria ? (
                       <div>
                         <div className="mb-2 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                          Geração de receita
+                          Evolução do negócio no tempo
                         </div>
                         <TrajetoriaBlock trajetoria={trajetoria} accentVar={meta.accentVar} />
                       </div>
@@ -315,46 +321,16 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     ) : null}
 
                     <div className="border-t border-line pt-3.5">
-                      <button
-                        type="button"
-                        onClick={() => toggleInfo(p.id)}
-                        aria-expanded={infoOpen}
-                        className="flex items-center gap-1.5 text-[12.5px] font-medium text-ink-muted hover:text-ink"
-                      >
-                        {infoOpen ? "Ocultar" : "Ver"} por que combina com você e o ponto de atenção
-                        <svg
-                          width="10"
-                          height="10"
-                          viewBox="0 0 10 10"
-                          fill="none"
-                          style={{ transform: infoOpen ? "rotate(180deg)" : undefined }}
-                        >
-                          <path d="M1.5 3.5L5 7l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                        </svg>
-                      </button>
-
-                      {infoOpen ? (
-                        <div className="mt-3 flex flex-col gap-3">
-                          <div>
-                            <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                              Por que combina com você
-                            </div>
-                            <div className="text-[14px] leading-[1.55] text-ink">{p.porQueCombinaComVoce}</div>
-                          </div>
-                          <div>
-                            <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-                              Ponto de atenção
-                            </div>
-                            <div className="text-[14px] leading-[1.55] text-ink">{p.pontoDeAtencao}</div>
-                          </div>
-                        </div>
-                      ) : null}
+                      <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
+                        Ponto de atenção
+                      </div>
+                      <div className="text-[14px] leading-[1.55] text-ink">{p.pontoDeAtencao}</div>
                     </div>
                   </div>
 
                   {p.status === "REJEITADA" ? (
                     <p className="mt-[18px] text-[13px] text-ink-muted">
-                      Essa possibilidade já foi tentada antes e não pôde ser aproveitada — escolha outra do
+                      Esse negócio já foi tentado antes e não pôde ser aproveitado — escolha outro do
                       conjunto.
                     </p>
                   ) : (
@@ -363,7 +339,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                         pendingText="Confirmando..."
                         className="mt-[18px] rounded-lg bg-gold px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
                       >
-                        Quero explorar esta possibilidade →
+                        Quero explorar este negócio →
                       </SubmitButton>
                     </form>
                   )}

@@ -30,7 +30,7 @@ export const ROLE_META: Record<
   },
   PARA_ONDE_QUER_IR: {
     label: "Para onde você quer ir",
-    subtitle: "Qual possibilidade leva melhor à direção que você declarou.",
+    subtitle: "Qual negócio leva melhor à direção que você declarou.",
     accentVar: "var(--role-2)",
     icon: (
       <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
@@ -76,7 +76,7 @@ export const ROLE_META: Record<
     ),
   },
   NAO_CONSIDERADA: {
-    label: "Uma possibilidade que talvez não tenha considerado",
+    label: "Um negócio que talvez não tenha considerado",
     subtitle: "Que contexto novo é sustentado por indícios reais do seu perfil.",
     accentVar: "var(--role-5)",
     icon: (

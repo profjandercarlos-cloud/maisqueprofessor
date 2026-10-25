@@ -62,7 +62,7 @@ export default async function AdequacaoConcluidoPage({
       <AppHeader progressLabel="SEU PLANO JÁ PODE SER CALIBRADO" />
 
       <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-        Possibilidade aprovada
+        Negócio aprovado
       </span>
       <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
         {possibility.titulo}
@@ -71,15 +71,15 @@ export default async function AdequacaoConcluidoPage({
       {semRecorteViavel ? (
         <>
           <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
-            Depois de Sua Rota Específica, sua vontade de continuar com esta possibilidade caiu. Em vez de forçar
-            um plano em cima de um recorte que não convenceu, vale mais a pena testar outra das suas 5
-            possibilidades.
+            Depois de Sua Rota Específica, sua vontade de continuar com este negócio caiu. Em vez de forçar
+            um plano em cima de um recorte que não convenceu, vale mais a pena testar outro dos seus 5
+            negócios.
           </p>
           <a
             href={`/diagnostico/possibilidades/${possibility.roundId}`}
             className="inline-block rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
-            Ver minhas outras possibilidades →
+            Ver meus outros negócios →
           </a>
         </>
       ) : (

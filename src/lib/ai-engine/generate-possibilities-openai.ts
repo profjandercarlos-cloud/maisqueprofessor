@@ -89,7 +89,7 @@ export type GeneratedPossibility = {
   comoFunciona: string; // bloco 1 — "A possibilidade" (já com exemplo concreto embutido)
   comoGerarReceita: string; // resumo interno curto — usado por Mapa de Execução/Etapa de Especificação/Plano
   porQueCombinaComVoce: string;
-  primeiraValidacao: string; // resumo interno curto ("como validar")
+  primeiraValidacao: string; // "primeiro serviço" (oferta inicial + como entregar) — mostrado ao professor
   pontoDeAtencao: string;
   dominioAplicacao: string;
   mecanismoComercialClasse: string;
@@ -590,7 +590,8 @@ export async function generatePossibilitiesOpenAI(context: GenerationContext): P
     }
 
     checkWordCount(`${p.papel}:como_gerar_receita`, p.como_gerar_receita, 30, 45, 15);
-    checkWordCount(`${p.papel}:como_validar`, p.como_validar, 25, 40, 15);
+    // como_validar é o "primeiro serviço" (mostrado ao professor): oferta inicial + como entregar.
+    checkWordCount(`${p.papel}:como_validar`, p.como_validar, 40, 70, 20);
     checkWordCount(`${p.papel}:por_que_combina_com_voce`, p.por_que_combina_com_voce, 25, 45, 15);
   }
 

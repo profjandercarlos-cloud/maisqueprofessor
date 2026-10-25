@@ -142,7 +142,7 @@ export default async function ConfiguracoesPage({
         <p className={fieldLabel}>Seus dados</p>
         <p className="mb-3 text-[13px] text-ink-muted">
           Pela LGPD, você pode pedir uma cópia de tudo que guardamos sobre você. Este botão gera um
-          PDF com seu diagnóstico, as possibilidades geradas, o relatório e o plano de execução,
+          PDF com seu diagnóstico, os negócios gerados, o relatório e o plano de execução,
           incluindo o progresso semana a semana e os check-ins registrados.
         </p>
         <a

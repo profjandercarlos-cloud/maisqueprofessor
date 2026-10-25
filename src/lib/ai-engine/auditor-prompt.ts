@@ -66,6 +66,10 @@ Verifique se \`dominio_aplicacao\`, \`territorio\` ou \`publico\` cita um setor,
 
 Este é o erro mais persistente do produto — verifique com atenção redobrada. Compare \`territorio\` e \`entrega\` de cada possibilidade com o texto literal das respostas de situação real (\`situacao-real-1\`, \`situacao-real-2\` e qualquer outra do mesmo tipo) e também com respostas de auto-descrição de atividade já exercida (como \`ajuda-procurada\`). Rejeite quando a possibilidade for essencialmente a mesma tarefa descrita — o mesmo tipo de ação, aplicada ao mesmo tipo de problema — apenas com o comprador trocado de "a própria pessoa" para "um cliente pagante", mesmo que embalada como produto ou ferramenta em vez de serviço direto. O teste: descrevendo a possibilidade sem mencionar de onde veio a evidência, ela parece a mesma tarefa, ou uma aplicação genuinamente diferente do mesmo raciocínio, aplicada a um problema de outra natureza? Atenção redobrada no papel \`onde_ja_e_forte\`.
 
+## C14. A possibilidade está apresentada como um negócio?
+
+Cada possibilidade precisa ser um **negócio que a pessoa pode criar**, e não uma tarefa, uma entrega avulsa ou um documento. Verifique, de forma objetiva: o \`titulo\` é o nome de um negócio com forma de empresa (consultoria, escola, estúdio, agência, editora, plataforma, central etc., seguido do foco), com cerca de 3 a 8 palavras; o \`titulo\` NÃO é o nome de uma entrega ("Parecer…", "Relatório…"), um verbo ("Analisar…") nem uma segunda pessoa; a \`a_possibilidade\` descreve o negócio em terceira pessoa e NÃO abre com "Você pode"; o \`como_validar\` traz uma oferta inicial concreta (o que se vende, a quem, em escopo pequeno) e não apenas "validar a ideia". Rejeite (substitua) só quando a falha for clara, e cite este critério no motivo, dizendo qual das quatro condições falhou. Não rejeite por estilo ou preferência de redação.
+
 ## C-FINAL. JSON obrigatório do auditor
 
 Retorne exclusivamente este JSON, sem texto fora dele:
@@ -75,7 +79,7 @@ Retorne exclusivamente este JSON, sem texto fora dele:
   "manter": [1, 2, 3],
   "substituir": [4, 5],
   "motivo": [
-    { "ordem": 4, "motivos": ["string — motivo objetivo e específico, citando qual critério (C1 a C13) foi violado e por quê"] },
+    { "ordem": 4, "motivos": ["string — motivo objetivo e específico, citando qual critério (C1 a C14) foi violado e por quê"] },
     { "ordem": 5, "motivos": ["string"] }
   ]
 }

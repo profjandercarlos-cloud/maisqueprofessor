@@ -41,7 +41,7 @@ export default async function PossibilitiesReviewPage({
             Preparando seu diagnóstico
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
-            Cinco possibilidades a caminho.
+            Cinco negócios a caminho.
           </h1>
           <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
             Estamos analisando suas respostas com cuidado. Não feche esta página, ela vai se
@@ -59,7 +59,7 @@ export default async function PossibilitiesReviewPage({
         <AppHeader progressLabel="ETAPA 03 / 10" />
         <div className="mb-11">
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
-            Não conseguimos gerar suas possibilidades agora.
+            Não conseguimos gerar seus negócios agora.
           </h1>
           <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
             Algo deu errado durante a geração. Você pode tentar novamente, nada do que você
@@ -88,13 +88,13 @@ export default async function PossibilitiesReviewPage({
           Seu diagnóstico está pronto
         </span>
         <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
-          Cinco possibilidades.
+          Cinco negócios.
           <br />
-          Uma delas <em className="text-gold not-italic italic">é sua</em>.
+          Um deles <em className="text-gold not-italic italic">é seu</em>.
         </h1>
         <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
-          Cada uma nasce de um ângulo diferente do que você respondeu, não são cinco variações da
-          mesma ideia. Abra e veja o que reconhece em você.
+          Cada um nasce de um ângulo diferente do que você respondeu, não são cinco variações do
+          mesmo negócio. Abra e veja o que reconhece em você.
         </p>
       </div>
 
@@ -114,8 +114,8 @@ export default async function PossibilitiesReviewPage({
             <path d="M8 7v4.5M8 4.8v.1" stroke="var(--role-3)" strokeWidth="1.4" strokeLinecap="round" />
           </svg>
           <span>
-            <strong className="font-semibold">Essa possibilidade não coube nas condições que você informou:</strong>{" "}
-            {conflito} Escolha outra possibilidade do conjunto abaixo.
+            <strong className="font-semibold">Esse negócio não coube nas condições que você informou:</strong>{" "}
+            {conflito} Escolha outro negócio do conjunto abaixo.
           </span>
         </div>
       ) : null}
@@ -129,8 +129,8 @@ export default async function PossibilitiesReviewPage({
                 <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
               <span>
-                Isto não é um ranking. Observe o que desperta reconhecimento em cada uma e reaja com
-                sinceridade, isso ajuda a refinar as próximas.
+                Isto não é um ranking. Observe o que desperta reconhecimento em cada um e reaja com
+                sinceridade, isso ajuda a refinar os próximos.
               </span>
             </div>
           ) : null}
@@ -165,16 +165,16 @@ export default async function PossibilitiesReviewPage({
 
       {alreadyApproved ? (
         <footer className="mt-9 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px]">
-          <p className="text-[14px] font-semibold text-ink">Possibilidade aprovada.</p>
+          <p className="text-[14px] font-semibold text-ink">Negócio aprovado.</p>
           <p className="text-[12.5px] text-ink-muted">Vamos seguir para o próximo passo.</p>
         </footer>
       ) : canAdjust ? (
         <footer className="mt-9 flex flex-col items-start justify-between gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px] sm:flex-row sm:items-center">
           <div>
-            <p className="text-[14px] font-semibold text-ink">Quer ajustar alguma dessas possibilidades?</p>
+            <p className="text-[14px] font-semibold text-ink">Quer ajustar algum desses negócios?</p>
             <p className="text-[12.5px] text-ink-muted">
-              Você tem uma rodada de ajuste. Escolha quais possibilidades quer manter e quais possibilidades quer
-              trocar, e responda algumas perguntas extras para essa troca ser mais certeira.
+              Você tem uma rodada de ajuste. Escolha quais negócios quer manter e quais quer trocar, e responda
+              algumas perguntas extras para essa troca ser mais certeira.
             </p>
           </div>
           <Link
@@ -186,9 +186,9 @@ export default async function PossibilitiesReviewPage({
         </footer>
       ) : (
         <footer className="mt-9 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px]">
-          <p className="text-[14px] font-semibold text-ink">Ainda nenhuma delas é a sua?</p>
+          <p className="text-[14px] font-semibold text-ink">Ainda nenhum deles é o seu?</p>
           <p className="text-[12.5px] text-ink-muted">
-            Sua rodada de ajuste já foi usada. Se nenhuma das cinco atuais fizer sentido, entre em contato pelo
+            Sua rodada de ajuste já foi usada. Se nenhum dos cinco atuais fizer sentido, entre em contato pelo
             suporte.
           </p>
         </footer>
