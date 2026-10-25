@@ -2,15 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { timingSafeStringEqual } from "@/lib/timing-safe-equal";
-import {
-  sendAccessExpiringReminder,
-  sendCheckinReminder,
-  sendEscalationMessage,
-  sendUntouchedWeekReminder,
-} from "@/lib/email/notifications";
+import { sendAccessExpiringReminder } from "@/lib/email/notifications";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const ESCALATION_AFTER_DAYS = 28; // 4 semanas sem check-in
 
 function isAuthorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
@@ -19,6 +13,8 @@ function isAuthorized(request: NextRequest): boolean {
   return authHeader !== null && timingSafeStringEqual(authHeader, `Bearer ${secret}`);
 }
 
+// Rotina diária. Desde out/2026 NÃO há mais check-in nem lembretes de semana: sobram
+// só o bloqueio de acesso vencido e o aviso de vencimento próximo.
 export async function GET(request: NextRequest) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
@@ -28,9 +24,6 @@ export async function GET(request: NextRequest) {
   const results = {
     accessExpiring: 0,
     accessBlocked: 0,
-    checkinReminders: 0,
-    escalations: 0,
-    untouchedWeekReminders: 0,
   };
 
   // 0) "Heartbeat" — o projeto Supabase está no plano gratuito, que pausa o
@@ -62,71 +55,6 @@ export async function GET(request: NextRequest) {
       if (!user.notifyEmail) continue;
       await sendAccessExpiringReminder({ to: user.email, name: user.name, daysRemaining: daysAhead });
       results.accessExpiring++;
-    }
-  }
-
-  // 3) Lembretes e escalada de check-in — só planos ativos, com acesso válido.
-  const activePlans = await db.plan.findMany({
-    where: { status: "ATIVO", user: { accessRevokedAt: null } },
-    include: {
-      user: true,
-      weeks: {
-        where: { status: "PENDENTE" },
-        orderBy: { weekNumber: "asc" },
-        take: 1,
-        include: { tasks: true },
-      },
-    },
-  });
-
-  for (const plan of activePlans) {
-    const currentWeek = plan.weeks[0];
-    if (!currentWeek || !plan.user.notifyEmail) continue;
-
-    const daysOverdue = Math.floor((now.getTime() - currentWeek.scheduledDate.getTime()) / DAY_MS);
-    if (daysOverdue < 0) continue; // ainda não chegou a data desta semana
-
-    if (daysOverdue >= ESCALATION_AFTER_DAYS) {
-      if ((daysOverdue - ESCALATION_AFTER_DAYS) % 7 === 0) {
-        await sendEscalationMessage({
-          to: plan.user.email,
-          name: plan.user.name,
-          planId: plan.id,
-          weeksWithoutCheckin: Math.floor(daysOverdue / 7),
-        });
-        results.escalations++;
-      }
-    } else if (daysOverdue % 7 === 0) {
-      await sendCheckinReminder({
-        to: plan.user.email,
-        name: plan.user.name,
-        planId: plan.id,
-        weekNumber: currentWeek.weekNumber,
-      });
-      results.checkinReminders++;
-    } else {
-      // Aviso antecipado — 3 dias antes do dia de check-in da pessoa
-      // (plan.diaCheckin, não a data específica da semana, que pode ter
-      // deslizado por recalibração), disparado só se ninguém mexeu em
-      // nenhuma tarefa ainda. Maior risco de abandono é a pessoa chegar no
-      // dia do check-in sem ter começado nada.
-      const daysUntilCheckin = (plan.diaCheckin - now.getDay() + 7) % 7;
-      const weekUntouched = currentWeek.tasks.every((t) => t.status === "PENDENTE");
-      // Nível "Mínimo" de acompanhamento (adequação da execução) pediu
-      // explicitamente "nenhum lembrete adicional" além do check-in em si —
-      // esse aviso antecipado de 3 dias antes é o único que se enquadra
-      // como "adicional" (o de atraso e a escalada fazem parte do próprio
-      // ritual de check-in, então continuam valendo pra todos os níveis).
-      if (plan.acompanhamento === "MINIMO") continue;
-      if (daysUntilCheckin === 3 && weekUntouched) {
-        await sendUntouchedWeekReminder({
-          to: plan.user.email,
-          name: plan.user.name,
-          planId: plan.id,
-          weekNumber: currentWeek.weekNumber,
-        });
-        results.untouchedWeekReminders++;
-      }
     }
   }
 

@@ -2,7 +2,6 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { tipoDeAcesso } from "@/lib/auth/acesso";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -17,42 +16,12 @@ export async function updateSettings(formData: FormData) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
+  // Só o nome é editável: dia de check-in e canais de notificação saíram junto com o
+  // check-in (as colunas continuam no banco, sem uso).
   const name = String(formData.get("name") ?? "").trim();
-
-  // Conta gratuita não tem plano nem check-in: a tela nem mostra esses campos,
-  // então só o nome é salvo (decidido aqui no servidor, não por campo da tela).
-  const dbUser = await db.user.findUnique({
-    where: { id: user.id },
-    select: { accessExpiresAt: true, accessRevokedAt: true, isAdmin: true },
-  });
-  if (tipoDeAcesso(dbUser) === "gratuito") {
-    if (!name) fail("O nome não pode ficar em branco.");
-    await db.user.update({ where: { id: user.id }, data: { name } });
-    redirect("/configuracoes?saved=1");
-  }
-
-  const checkinWeekday = Number(formData.get("checkinWeekday"));
-  const notifyEmail = formData.get("notifyEmail") === "on";
-  const notifyPush = formData.get("notifyPush") === "on";
-
   if (!name) fail("O nome não pode ficar em branco.");
-  if (Number.isNaN(checkinWeekday) || checkinWeekday < 0 || checkinWeekday > 6) {
-    fail("Selecione um dia da semana válido.");
-  }
-  if (!notifyEmail && !notifyPush) {
-    fail("Pelo menos um canal de notificação precisa ficar ativo.");
-  }
 
-  await db.user.update({
-    where: { id: user.id },
-    data: { name, checkinWeekday, notifyEmail, notifyPush },
-  });
-
-  // Mantém o plano ativo em sincronia com o dia de check-in global.
-  await db.plan.updateMany({
-    where: { userId: user.id, status: "ATIVO" },
-    data: { diaCheckin: checkinWeekday },
-  });
+  await db.user.update({ where: { id: user.id }, data: { name } });
 
   redirect("/configuracoes?saved=1");
 }

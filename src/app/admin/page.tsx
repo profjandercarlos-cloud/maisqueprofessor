@@ -33,7 +33,6 @@ export default async function AdminDashboardPage({
     diagnosticsCompleted,
     plansActive,
     plansPaused,
-    lateWeeks,
     approvedNoUser,
     recentTransactions,
     caminhosRendaPendentes,
@@ -50,7 +49,6 @@ export default async function AdminDashboardPage({
     db.diagnostic.count({ where: { status: "CONCLUIDO" } }),
     db.plan.count({ where: { status: "ATIVO" } }),
     db.plan.count({ where: { status: "PAUSADO" } }),
-    db.planWeek.count({ where: { status: "PENDENTE", scheduledDate: { lt: now }, plan: { status: "ATIVO" } } }),
     db.hotmartTransaction.findMany({
       where: { eventType: { in: ["PURCHASE_APPROVED", "PURCHASE_COMPLETE"] }, userId: null },
       orderBy: { processedAt: "desc" },
@@ -133,15 +131,6 @@ export default async function AdminDashboardPage({
           </a>
         </div>
       </section>
-
-      {lateWeeks > 0 ? (
-        <section className="rounded-[var(--radius-app)] border border-gold bg-gold-soft p-4">
-          <p className="text-[14px] text-ink">
-            <strong>{lateWeeks}</strong> semana(s) de plano ativo estão com check-in atrasado
-            (passou a data prevista e ninguém respondeu ainda).
-          </p>
-        </section>
-      ) : null}
 
       {approvedNoUser.length > 0 ? (
         <section>

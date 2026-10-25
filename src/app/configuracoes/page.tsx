@@ -6,7 +6,6 @@ import { tipoDeAcesso } from "@/lib/auth/acesso";
 import { formatDate } from "@/lib/format-date";
 import { montarLinkCompra } from "@/lib/hotmart/checkout";
 import { NOME_PLANO_PAGO } from "@/lib/hotmart/oferta";
-import { WEEKDAY_LABELS } from "@/lib/plano/weekdays";
 import { updateSettings } from "./actions";
 import { DeleteAccountForm } from "./delete-account-form";
 import { StepErrorBanner } from "@/components/step-error-banner";
@@ -41,7 +40,7 @@ export default async function ConfiguracoesPage({
         ? `${NOME_PLANO_PAGO} ativo até ${formatDate(dbUser.accessExpiresAt)}`
         : `${NOME_PLANO_PAGO} ativo`
       : tipoAcesso === "gratuito"
-        ? `Conta gratuita. Você pode explorar as ideias de negócios e favoritar as que gostar. O ${NOME_PLANO_PAGO} libera o questionário, o plano personalizado de execução, a agenda e o acompanhamento.`
+        ? `Conta gratuita. Você pode explorar as ideias de negócios e favoritar as que gostar. O ${NOME_PLANO_PAGO} libera o questionário, os planos de execução e o acompanhamento do seu progresso.`
         : dbUser.accessRevokedAt
           ? "Seu acesso foi revogado."
           : `Seu ${NOME_PLANO_PAGO} expirou. Renove sua compra para continuar.`;
@@ -72,49 +71,6 @@ export default async function ConfiguracoesPage({
           <p className="text-[14.5px] text-ink-muted">{dbUser.email}</p>
         </div>
 
-        {/* Dia do check-in e canais de notificação só fazem sentido para quem tem plano
-            de execução. Conta gratuita não vê estes campos (e updateSettings os ignora). */}
-        {tipoAcesso !== "gratuito" ? (
-          <>
-        <div>
-          <label htmlFor="checkinWeekday" className={fieldLabel}>
-            Dia da semana do check-in
-          </label>
-          <select
-            id="checkinWeekday"
-            name="checkinWeekday"
-            defaultValue={dbUser.checkinWeekday ?? ""}
-            required
-            className={inputClass}
-          >
-            <option value="" disabled>
-              Selecione um dia
-            </option>
-            {WEEKDAY_LABELS.map((label, index) => (
-              <option key={label} value={index}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <p className={fieldLabel}>Canal de notificação</p>
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center gap-2 text-[14.5px] text-ink">
-              <input type="checkbox" name="notifyEmail" defaultChecked={dbUser.notifyEmail} className="accent-petrol" />
-              E-mail
-            </label>
-            <label className="flex items-center gap-2 text-[14.5px] text-ink">
-              <input type="checkbox" name="notifyPush" defaultChecked={dbUser.notifyPush} className="accent-petrol" />
-              Notificação push
-            </label>
-          </div>
-          <p className="mt-1 text-[12.5px] text-ink-muted">Pelo menos um precisa ficar ativo.</p>
-        </div>
-          </>
-        ) : null}
-
         {error ? <StepErrorBanner error={error} /> : null}
 
         <SubmitButton
@@ -143,7 +99,7 @@ export default async function ConfiguracoesPage({
         <p className="mb-3 text-[13px] text-ink-muted">
           Pela LGPD, você pode pedir uma cópia de tudo que guardamos sobre você. Este botão gera um
           PDF com seu diagnóstico, os negócios gerados, o relatório e o plano de execução,
-          incluindo o progresso semana a semana e os check-ins registrados.
+          incluindo o progresso de cada ação e o checklist.
         </p>
         <a
           href="/api/conta/exportar"

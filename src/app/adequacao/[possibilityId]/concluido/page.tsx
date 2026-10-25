@@ -5,11 +5,11 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
+import { cotaDePlanos } from "@/lib/planos/cota";
 import { generatePlan } from "./actions";
 
-// Ver nota em diagnostico/concluido/page.tsx — sem isto a Vercel mata a
-// função aos 10s, e gerar o Plano Personalizado de Transição leva bem mais que isso.
-// 300s — teto do plano Vercel Pro (era 120, ajustado pro Hobby).
+// Gerar o plano chama a IA e leva bem mais que os 10s padrão da Vercel.
+// 300s é o teto do plano Vercel Pro.
 export const maxDuration = 300;
 
 export default async function AdequacaoConcluidoPage({
@@ -35,73 +35,40 @@ export default async function AdequacaoConcluidoPage({
     redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
   }
 
-  // Se as ações de especificação já existem mas ainda faltam respostas (ou
-  // o feedback geral), manda direto pra lá em vez de esperar o clique em
-  // "Continuar minha rota" pra só então perceber isso — quem sai da tela
-  // de Sua Rota Específica e volta por aqui depois não devia precisar de
-  // um clique a mais só pra ser redirecionado de novo. Não gera nada aqui
-  // (isso só acontece no clique, na 1ª vez) — é só leitura do que já existe.
-  const acoesExistentes = await db.acaoEspecificacao.findMany({ where: { possibilityId } });
-  const acoesIncompletas = acoesExistentes.some((a) => a.respondidoEm === null);
-  if (acoesExistentes.length > 0) {
-    if (acoesIncompletas || !possibility.feedbackEspecificacao) {
-      redirect(`/adequacao/${possibilityId}/especificacao`);
-    }
-  }
-
-  // Vontade de continuar caiu depois da Etapa de Especificação — em vez de
-  // insistir na mesma possibilidade sem um recorte que sustente um plano,
-  // recomenda tentar outra das 5 possibilidades ainda disponíveis.
-  const feedback = possibility.feedbackEspecificacao as { vontadeContinuar?: string } | null;
-  const semRecorteViavel = acoesExistentes.length > 0 && !acoesIncompletas && feedback?.vontadeContinuar === "diminuiu";
-
+  const cota = cotaDePlanos(await db.plan.count({ where: { userId: user.id } }));
   const action = generatePlan.bind(null, possibilityId);
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="SEU PLANO JÁ PODE SER CALIBRADO" />
+      <AppHeader progressLabel="CRIAR PLANO DE EXECUÇÃO" />
 
       <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-        Negócio aprovado
+        Tudo certo
       </span>
       <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
         {possibility.titulo}
       </h1>
+      <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
+        Com as suas respostas, vamos montar o seu plano de execução: as ações essenciais, na ordem certa, para você
+        colocar o primeiro serviço deste negócio no mercado. Cada ação traz um checklist e as orientações para
+        executá-la, no seu ritmo.
+      </p>
 
-      {semRecorteViavel ? (
-        <>
-          <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
-            Depois de Sua Rota Específica, sua vontade de continuar com este negócio caiu. Em vez de forçar
-            um plano em cima de um recorte que não convenceu, vale mais a pena testar outro dos seus 5
-            negócios.
-          </p>
-          <a
-            href={`/diagnostico/possibilidades/${possibility.roundId}`}
-            className="inline-block rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
-          >
-            Ver meus outros negócios →
-          </a>
-        </>
-      ) : (
-        <>
-          <p className="mb-8 max-w-[55ch] text-[14.5px] text-ink-muted">
-            Antes do seu Plano Personalizado de Transição, você vai passar por Sua Rota Específica — ações
-            rápidas e reais que confirmam quem é seu público, qual problema específico atacar e como o contato
-            acontece, antes do plano existir. A duração e a profundidade se ajustam a você, produzindo
-            evidências reais sem ultrapassar sua disponibilidade.
-          </p>
-
-          <form action={action}>
-            {error ? <p className="mb-4 text-sm text-role-3">{error}</p> : null}
-            <SubmitButton
-              pendingText="Preparando... isso pode levar até 1 minuto, não recarregue a página"
-              className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
-            >
-              Continuar minha rota →
-            </SubmitButton>
-          </form>
-        </>
-      )}
+      <form action={action}>
+        {error ? <p className="mb-4 text-sm text-role-3">{error}</p> : null}
+        <SubmitButton
+          disabled={cota.esgotada}
+          pendingText="Montando seu plano... isso pode levar até 1 minuto, não recarregue a página"
+          className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+        >
+          Criar meu plano de execução →
+        </SubmitButton>
+        <p className="mt-3 text-[12.5px] text-ink-muted">
+          {cota.esgotada
+            ? "Você já usou os 5 planos de execução."
+            : `Este plano usa 1 dos seus ${cota.limite} planos (${cota.usados} de ${cota.limite} usados).`}
+        </p>
+      </form>
     </div>
   );
 }

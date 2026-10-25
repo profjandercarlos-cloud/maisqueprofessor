@@ -1,45 +1,26 @@
 import { AppHeader } from "@/components/app-header";
-import { PlanMural } from "@/components/plan-mural";
+import { PapelIcon } from "@/components/papel-icon";
+import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
+import { resumoDasAcoes } from "@/lib/plano/acoes";
+import { cotaDePlanos } from "@/lib/planos/cota";
 import { LogoutButton } from "./logout-button";
-import { PapelIcon } from "@/components/papel-icon";
-import { Prisma } from "@/generated/prisma/client";
-import type { PlanTask } from "@/generated/prisma/client";
-import { ESPECIFICACAO_TITULO } from "@/lib/especificacao/titulo";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function Home() {
   const user = await requireActiveAccess({ gratuitoVaiPara: "/negocios" });
-  const query = await searchParams;
-  const expandedTaskId = typeof query.parcial === "string" ? query.parcial : undefined;
 
-  const [diagnostic, activePlan, dbUser, pendingEspecificacaoPossibility] = await Promise.all([
+  const [diagnostic, activePlan, dbUser, totalPlanos] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
     db.plan.findFirst({
       where: { userId: user.id, status: "ATIVO" },
-      include: { possibility: true, acoes: { orderBy: { sequencia: "asc" } } },
+      include: { possibility: true, acoes: { orderBy: { sequencia: "asc" }, include: { itens: { select: { feito: true } } } } },
     }),
     db.user.findUnique({ where: { id: user.id }, select: { isAdmin: true, name: true } }),
-    loadPendingEspecificacaoPossibility(user.id),
+    db.plan.count({ where: { userId: user.id } }),
   ]);
-
-  let currentWeek = null as Awaited<ReturnType<typeof loadCurrentWeek>> | null;
-  let poolTasks: Awaited<ReturnType<typeof loadPoolTasks>> = [];
-  let upcomingPlanTasks: PlanTask[] = [];
-  if (activePlan) {
-    [currentWeek, poolTasks] = await Promise.all([
-      loadCurrentWeek(activePlan.id),
-      loadPoolTasks(activePlan.id),
-    ]);
-    if (currentWeek) {
-      upcomingPlanTasks = await loadUpcomingPlanTasks(activePlan.id, currentWeek.weekNumber);
-    }
-  }
+  const cota = cotaDePlanos(totalPlanos);
 
   const diagnosticCta = !diagnostic
     ? { label: "Começar diagnóstico", href: `/diagnostico/${SHARED_STEPS[0].slug}` }
@@ -48,7 +29,12 @@ export default async function Home({
           label: "Continuar diagnóstico",
           href: `/diagnostico/${getResumeSlug(diagnostic.intention, diagnostic.rotaProfissional, diagnostic.answers as Record<string, unknown>)}`,
         }
-      : { label: "Ver diagnóstico concluído", href: "/diagnostico/concluido" };
+      : { label: "Ver meus negócios", href: "/diagnostico/concluido" };
+
+  const acoes = activePlan?.acoes ?? [];
+  const planoNovo = acoes.length > 0 && acoes.some((a) => a.itens.length > 0);
+  const resumo = resumoDasAcoes(acoes);
+  const proxima = resumo.proxima !== null ? acoes.find((a) => a.sequencia === resumo.proxima) : undefined;
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
@@ -66,67 +52,69 @@ export default async function Home({
         <LogoutButton />
       </div>
 
-      {pendingEspecificacaoPossibility ? (
-        <div className="mb-8 rounded-[var(--radius-app)] border border-gold bg-gold-soft p-5 shadow-[var(--shadow)]">
-          <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
-            {ESPECIFICACAO_TITULO} pendente
-          </span>
-          <p className="mb-2 font-serif text-lg font-medium text-ink">{pendingEspecificacaoPossibility.titulo}</p>
-          <p className="mb-3 text-[13.5px] text-ink-muted">
-            Faltam respostas em {ESPECIFICACAO_TITULO} — elas calibram o seu Plano Personalizado de Transição.
-          </p>
-          <a
-            href={`/adequacao/${pendingEspecificacaoPossibility.id}/especificacao`}
-            className="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
-          >
-            Continuar minha rota →
-          </a>
-        </div>
-      ) : null}
-
-      {activePlan && currentWeek ? (
+      {activePlan && planoNovo ? (
         <>
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
             <PapelIcon papel={activePlan.possibility.papel} className="h-[15px] w-[15px] shrink-0 text-petrol" />
-            <span className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-              Plano ativo
-            </span>
-            <a
-              href={`/planos/${activePlan.id}`}
-              className="text-[13px] font-semibold text-petrol hover:underline"
-            >
+            <span className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">Plano ativo</span>
+            <a href={`/planos/${activePlan.id}`} className="text-[13px] font-semibold text-petrol hover:underline">
               {activePlan.possibility.titulo} →
             </a>
           </div>
-          <PlanMural
-            planId={activePlan.id}
-            week={currentWeek}
-            weekTasks={currentWeek.tasks}
-            poolTasks={poolTasks}
-            upcomingPlanTasks={upcomingPlanTasks}
-            horasDisponiveis={activePlan.tempoDisponivelHoras}
-            expandedTaskId={expandedTaskId}
-            duracaoSemanas={activePlan.duracaoSemanas}
-            acoes={activePlan.acoes}
-          />
+
+          {/* Evolução: o progresso do plano ativo, num lugar só (era uma página à parte). */}
+          <section className="mb-5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
+            <ProgressoPlano acoes={acoes} />
+          </section>
+
+          {proxima ? (
+            <section className="mb-5 rounded-[var(--radius-app)] border border-gold bg-gold-soft p-5">
+              <p className="mb-1 font-mono text-[10.5px] tracking-[0.06em] text-gold uppercase">
+                {proxima.status === "EM_ANDAMENTO" ? "Continue de onde parou" : "Sua próxima ação"}
+              </p>
+              <div className="mb-1.5 flex flex-wrap items-center gap-2.5">
+                <h2 className="font-serif text-[20px] font-medium tracking-tight text-ink">
+                  {proxima.sequencia}. {proxima.nome}
+                </h2>
+                <SeloStatusAcao status={proxima.status} />
+              </div>
+              <p className="mb-3 text-[14px] leading-[1.55] text-ink-muted">{proxima.objetivo}</p>
+              <a
+                href={`/planos/${activePlan.id}/acoes/${proxima.id}`}
+                className="inline-block rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
+              >
+                {proxima.status === "EM_ANDAMENTO" ? "Continuar esta ação →" : "Começar esta ação →"}
+              </a>
+            </section>
+          ) : (
+            <section className="mb-5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
+              <p className="mb-1 font-mono text-[10.5px] tracking-[0.06em] text-gold uppercase">Plano concluído</p>
+              <p className="text-[14.5px] leading-[1.55] text-ink">
+                Você concluiu todas as ações deste plano. Veja o resultado, avalie o que aprendeu e decida o próximo
+                passo.
+              </p>
+            </section>
+          )}
+
+          <p className="text-[13px] text-ink-muted">
+            <a href={`/planos/${activePlan.id}`} className="font-semibold text-petrol hover:underline">
+              Ver todas as ações
+            </a>{" "}
+            ·{" "}
+            <a href="/planos" className="font-semibold text-petrol hover:underline">
+              Planos de execução ({cota.usados} de {cota.limite})
+            </a>
+          </p>
         </>
       ) : activePlan ? (
         <div className="mb-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
-          <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">
-            Plano concluído
-          </span>
-          <p className="mb-2 flex items-center gap-2 font-serif text-lg font-medium text-ink">
-            <PapelIcon papel={activePlan.possibility.papel} className="h-[16px] w-[16px] shrink-0 text-petrol" />
-            {activePlan.possibility.titulo}
-          </p>
+          <span className="mb-1 block font-mono text-[10px] tracking-wide text-gold uppercase">Plano no formato antigo</span>
+          <p className="mb-2 font-serif text-lg font-medium text-ink">{activePlan.possibility.titulo}</p>
           <p className="text-[13.5px] text-ink-muted">
-            Todas as semanas foram concluídas — bom trabalho. Veja o plano completo ou comece outro.
+            Este plano foi criado no formato por semanas, que foi substituído pelo plano de ações com checklist.
           </p>
-          <a
-            href={`/planos/${activePlan.id}`}
-            className="mt-3 inline-block text-[13px] font-semibold text-petrol hover:underline"
-          >
-            Ver plano completo →
+          <a href="/planos" className="mt-3 inline-block text-[13px] font-semibold text-petrol hover:underline">
+            Ir para Planos de execução →
           </a>
         </div>
       ) : (
@@ -139,44 +127,4 @@ export default async function Home({
       )}
     </div>
   );
-}
-
-// Possibilidade aprovada, com adequação concluída e ações de especificação
-// já geradas, mas ainda faltando resposta em alguma ação ou o feedback
-// geral — o estado transitório entre aprovar uma possibilidade e o Plano
-// ser criado. Sem isso visível no Painel, quem sai da tela de Sua Rota
-// Específica no meio só acha o caminho de volta cavando em Meus Planos.
-function loadPendingEspecificacaoPossibility(userId: string) {
-  return db.possibility.findFirst({
-    where: {
-      round: { diagnostic: { userId } },
-      status: "APROVADA",
-      plan: null,
-      acoesEspecificacao: { some: {} },
-      OR: [{ acoesEspecificacao: { some: { respondidoEm: null } } }, { feedbackEspecificacao: { equals: Prisma.DbNull } }],
-    },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
-function loadCurrentWeek(planId: string) {
-  return db.planWeek.findFirst({
-    where: { planId, status: "PENDENTE", checkin: null },
-    orderBy: { weekNumber: "asc" },
-    include: { tasks: { orderBy: { sequencia: "asc" } } },
-  });
-}
-
-function loadPoolTasks(planId: string) {
-  return db.planTask.findMany({
-    where: { planId, planWeekId: null },
-    orderBy: { createdAt: "asc" },
-  });
-}
-
-function loadUpcomingPlanTasks(planId: string, afterWeekNumber: number) {
-  return db.planTask.findMany({
-    where: { planId, origin: "PLANO", planWeek: { weekNumber: { gt: afterWeekNumber } } },
-    orderBy: [{ planWeek: { weekNumber: "asc" } }, { sequencia: "asc" }],
-  });
 }

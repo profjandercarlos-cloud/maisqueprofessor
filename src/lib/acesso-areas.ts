@@ -4,7 +4,7 @@
 export const AREAS_TRANCADAS: Record<string, { titulo: string; descricao: string }> = {
   "/": {
     titulo: "Painel",
-    descricao: "O seu painel do dia a dia: o plano ativo, as tarefas da semana e o check-in.",
+    descricao: "O seu painel do dia a dia: o plano ativo, a sua próxima ação e o quanto você já avançou.",
   },
   "/mapa": {
     titulo: "Mapa da jornada",
@@ -17,15 +17,7 @@ export const AREAS_TRANCADAS: Record<string, { titulo: string; descricao: string
   },
   "/planos": {
     titulo: "Planos de execução",
-    descricao: "Até 5 planos personalizados, semana a semana, para colocar em prática os negócios que você escolher.",
-  },
-  "/agenda": {
-    titulo: "Agenda",
-    descricao: "Seus compromissos e o tempo reservado para executar o plano.",
-  },
-  "/evolucao": {
-    titulo: "Evolução",
-    descricao: "O acompanhamento do que você já fez e dos marcos que alcançou.",
+    descricao: "Até 5 planos de execução: as ações essenciais, na ordem certa e com checklist, para colocar em prática os negócios que você escolher.",
   },
   "/anti-procrastinacao": {
     titulo: "Antiprocrastinação",

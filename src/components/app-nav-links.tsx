@@ -46,26 +46,6 @@ function PlanosIcon() {
   );
 }
 
-function AgendaIcon() {
-  return (
-    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
-      <rect x="2.5" y="3.5" width="13" height="12" rx="1.5" />
-      <line x1="2.5" y1="7" x2="15.5" y2="7" />
-      <line x1="5.5" y1="2" x2="5.5" y2="4.5" />
-      <line x1="12.5" y1="2" x2="12.5" y2="4.5" />
-    </svg>
-  );
-}
-
-function EvolucaoIcon() {
-  return (
-    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
-      <circle cx="9" cy="7.2" r="4.2" />
-      <path d="M6.3 10.9 L5.3 15.5 L9 13.3 L12.7 15.5 L11.7 10.9" />
-    </svg>
-  );
-}
-
 function AntiProcrastinacaoIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
@@ -124,8 +104,6 @@ const BASE_ITEMS = [
   { href: "/mapa", label: "Mapa", Icon: MapaIcon },
   { href: "/diagnostico/concluido", label: "Meus negócios", Icon: PossibilidadesIcon },
   { href: "/planos", label: "Planos de execução", Icon: PlanosIcon },
-  { href: "/agenda", label: "Agenda", Icon: AgendaIcon },
-  { href: "/evolucao", label: "Evolução", Icon: EvolucaoIcon },
   { href: "/anti-procrastinacao", label: "Antiprocrastinação", Icon: AntiProcrastinacaoIcon },
   { href: "/configuracoes", label: "Configurações", Icon: ConfiguracoesIcon },
 ];

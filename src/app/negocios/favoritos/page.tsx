@@ -77,9 +77,7 @@ export default async function MeusFavoritosPage() {
                 Transforme seus favoritos em planos de execução
               </h2>
               <p className="mb-4 text-[14.5px] leading-[1.6] text-ink">
-                Escolha até {PLANOS_POR_CONTA} dos seus favoritos. Cada um vira um plano com tarefas e data, e um
-                critério claro de &quot;feito&quot;, com check-in semanal para você ajustar quando a semana não sair
-                como previsto. Você começa por um plano e abre os outros quando estiver pronto.
+                Escolha até {PLANOS_POR_CONTA} dos seus favoritos. Cada um vira um plano com as ações essenciais, na ordem certa, cada uma com checklist e orientações. Você começa por um plano e abre os outros quando estiver pronto.
               </p>
               {!pago && linkCompra ? (
                 <a

@@ -50,6 +50,7 @@ export async function GET() {
         orderBy: { createdAt: "asc" },
         include: {
           possibility: true,
+          acoes: { orderBy: { sequencia: "asc" }, include: { itens: { orderBy: { sequencia: "asc" } } } },
           weeks: {
             orderBy: { weekNumber: "asc" },
             include: {
@@ -172,6 +173,29 @@ export async function GET() {
       `Status: ${PLAN_STATUS_LABEL[plan.status] ?? plan.status} · Iniciado em ${formatDate(plan.activatedAt, { day: "2-digit", month: "long", year: "numeric" })} · ${plan.tempoDisponivelHoras}h/semana declaradas`,
     );
     rule();
+
+    // Plano por ações (formato atual): resumo, e cada ação com o checklist marcado.
+    // Os planos do formato antigo (por semanas) seguem no trecho mais abaixo.
+    if (plan.acoes.some((a) => a.itens.length > 0)) {
+      const resumo = (plan.relatorio as unknown as { resumo?: Record<string, string> }).resumo;
+      if (resumo) {
+        h2("Resumo do plano");
+        body(`Por que este plano: ${resumo.por_que_esse_plano}`);
+        body(`Conta como feito quando: ${resumo.resultado_minimo_viavel}`);
+        body(`No final você terá: ${resumo.entrega_final}`);
+      }
+      h2("Ações");
+      for (const acao of plan.acoes) {
+        if (doc.page.height - doc.page.margins.bottom - doc.y < 150) doc.addPage();
+        const statusAcao =
+          acao.status === "CONCLUIDA" ? "concluída" : acao.status === "EM_ANDAMENTO" ? "em andamento" : "a fazer";
+        h3(`Ação ${acao.sequencia} — ${acao.nome} (${statusAcao})`);
+        body(`Objetivo: ${acao.objetivo}`);
+        meta(`Pronto quando: ${acao.escopoMinimo}`);
+        for (const item of acao.itens) body(`${item.feito ? "[x]" : "[ ]"} ${item.texto}`);
+      }
+      continue;
+    }
 
     h2("Relatório");
     const relatorio = plan.relatorio as unknown as Relatorio;

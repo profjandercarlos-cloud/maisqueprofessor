@@ -5,55 +5,24 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { MENSAGEM_COTA_ESGOTADA, cotaDePlanos } from "@/lib/planos/cota";
 import {
-  type AcaoAceita,
-  type DistribuicaoTempo,
-  type EquilibrioAprenderExecutar,
   type EstagioInicial,
-  MilestoneTipo,
   NivelExecucao,
-  type NivelAcompanhamento,
   type OrcamentoFaixa,
   type Prisma,
-  type RegraSegurancaFinanceira,
-  type RitmoDesejado,
 } from "@/generated/prisma/client";
-
-const MARCO_TIPO_MAP: Record<string, MilestoneTipo> = {
-  entrega_controlavel: MilestoneTipo.ENTREGA_CONTROLAVEL,
-  sinal_externo: MilestoneTipo.SINAL_EXTERNO,
-};
-
-const NIVEL_EXECUCAO_MAP: Record<string, NivelExecucao> = {
-  validacao: NivelExecucao.VALIDACAO,
-  implementacao: NivelExecucao.IMPLEMENTACAO,
-  desenvolvimento: NivelExecucao.DESENVOLVIMENTO,
-};
-import { calcularHorasNucleoSemana } from "@/lib/plano/formula";
-import { distribuirSemanasPorAcao } from "@/lib/plano/distribuir-acoes";
-import {
-  generateReportAndPlanOpenAI,
-  type AcaoEspecificacaoResultado,
-  type FeedbackEspecificacao,
-  type RecorteEspecificado,
-} from "@/lib/ai-engine/generate-report-plan-openai";
+import { generatePlanoDeAcoesOpenAI } from "@/lib/ai-engine/generate-plano-acoes-openai";
 import { generateMapaExecucaoOpenAI, type MapaExecucao } from "@/lib/ai-engine/generate-mapa-execucao-openai";
-import { generateSpecificationActionsOpenAI } from "@/lib/ai-engine/generate-specification-actions-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { getResumeSlug } from "@/lib/adequacao/steps";
 
-const DIMENSAO_MAP: Record<string, "PUBLICO" | "PROBLEMA" | "FORMATO" | "EVIDENCIA"> = {
-  publico: "PUBLICO",
-  problema: "PROBLEMA",
-  formato: "FORMATO",
-  evidencia: "EVIDENCIA",
-};
-
 function fail(possibilityId: string, message: string): never {
   redirect(`/adequacao/${possibilityId}/concluido?error=${encodeURIComponent(message)}`);
 }
 
+// Cria o plano de execução (por ações) logo depois do questionário curto. Não há mais
+// a Etapa de Especificação nem semanas: o plano nasce do primeiro serviço do negócio.
 export async function generatePlan(possibilityId: string) {
   const user = await requireActiveAccess();
 
@@ -65,10 +34,22 @@ export async function generatePlan(possibilityId: string) {
   if (possibility.status === "REJEITADA") redirect("/");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
-  // O Mapa de Execução só é gerado agora, na primeira vez que o professor
-  // chega até aqui com esta possibilidade aprovada — antes disso ele é
-  // null (ver Possibility.mapaExecucao). As 4 possibilidades não escolhidas
-  // nunca pagam essa chamada.
+  const response = await getOrCreateAdequacaoResponse(possibilityId);
+  const answers = response.answers as Record<string, unknown>;
+  const resumeSlug = getResumeSlug(answers);
+  if (resumeSlug !== "concluido") {
+    redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
+  }
+
+  // A cota vem antes de qualquer chamada de IA: todo plano criado conta.
+  const cota = cotaDePlanos(await db.plan.count({ where: { userId: user.id } }));
+  if (cota.esgotada) {
+    fail(possibilityId, MENSAGEM_COTA_ESGOTADA);
+  }
+
+  // O Mapa de Execução (invisível para a pessoa) só é gerado agora, na primeira vez
+  // que ela chega até aqui com este negócio escolhido. Os 4 não escolhidos nunca
+  // pagam essa chamada.
   let mapaExecucao = possibility.mapaExecucao as unknown as MapaExecucao | null;
   if (!mapaExecucao) {
     try {
@@ -86,7 +67,7 @@ export async function generatePlan(possibilityId: string) {
     } catch (err) {
       console.error("Erro ao gerar o Mapa de Execução", err);
       await logDebugError("adequacao:generateMapaExecucao", err);
-      fail(possibilityId, "Não foi possível preparar sua possibilidade agora. Tente de novo em instantes.");
+      fail(possibilityId, "Não foi possível preparar seu negócio agora. Tente de novo em instantes.");
     }
     await db.possibility.update({
       where: { id: possibility.id },
@@ -94,273 +75,90 @@ export async function generatePlan(possibilityId: string) {
     });
   }
 
-  const response = await getOrCreateAdequacaoResponse(possibilityId);
-  const answers = response.answers as Record<string, unknown>;
-  const resumeSlug = getResumeSlug(answers);
-  if (resumeSlug !== "concluido") {
-    redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
-  }
-
-  // Bloco 0 da rota: a Etapa de Especificação ("Sua Rota Específica")
-  // precisa existir e estar respondida (mais o feedback geral) antes do
-  // Plano de Execução Personalizado ser gerado — ver
-  // src/app/adequacao/[possibilityId]/especificacao. As respostas das
-  // ações são insumo real pro plano (ver generateReportAndPlanOpenAI),
-  // não só uma barreira de fricção.
-  const estagioInicialParaEspecificacao = answers.estagioInicial as EstagioInicial;
-  const acoesAceitasParaEspecificacao = (answers.acoesAceitas as string[] | undefined) ?? [];
-  const orcamentoParaEspecificacao = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
-  const regraFinanceiraParaEspecificacao = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
-  const distribuicaoTempoParaEspecificacao = answers.distribuicaoTempo as DistribuicaoTempo;
-
-  let acoes = await db.acaoEspecificacao.findMany({
-    where: { possibilityId: possibility.id },
-    orderBy: { ordem: "asc" },
-  });
-
-  if (acoes.length === 0) {
-    let geradas;
-    try {
-      geradas = await generateSpecificationActionsOpenAI({
-        diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
-        possibility: {
-          titulo: possibility.titulo,
-          comoFunciona: possibility.comoFunciona,
-          comoGerarReceita: possibility.comoGerarReceita,
-          porQueCombinaComVoce: possibility.porQueCombinaComVoce,
-          primeiraValidacao: possibility.primeiraValidacao,
-          pontoDeAtencao: possibility.pontoDeAtencao,
-        },
-        mapaExecucao,
-        estagioInicial: estagioInicialParaEspecificacao,
-        acoesAceitas: acoesAceitasParaEspecificacao as AcaoAceita[],
-        orcamentoFaixa: orcamentoParaEspecificacao,
-        regraSegurancaFinanceira: regraFinanceiraParaEspecificacao,
-        distribuicaoTempo: distribuicaoTempoParaEspecificacao,
-      });
-    } catch (err) {
-      console.error("Erro ao gerar a Etapa de Especificação", err);
-      await logDebugError("adequacao:generateSpecificationActions", err);
-      fail(possibilityId, "Não foi possível preparar sua rota específica agora. Tente de novo em instantes.");
-    }
-    await db.acaoEspecificacao.createMany({
-      data: geradas.acoes.map((a, index) => ({
-        possibilityId: possibility.id,
-        ordem: index + 1,
-        dimensao: DIMENSAO_MAP[a.dimensao],
-        nome: a.nome,
-        objetivo: a.objetivo,
-        porQueExiste: a.por_que_existe,
-        tempoEstimadoMinutos: a.tempo_estimado_minutos,
-        recursosNecessarios: a.recursos_necessarios,
-        passoAPasso: a.passo_a_passo as Prisma.InputJsonValue,
-        criterioConclusao: a.criterio_conclusao,
-        evidenciaEsperada: a.evidencia_esperada,
-        perguntaReflexao: a.pergunta_reflexao,
-        perguntaRegistro: a.pergunta_registro,
-        exemploCenario: a.exemplo_cenario,
-        exemploResultado: a.exemplo_resultado,
-      })),
-    });
-    // Dimensões já resolvidas pela própria possibilidade entram direto no
-    // recorte; as em aberto ficam null até a ação correspondente ser
-    // respondida (ver enviarFeedbackEspecificacao, que completa o recorte).
-    await db.possibility.update({
-      where: { id: possibility.id },
-      data: { recorteEspecificado: geradas.dimensoes_resolvidas as unknown as Prisma.InputJsonValue },
-    });
-    redirect(`/adequacao/${possibilityId}/especificacao`);
-  }
-
-  const acoesIncompletas = acoes.some((a) => a.respondidoEm === null);
-  const currentPossibility = await db.possibility.findUnique({
-    where: { id: possibility.id },
-    select: { feedbackEspecificacao: true, recorteEspecificado: true },
-  });
-  if (acoesIncompletas || !currentPossibility?.feedbackEspecificacao) {
-    redirect(`/adequacao/${possibilityId}/especificacao`);
-  }
-
-  const feedbackEspecificacao = currentPossibility.feedbackEspecificacao as unknown as FeedbackEspecificacao;
-  const recorteEspecificado = currentPossibility.recorteEspecificado as unknown as RecorteEspecificado;
-  const acoesResultado: AcaoEspecificacaoResultado[] = acoes.map((a) => ({
-    ordem: a.ordem,
-    dimensao: a.dimensao,
-    nome: a.nome,
-    conseguiuConcluir: a.conseguiuConcluir,
-    tempoRealMinutos: a.tempoRealMinutos,
-    oQueAconteceu: a.oQueAconteceu,
-    reflexao: a.reflexao,
-  }));
-
-  const cota = cotaDePlanos(await db.plan.count({ where: { userId: user.id } }));
-  if (cota.esgotada) {
-    fail(possibilityId, MENSAGEM_COTA_ESGOTADA);
-  }
-
   const tempoDisponivelHoras = Number(answers.horasSemanaisDisponiveis);
   const estagioInicial = answers.estagioInicial as EstagioInicial;
-  const distribuicaoTempo = answers.distribuicaoTempo as DistribuicaoTempo;
   const investimentoFaixa = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
-  const regraSegurancaFinanceira = answers.regraSegurancaFinanceira as RegraSegurancaFinanceira;
-  const acoesAceitas = (answers.acoesAceitas as string[] | undefined) ?? [];
-  const equilibrioAprenderExecutar = answers.equilibrioAprenderExecutar as EquilibrioAprenderExecutar;
-  const ritmoDesejado = answers.ritmoDesejado as RitmoDesejado;
-  const acompanhamento = answers.nivelAcompanhamento as NivelAcompanhamento;
-  const diaCheckin = Number(answers.diaCheckin);
-  const condicaoAdicionalExecucao = typeof answers.condicaoAdicionalExecucao === "string" ? answers.condicaoAdicionalExecucao : null;
 
-  const horasNucleoSemana = calcularHorasNucleoSemana(tempoDisponivelHoras);
-
-  let generated;
+  let plano;
   try {
-    generated = await generateReportAndPlanOpenAI({
-      diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
-      possibility: {
+    plano = await generatePlanoDeAcoesOpenAI({
+      negocio: {
         titulo: possibility.titulo,
         comoFunciona: possibility.comoFunciona,
-        comoGerarReceita: possibility.comoGerarReceita,
         porQueCombinaComVoce: possibility.porQueCombinaComVoce,
-        primeiraValidacao: possibility.primeiraValidacao,
+        primeiroServico: possibility.primeiraValidacao,
         pontoDeAtencao: possibility.pontoDeAtencao,
       },
       mapaExecucao,
-      horasPorSemana: tempoDisponivelHoras,
-      horasNucleoSemana,
       estagioInicial,
-      distribuicaoTempo,
+      horasPorSemana: tempoDisponivelHoras,
       orcamentoFaixa: investimentoFaixa,
-      regraSegurancaFinanceira,
-      acoesAceitas: acoesAceitas as AcaoAceita[],
-      equilibrioAprenderExecutar,
-      ritmoDesejado,
-      condicaoAdicionalExecucao,
-      recorteEspecificado,
-      acoesEspecificacao: acoesResultado,
-      feedbackEspecificacao,
+      diagnosticInput: formatDiagnosticInput(possibility.round.diagnostic),
     });
   } catch (err) {
-    console.error("Erro ao gerar relatório e plano", err);
-    await logDebugError("adequacao:generateReportAndPlan", err);
+    console.error("Erro ao gerar o plano de ações", err);
+    await logDebugError("adequacao:generatePlanoDeAcoes", err);
     fail(possibilityId, "Não foi possível gerar seu plano agora. Tente de novo em instantes.");
   }
 
   await db.adequacaoResponse.update({ where: { id: response.id }, data: { status: "CONCLUIDO" } });
 
-  // Conflito explícito — alguma condição informada impede o teste que essa
-  // possibilidade exigiria. Não cria o Plan; marca REJEITADA (não PENDENTE)
-  // pra fechar essa possibilidade de vez — não faz sentido tentar gerar o
-  // mesmo plano da mesma possibilidade de novo, e sem isso a pessoa podia
-  // aprovar e tentar de novo indefinidamente, disparando a chamada mais
-  // cara do app sem nenhum limite (ver approvePossibility, que agora
-  // recusa reaprovar uma possibilidade REJEITADA, e o guard no início desta
-  // função que já bloqueia gerar plano pra uma REJEITADA).
-  if (generated.relatorio.classificacao_encaixe === "conflito_explicito") {
+  // Conflito explícito: alguma condição informada impede o primeiro serviço. Não cria
+  // o Plan e fecha este negócio de vez (REJEITADA), para a pessoa não repetir a chamada
+  // mais cara do app indefinidamente.
+  if (plano.encaixe.classificacao === "conflito_explicito") {
     await db.possibility.update({ where: { id: possibility.id }, data: { status: "REJEITADA" } });
     redirect(
-      `/diagnostico/possibilidades/${possibility.roundId}?conflito=${encodeURIComponent(generated.relatorio.explicacao_encaixe)}`,
+      `/diagnostico/possibilidades/${possibility.roundId}?conflito=${encodeURIComponent(plano.encaixe.explicacao)}`,
     );
   }
 
-  // Só 1 plano ativo por vez (Etapa 9) — pausa qualquer outro antes de ativar este.
+  // Só 1 plano ativo por vez — pausa qualquer outro antes de ativar este.
   await db.plan.updateMany({
     where: { userId: user.id, status: "ATIVO" },
     data: { status: "PAUSADO", pausedAt: new Date() },
   });
-
-  const now = new Date();
 
   const plan = await db.plan.create({
     data: {
       userId: user.id,
       possibilityId: possibility.id,
       tempoDisponivelHoras,
-      horasNucleoSemana,
+      horasNucleoSemana: tempoDisponivelHoras,
       investimentoFaixa,
-      acompanhamento,
-      diaCheckin,
       estagioInicial,
-      distribuicaoTempo,
-      regraSegurancaFinanceira,
-      acoesAceitas: acoesAceitas as AcaoAceita[],
-      equilibrioAprenderExecutar,
-      ritmoDesejado,
-      condicaoAdicionalExecucao,
-      classificacaoEncaixe: generated.relatorio.classificacao_encaixe,
-      nivelExecucao: NIVEL_EXECUCAO_MAP[generated.relatorio.nivel_execucao],
-      resultadoMinimoViavel: generated.relatorio.resultado_minimo_viavel,
-      ttfrSemanas: generated.relatorio.ttfr_semanas,
-      ttfrResultado: generated.relatorio.ttfr_resultado,
-      proporcaoAprendizado: generated.relatorio.proporcao_aprendizado,
-      duracaoSemanas: generated.semanas.length,
-      relatorio: generated.relatorio as Prisma.InputJsonValue,
-      milestones: {
-        create: generated.marcos.map((marco, index) => ({
-          sequencia: index,
-          titulo: marco.titulo,
-          descricao: marco.descricao,
-          tipo: MARCO_TIPO_MAP[marco.tipo],
+      classificacaoEncaixe: plano.encaixe.classificacao,
+      resultadoMinimoViavel: plano.resumo.resultado_minimo_viavel,
+      ttfrResultado: mapaExecucao.primeiroResultadoObservavel,
+      relatorio: { versao: "acoes_v1", encaixe: plano.encaixe, resumo: plano.resumo } as Prisma.InputJsonValue,
+      // Colunas do formato antigo (semanas), exigidas pelo banco mas sem uso nos planos
+      // por ações: ficam com valores neutros. "Sistema recomenda" = nenhuma preferência.
+      diaCheckin: 0,
+      distribuicaoTempo: "AGENDA_VARIAVEL",
+      regraSegurancaFinanceira: "NAO_SE_APLICA",
+      equilibrioAprenderExecutar: "SISTEMA_RECOMENDA",
+      ritmoDesejado: "SISTEMA_RECOMENDA",
+      nivelExecucao: NivelExecucao.VALIDACAO,
+      ttfrSemanas: Math.max(1, Math.round(mapaExecucao.ttfrBaseSemanas)),
+      proporcaoAprendizado: 0,
+      duracaoSemanas: 0,
+      acoes: {
+        create: plano.acoes.map((acao, index) => ({
+          sequencia: index + 1,
+          nome: acao.nome,
+          objetivo: acao.objetivo,
+          escopoMinimo: acao.definicao_de_pronto,
+          orientacoes: {
+            comoFazer: acao.como_fazer,
+            pontosDeAtencao: acao.pontos_de_atencao,
+            errosComuns: acao.erros_comuns,
+          } as Prisma.InputJsonValue,
+          itens: { create: acao.checklist.map((texto, i) => ({ sequencia: i + 1, texto })) },
         })),
       },
     },
   });
 
-  // As Ações precisam existir (com IDs reais) antes das semanas, pra cada
-  // semana já nascer com planAcaoId — por isso não entram no create
-  // aninhado acima. distribuirSemanasPorAcao é a rede de segurança
-  // determinística caso normalizeWeekCount tenha alterado o número final
-  // de semanas depois que a IA gerou "acoes" (ver o próprio helper).
-  const acoesCriadas = await db.$transaction(
-    generated.acoes.map((acao, index) =>
-      db.planAcao.create({
-        data: {
-          planId: plan.id,
-          sequencia: index + 1,
-          nome: acao.nome,
-          objetivo: acao.objetivo,
-          escopoMinimo: acao.escopo_minimo,
-        },
-      }),
-    ),
-  );
-  const faixasPorAcao = distribuirSemanasPorAcao(generated.acoes, generated.semanas.length);
-
-  const weeksCriadas = await db.$transaction(
-    generated.semanas.map((semana, index) => {
-      const scheduledDate = new Date(now);
-      scheduledDate.setDate(scheduledDate.getDate() + index * 7);
-      const acaoIndex = faixasPorAcao.findIndex((faixa) => index >= faixa.inicio && index < faixa.fim);
-      return db.planWeek.create({
-        data: {
-          planId: plan.id,
-          planAcaoId: acaoIndex >= 0 ? acoesCriadas[acaoIndex].id : null,
-          weekNumber: index + 1,
-          meta: semana.meta,
-          dificuldadesAntecipadas: semana.dificuldades_antecipadas,
-          scheduledDate,
-        },
-      });
-    }),
-  );
-
-  // PlanTask não pode ser criado aninhado abaixo de Plan/PlanWeek (o create
-  // aninhado só preenche a FK do pai imediato) então as tarefas são
-  // inseridas à parte, já com os dois IDs resolvidos.
-  let sequencia = 0;
-  const taskRows = generated.semanas.flatMap((semana, index) => {
-    const week = weeksCriadas[index];
-    return semana.tarefas.map((tarefa) => ({
-      planId: plan.id,
-      planWeekId: week.id,
-      texto: tarefa.texto,
-      horasEstimadas: tarefa.horas,
-      opcional: tarefa.opcional,
-      sequencia: sequencia++,
-    }));
-  });
-  await db.planTask.createMany({ data: taskRows });
-
-  await db.user.update({ where: { id: user.id }, data: { checkinWeekday: diaCheckin } });
   await db.possibility.update({ where: { id: possibility.id }, data: { status: "APROVADA" } });
 
   redirect(`/planos/${plan.id}`);

@@ -1,330 +1,131 @@
 import { notFound } from "next/navigation";
+import { z } from "zod";
 import { AppHeader } from "@/components/app-header";
+import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { formatDate } from "@/lib/format-date";
-import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
-import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
-import { ROLE_META } from "@/lib/possibilidades/role-meta";
-import type { Prisma } from "@/generated/prisma/client";
+import { STATUS_ACAO_META } from "@/lib/plano/acoes";
 
-type WeekWithDetails = Prisma.PlanWeekGetPayload<{ include: { checkin: true; tasks: true } }>;
+const relatorioSchema = z.object({
+  versao: z.literal("acoes_v1"),
+  encaixe: z.object({ classificacao: z.string(), explicacao: z.string() }),
+  resumo: z.object({
+    por_que_esse_plano: z.string(),
+    resultado_minimo_viavel: z.string(),
+    entrega_final: z.string(),
+  }),
+});
 
-export default async function PlanPage({
-  params,
-}: {
-  params: Promise<{ planId: string }>;
-}) {
+const AVISO_ENCAIXE: Record<string, string> = {
+  cabe_com_adaptacao: "O plano precisou ser adaptado à sua realidade",
+  construcao_medio_prazo: "Este plano constrói a base antes do primeiro serviço",
+};
+
+export default async function PlanPage({ params }: { params: Promise<{ planId: string }> }) {
   const { planId } = await params;
-
   const user = await requireActiveAccess();
 
   const plan = await db.plan.findUnique({
     where: { id: planId },
     include: {
-      possibility: true,
-      acoes: { orderBy: { sequencia: "asc" } },
-      weeks: {
-        orderBy: { weekNumber: "asc" },
-        include: { checkin: true, tasks: { orderBy: { sequencia: "asc" } } },
-      },
+      possibility: { select: { titulo: true } },
+      acoes: { orderBy: { sequencia: "asc" }, include: { itens: { select: { feito: true } } } },
     },
   });
   if (!plan || plan.userId !== user.id) notFound();
 
-  const relatorio = plan.relatorio as unknown as Relatorio;
-  const hasCheckinDue = plan.weeks.some((w) => w.status === "PENDENTE" && !w.checkin);
-
-  // Semanas agrupadas por Ação (a unidade narrativa principal) — semanas
-  // sem planAcaoId são "extras" (criadas depois pra pendências, ver
-  // src/lib/plano/current-week.ts) e ficam fora do agrupamento.
-  const semanasPorAcao = new Map<string, typeof plan.weeks>();
-  const semanasExtras: typeof plan.weeks = [];
-  for (const week of plan.weeks) {
-    if (!week.planAcaoId) {
-      semanasExtras.push(week);
-      continue;
-    }
-    const lista = semanasPorAcao.get(week.planAcaoId) ?? [];
-    lista.push(week);
-    semanasPorAcao.set(week.planAcaoId, lista);
-  }
-  const primeiraSemanaPendente = plan.weeks.find((w) => w.status === "PENDENTE");
+  const relatorio = relatorioSchema.safeParse(plan.relatorio);
+  const formatoAntigo = !relatorio.success || plan.acoes.every((a) => a.itens.length === 0);
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="ETAPA 07 / 10" />
+      <AppHeader progressLabel="PLANO DE EXECUÇÃO" />
 
-      {/* De onde essa possibilidade veio (um dos 5 papéis fixos) — some
-          fácil de esquecer qual dos 5 ângulos originais gerou essa
-          possibilidade, então mostra de novo aqui, não só como ícone com
-          tooltip (como na lista de "Meus planos"). */}
-      <div className="mb-[18px] flex flex-wrap items-center gap-2">
-        <span className="inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-          Relatório completo
-        </span>
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full py-[3px] pr-[9px] pl-2 font-mono text-[10px] tracking-[0.07em] uppercase"
-          style={{
-            color: ROLE_META[plan.possibility.papel].accentVar,
-            background: `color-mix(in srgb, ${ROLE_META[plan.possibility.papel].accentVar} 13%, var(--tint-base))`,
-          }}
-        >
-          {ROLE_META[plan.possibility.papel].icon}
-          {ROLE_META[plan.possibility.papel].label}
-        </span>
-      </div>
+      <a href="/planos" className="mb-4 inline-block text-[13px] font-semibold text-petrol hover:underline">
+        ← Planos de execução
+      </a>
+
       <h1 className="mb-5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
         {plan.possibility.titulo}
       </h1>
 
-      {/* Resumo em linguagem simples, antes de qualquer bloco técnico —
-          "pra onde você vai e o que conta como chegar lá" de cara, sem
-          precisar ler o relatório inteiro primeiro. Montado a partir de
-          campos que já existem no relatório, sem chamada de IA nova. */}
-      {relatorio.hipotese_de_teste ? (
-        <div className="mb-6 rounded-[var(--radius-app)] border border-petrol bg-gold-soft p-5">
-          <p className="mb-2 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">Em resumo</p>
-          <p className="mb-2 text-[14.5px] leading-[1.55] text-ink">
-            <span className="font-semibold text-petrol">Você está testando: </span>
-            {relatorio.hipotese_de_teste}
-          </p>
-          <p className="text-[14.5px] leading-[1.55] text-ink">
-            <span className="font-semibold text-petrol">Isso conta como feito quando: </span>
-            {plan.resultadoMinimoViavel}
+      {formatoAntigo ? (
+        <div className="rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 text-[14.5px] leading-[1.6] text-ink">
+          <p className="mb-2 font-semibold text-petrol">Este plano usa o formato antigo.</p>
+          <p className="text-ink-muted">
+            Os planos agora são uma lista de ações com checklist, e não mais semanas e tarefas. Este plano continua
+            contando como um dos seus 5 planos. Para executar este negócio no formato novo, crie um novo plano a
+            partir de{" "}
+            <a href="/planos" className="font-semibold text-petrol hover:underline">
+              Planos de execução
+            </a>
+            .
           </p>
         </div>
-      ) : null}
-
-      {/* relatorio.hipotese_de_teste guarda a presença dos campos novos —
-          planos gerados antes desta mudança não têm esse bloco no JSON
-          salvo, e não vale a pena reprocessá-los só por isso. */}
-      {relatorio.hipotese_de_teste ? (
-        <div className="mb-8 rounded-[var(--radius-app)] border border-petrol/20 bg-paper-raised p-5 shadow-[var(--shadow)]">
-          <div className="mb-3 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Seu experimento
-          </div>
-          <dl className="flex flex-col gap-3 text-[14px] text-ink">
-            <div>
-              <dt className="mb-0.5 font-semibold text-petrol">Hipótese</dt>
-              <dd className="leading-[1.5]">{relatorio.hipotese_de_teste}</dd>
-            </div>
-            <div>
-              <dt className="mb-0.5 font-semibold text-petrol">Entregas finais</dt>
-              <dd>
-                <ul className="flex flex-col gap-1">
-                  {relatorio.entregas_finais.map((entrega, i) => (
-                    <li key={i} className="flex items-start gap-2 leading-[1.5]">
-                      <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
-                      {entrega}
-                    </li>
-                  ))}
-                </ul>
-              </dd>
-            </div>
-            <div>
-              <dt className="mb-0.5 font-semibold text-petrol">Carga total</dt>
-              <dd className="leading-[1.5]">
-                {plan.duracaoSemanas} semanas · {plan.horasNucleoSemana}h por semana ·{" "}
-                {plan.duracaoSemanas * plan.horasNucleoSemana}h no total
-              </dd>
-            </div>
-            <div>
-              <dt className="mb-0.5 font-semibold text-petrol">Investimento máximo</dt>
-              <dd className="leading-[1.5]">{INVESTIMENTO_LABELS[plan.investimentoFaixa]}</dd>
-            </div>
-            <div>
-              <dt className="mb-0.5 font-semibold text-petrol">O experimento termina quando</dt>
-              <dd className="leading-[1.5]">{relatorio.condicao_de_termino}</dd>
-            </div>
-          </dl>
-        </div>
-      ) : null}
-
-      <div className="mb-12 flex flex-col gap-5">
-        {REPORT_SECTIONS.map((section) => (
-          <div
-            key={section.key}
-            className="rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]"
-          >
-            <div className="mb-1.5 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-              {section.label}
-            </div>
-            <p className="text-[14.5px] leading-[1.6] text-ink">{relatorio[section.key]}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <div>
-          <h2 className="mb-1 font-serif text-xl font-medium tracking-tight text-petrol">
-            Plano Personalizado de Transição
-          </h2>
-          <p className="mb-1 font-mono text-[11px] tracking-wide text-ink-muted uppercase">
-            {plan.duracaoSemanas} semanas · {plan.horasNucleoSemana}h por semana ·{" "}
-            {plan.duracaoSemanas * plan.horasNucleoSemana}h no total
-          </p>
-          <p className="text-[13.5px] text-ink-muted">
-            Check-in toda semana. O cronograma se ajusta ao seu ritmo real — nunca ao contrário.
-          </p>
-        </div>
-        <a
-          href={`/planos/${planId}/diario`}
-          className="shrink-0 text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
-        >
-          Ver diário →
-        </a>
-      </div>
-
-      {hasCheckinDue ? (
-        <a
-          href={`/planos/${planId}/checkin`}
-          className="mb-6 block rounded-[var(--radius-app)] border border-petrol bg-gold-soft px-5 py-4 text-[14.5px] font-semibold text-petrol transition-opacity hover:opacity-90"
-        >
-          Fazer o check-in desta semana →
-        </a>
-      ) : null}
-
-      <div className="flex flex-col gap-5">
-        {plan.acoes.map((acao) => {
-          const weeksDaAcao = semanasPorAcao.get(acao.id) ?? [];
-          const acaoAtual = weeksDaAcao.some((w) => w.id === primeiraSemanaPendente?.id);
-          const acaoConcluida = weeksDaAcao.length > 0 && weeksDaAcao.every((w) => w.status === "CONCLUIDA");
-          return (
-            <details
-              key={acao.id}
-              open={acaoAtual}
-              className="overflow-hidden rounded-[var(--radius-app)] border border-line bg-paper-raised shadow-[var(--shadow)]"
-            >
-              <summary className="flex cursor-pointer items-center justify-between gap-3 bg-paper px-5 py-3.5">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-petrol font-mono text-[11px] font-bold text-paper">
-                    {acao.sequencia}
-                  </span>
-                  <div>
-                    <p className="font-serif text-[15px] leading-snug font-medium text-petrol">{acao.nome}</p>
-                    <p className="text-[12px] text-ink-muted">{acao.objetivo}</p>
-                  </div>
-                </div>
-                {acaoAtual ? (
-                  <span className="shrink-0 rounded-full bg-gold px-2.5 py-[3px] font-mono text-[9.5px] font-semibold tracking-wide text-paper uppercase">
-                    Atual
-                  </span>
-                ) : acaoConcluida ? (
-                  <span className="shrink-0 font-mono text-[10px] tracking-wide text-ink-muted uppercase">
-                    Concluída
-                  </span>
-                ) : null}
-              </summary>
-              <div className="flex flex-col gap-4 p-4">
-                {weeksDaAcao.map((week) => (
-                  <WeekCard key={week.id} week={week} />
-                ))}
+      ) : (
+        <>
+          <section className="mb-6 rounded-[var(--radius-app)] border border-gold bg-gold-soft p-5">
+            <p className="mb-3 font-mono text-[10.5px] tracking-[0.06em] text-gold uppercase">Em resumo</p>
+            <dl className="flex flex-col gap-3 text-[14.5px] leading-[1.6] text-ink">
+              <div>
+                <dt className="font-semibold text-petrol">Por que este plano</dt>
+                <dd>{relatorio.data!.resumo.por_que_esse_plano}</dd>
               </div>
-            </details>
-          );
-        })}
+              <div>
+                <dt className="font-semibold text-petrol">Conta como feito quando</dt>
+                <dd>{relatorio.data!.resumo.resultado_minimo_viavel}</dd>
+              </div>
+              <div>
+                <dt className="font-semibold text-petrol">No final você terá</dt>
+                <dd>{relatorio.data!.resumo.entrega_final}</dd>
+              </div>
+            </dl>
+            {AVISO_ENCAIXE[relatorio.data!.encaixe.classificacao] ? (
+              <p className="mt-3 border-t border-line pt-3 text-[13px] text-ink-muted">
+                <span className="font-semibold text-petrol">{AVISO_ENCAIXE[relatorio.data!.encaixe.classificacao]}:</span>{" "}
+                {relatorio.data!.encaixe.explicacao}
+              </p>
+            ) : null}
+          </section>
 
-        {semanasExtras.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            <p className="font-mono text-[11px] tracking-wide text-ink-muted uppercase">Semanas extras</p>
-            {semanasExtras.map((week) => (
-              <WeekCard key={week.id} week={week} />
-            ))}
-          </div>
-        ) : null}
-      </div>
+          <section className="mb-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
+            <ProgressoPlano acoes={plan.acoes} />
+          </section>
 
-      {relatorio.criterios_decisao ? (
-        <div className="mt-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
-          <div className="mb-3 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">
-            Critérios de decisão final
-          </div>
-          <p className="mb-2 text-[13.5px] font-medium text-ink">
-            Ao concluir a última semana, responda:
-          </p>
-          <ul className="mb-4 flex flex-col gap-1.5">
-            {relatorio.criterios_decisao.perguntas.map((pergunta, i) => (
-              <li key={i} className="flex items-start gap-2 text-[13.5px] leading-[1.5] text-ink">
-                <span className="mt-[7px] h-[5px] w-[5px] shrink-0 rounded-full bg-petrol" />
-                {pergunta}
-              </li>
-            ))}
-          </ul>
-          <div className="flex flex-col gap-2 text-[13px] leading-[1.5]">
-            <p>
-              <span className="font-semibold text-petrol">Avançar: </span>
-              {relatorio.criterios_decisao.regra_avancar}
-            </p>
-            <p>
-              <span className="font-semibold text-petrol">Ajustar: </span>
-              {relatorio.criterios_decisao.regra_ajustar}
-            </p>
-            <p>
-              <span className="font-semibold text-petrol">Encerrar: </span>
-              {relatorio.criterios_decisao.regra_encerrar}
-            </p>
-          </div>
-        </div>
-      ) : null}
+          <h2 className="mb-3 font-serif text-lg font-medium tracking-tight text-petrol">Suas ações, na ordem</h2>
+          <ol className="flex flex-col gap-2.5">
+            {plan.acoes.map((acao) => {
+              const meta = STATUS_ACAO_META[acao.status];
+              const feitos = acao.itens.filter((i) => i.feito).length;
+              return (
+                <li key={acao.id}>
+                  <a
+                    href={`/planos/${plan.id}/acoes/${acao.id}`}
+                    className="flex items-start gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-4 transition-colors hover:border-petrol"
+                  >
+                    <span
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-[13px] font-semibold"
+                      style={{ background: meta.corFundo, color: meta.cor }}
+                    >
+                      {acao.status === "CONCLUIDA" ? "✓" : acao.sequencia}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="font-serif text-[17px] font-medium text-ink">{acao.nome}</span>
+                        <SeloStatusAcao status={acao.status} />
+                      </span>
+                      <span className="block text-[13.5px] leading-[1.5] text-ink-muted">{acao.objetivo}</span>
+                      <span className="mt-1.5 block text-[12px] text-ink-muted">
+                        {feitos} de {acao.itens.length} passos feitos
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
     </div>
-  );
-}
-
-function WeekCard({ week }: { week: WeekWithDetails }) {
-  const done = week.status === "CONCLUIDA";
-  return (
-    <article
-      className="overflow-hidden rounded-[var(--radius-app)] border border-line bg-paper shadow-[var(--shadow)]"
-      style={done ? { opacity: 0.7 } : undefined}
-    >
-      <div className="flex items-center justify-between gap-3 border-b border-line bg-paper-raised px-4 py-2.5">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-petrol font-mono text-[11px] font-bold text-paper">
-            {week.weekNumber}
-          </span>
-          <span className="font-mono text-[10.5px] tracking-[0.08em] text-ink-muted uppercase">
-            {done ? "Concluída" : "Semana"}
-          </span>
-        </div>
-        <span className="text-[12px] text-ink-muted">
-          {formatDate(week.scheduledDate, { day: "2-digit", month: "short" })}
-        </span>
-      </div>
-
-      <div className="p-4">
-        <p className="mb-3.5 font-serif text-[16px] leading-snug font-medium text-ink">{week.meta}</p>
-
-        <ul className="mb-3.5 flex flex-col gap-2">
-          {week.tasks.map((t) => (
-            <li key={t.id} className="flex items-start gap-2.5 rounded-lg bg-paper-raised px-3.5 py-2.5">
-              <span className="mt-[5px] h-[7px] w-[7px] shrink-0 rounded-full bg-petrol" />
-              <span className="flex-1 text-[13.5px] leading-[1.5] text-ink">{t.texto}</span>
-              <span className="mt-px shrink-0 text-[11.5px] whitespace-nowrap text-ink-muted">
-                {t.horasEstimadas}h
-              </span>
-              {t.opcional ? (
-                <span className="mt-px shrink-0 rounded-full px-2 py-0.5 font-mono text-[9.5px] tracking-wide text-gold uppercase">
-                  Opcional
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
-
-        {week.dificuldadesAntecipadas ? (
-          <div className="flex items-start gap-2.5 rounded-lg border border-gold-soft bg-gold-soft px-3.5 py-3">
-            <svg width="15" height="15" viewBox="0 0 16 16" fill="none" className="mt-0.5 shrink-0">
-              <circle cx="8" cy="8" r="7" stroke="var(--gold)" strokeWidth="1.4" />
-              <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
-            </svg>
-            <div>
-              <p className="mb-0.5 font-mono text-[10px] tracking-[0.06em] text-gold uppercase">Ponto de atenção</p>
-              <p className="text-[13px] leading-[1.5] text-ink">{week.dificuldadesAntecipadas}</p>
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </article>
   );
 }

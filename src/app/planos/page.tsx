@@ -5,6 +5,7 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { categoriaDaIdeia } from "@/lib/ideias/categorias";
 import { PLANOS_DOS_FAVORITOS_DISPONIVEIS } from "@/lib/negocios/favoritos";
 import { LIMITE_PLANOS, cotaDePlanos } from "@/lib/planos/cota";
+import { ProgressoPlano } from "@/components/progresso-plano";
 import { activatePlan } from "./actions";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -21,7 +22,7 @@ export default async function PlanosPage() {
 
   const plans = await db.plan.findMany({
     where: { userId: user.id },
-    include: { possibility: true, weeks: true },
+    include: { possibility: true, acoes: { orderBy: { sequencia: "asc" } } },
     orderBy: { createdAt: "asc" },
   });
   const cota = cotaDePlanos(plans.length);
@@ -35,7 +36,6 @@ export default async function PlanosPage() {
         status: { not: "REJEITADA" },
         id: { notIn: [...planPossibilityIds] },
       },
-      include: { acoesEspecificacao: true },
       orderBy: { createdAt: "desc" },
     }),
     db.ideiaFavorita.findMany({
@@ -71,8 +71,7 @@ export default async function PlanosPage() {
           ))}
         </div>
         <p className="text-[13.5px] leading-[1.55] text-ink-muted">
-          Cada plano criado conta, mesmo que você ainda não o tenha executado. Só 1 plano fica ativo (recebendo
-          check-in) por vez.
+          Cada plano criado conta, mesmo que você ainda não o tenha executado. Só 1 plano fica ativo por vez: é o que aparece no seu Painel.
         </p>
       </section>
 
@@ -82,7 +81,7 @@ export default async function PlanosPage() {
       ) : (
         <div className="mt-3 mb-10 flex flex-col gap-3">
           {plans.map((plan) => {
-            const completedWeeks = plan.weeks.filter((w) => w.status === "CONCLUIDA").length;
+            const concluidas = plan.acoes.filter((a) => a.status === "CONCLUIDA").length;
             const isActive = plan.status === "ATIVO";
             return (
               <article
@@ -101,7 +100,7 @@ export default async function PlanosPage() {
                     {STATUS_LABELS[plan.status]}
                   </span>
                   <span className="text-[12px] text-ink-muted">
-                    Semana {completedWeeks}/{plan.duracaoSemanas}
+                    {plan.acoes.length > 0 ? `${concluidas} de ${plan.acoes.length} ações` : "Formato antigo"}
                   </span>
                 </div>
                 <a
@@ -114,6 +113,11 @@ export default async function PlanosPage() {
                   />
                   <span title={PAPEL_LABELS[plan.possibility.papel]}>{plan.possibility.titulo}</span>
                 </a>
+                {plan.acoes.length > 0 ? (
+                  <div className="mb-3">
+                    <ProgressoPlano acoes={plan.acoes} mostrarLegenda={false} />
+                  </div>
+                ) : null}
                 {!isActive ? (
                   <form action={activatePlan.bind(null, plan.id)}>
                     <SubmitButton
@@ -147,10 +151,6 @@ export default async function PlanosPage() {
       ) : (
         <div className="mb-7 flex flex-col gap-2.5">
           {availablePossibilities.map((p) => {
-            const especificacaoPendente =
-              p.status === "APROVADA" &&
-              p.acoesEspecificacao.length > 0 &&
-              (p.acoesEspecificacao.some((a) => a.respondidoEm === null) || !p.feedbackEspecificacao);
             const conteudo = (
               <>
                 <span className="flex min-w-0 items-center gap-2">
@@ -160,19 +160,14 @@ export default async function PlanosPage() {
                   </span>
                 </span>
                 <span className="shrink-0 text-[13px] font-semibold text-petrol">
-                  {cota.esgotada && !especificacaoPendente
-                    ? "Sem planos disponíveis"
-                    : especificacaoPendente
-                      ? "Especificação pendente →"
-                      : "Criar plano →"}
+                  {cota.esgotada ? "Sem planos disponíveis" : "Criar plano →"}
                 </span>
               </>
             );
-            const classe = `flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-[14.5px] text-ink ${
-              especificacaoPendente ? "border-gold bg-gold-soft" : "border-line bg-paper-raised"
-            }`;
+            const classe =
+              "flex items-center justify-between gap-3 rounded-lg border border-line bg-paper-raised px-4 py-3 text-[14.5px] text-ink";
             // Sem vaga na cota, o item deixa de ser link: não dá para criar mais um plano.
-            return cota.esgotada && !especificacaoPendente ? (
+            return cota.esgotada ? (
               <div key={p.id} className={`${classe} opacity-70`}>
                 {conteudo}
               </div>

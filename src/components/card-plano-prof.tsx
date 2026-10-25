@@ -47,16 +47,12 @@ function entregaveis(): { titulo: string; texto: string }[] {
           texto: "Em vez de adivinhar, você descobre quais caminhos fazem mais sentido para o seu momento.",
         },
     {
-      titulo: "Plano personalizado de execução",
-      texto: "Ações organizadas por semana, de acordo com o tempo que você realmente tem.",
+      titulo: "Plano de execução com checklist",
+      texto: "As ações essenciais, na ordem certa, cada uma com checklist, orientações e os erros mais comuns.",
     },
     {
-      titulo: "Check-in semanal",
-      texto: "Você registra o que fez, e o plano se ajusta quando a semana não sai como previsto.",
-    },
-    {
-      titulo: "Agenda e evolução",
-      texto: "Suas tarefas distribuídas na semana e o seu progresso sempre à vista.",
+      titulo: "Seu progresso à vista",
+      texto: "Você vê quantas ações já concluiu e qual é a próxima, no seu ritmo.",
     },
     {
       titulo: "Apoio contra a procrastinação",

@@ -439,26 +439,54 @@ model Plan {
 }
 
 // =========================================================================
-// Ações padronizadas do plano — 5 a 8 por plano, a unidade narrativa
-// principal ("Ação 3 de 6"), cada uma agrupando 1+ semanas reais. O
-// check-in continua semanal (nenhuma mudança em Checkin/ExecutionGuidance)
-// — a Ação é só uma camada de significado sobre as mesmas semanas, não uma
-// substituição delas.
+// Ações do plano — de 5 a 10 por plano, NA ORDEM em que devem ser feitas. É a
+// unidade principal do plano (desde out/2026 não há mais semanas nem
+// tarefas por semana): cada Ação tem um checklist e orientações, e a pessoa
+// segue no ritmo dela. Os planos antigos (formato em semanas) ainda têm
+// PlanWeek/PlanTask ligados a estas mesmas Ações — legado, sem uso nos planos novos.
 // =========================================================================
+enum AcaoStatus {
+  A_FAZER
+  EM_ANDAMENTO
+  CONCLUIDA
+
+  @@map("acao_status")
+}
+
 model PlanAcao {
-  id           String   @id @default(uuid())
+  id           String     @id @default(uuid())
   planId       String
-  plan         Plan     @relation(fields: [planId], references: [id], onDelete: Cascade)
-  sequencia    Int // 1-8
+  plan         Plan       @relation(fields: [planId], references: [id], onDelete: Cascade)
+  sequencia    Int // 1-10
   nome         String // curto, 3-6 palavras
-  objetivo     String   @db.Text
-  escopoMinimo String   @db.Text // o que conta como concluída, independente do tempo que a pessoa levar
-  createdAt    DateTime @default(now())
+  objetivo     String     @db.Text
+  escopoMinimo String     @db.Text // "definição de pronto": o que conta como concluída, independente do tempo
+  status       AcaoStatus @default(A_FAZER) // derivado dos itens do checklist (ver src/lib/plano/acoes.ts)
+  concluidaEm  DateTime?
+  // { comoFazer: string[], pontosDeAtencao: string[], errosComuns: string[] } — null nos planos antigos
+  orientacoes  Json?
+  createdAt    DateTime   @default(now())
 
   weeks PlanWeek[]
+  itens PlanAcaoItem[]
 
   @@unique([planId, sequencia])
   @@map("plan_acoes")
+}
+
+// Item do checklist de uma Ação. Marcar/desmarcar atualiza o status da Ação.
+model PlanAcaoItem {
+  id        String    @id @default(uuid())
+  acaoId    String
+  acao      PlanAcao  @relation(fields: [acaoId], references: [id], onDelete: Cascade)
+  sequencia Int
+  texto     String    @db.Text
+  feito     Boolean   @default(false)
+  feitoEm   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@unique([acaoId, sequencia])
+  @@map("plan_acao_itens")
 }
 
 // =========================================================================
