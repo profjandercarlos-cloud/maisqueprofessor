@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { planoDeAcoesSchema } from "@/lib/ai-engine/generate-plano-acoes-openai";
-import { ADEQUACAO_STEPS, getResumeSlug } from "@/lib/adequacao/steps";
+import { OPCOES_ORCAMENTO, orcamentoValido } from "@/lib/adequacao/orcamento";
 import { medalhasDoPlano } from "./active-plan-badge";
 import { lerOrientacoes, resumoDasAcoes, statusDaAcao, type StatusAcao } from "./acoes";
 
@@ -96,16 +96,14 @@ describe("plano gerado pela IA", () => {
   });
 });
 
-describe("questionário de execução curto", () => {
-  it("tem só 3 perguntas, sem ritmo, distribuição, check-in nem ações aceitas", () => {
-    expect(ADEQUACAO_STEPS.map((s) => s.slug)).toEqual(["estagio-inicial", "horas-semanais", "orcamento"]);
+describe("pergunta única antes de criar o plano", () => {
+  it("só o orçamento é perguntado, com as 4 faixas do banco", () => {
+    expect(OPCOES_ORCAMENTO.map((o) => o.value)).toEqual(["SEM_INVESTIMENTO", "ATE_300", "DE_300_A_1000", "ACIMA_DE_1000"]);
   });
-  it("continua de onde parou e conclui quando as 3 estão respondidas", () => {
-    expect(getResumeSlug({})).toBe("estagio-inicial");
-    expect(getResumeSlug({ estagioInicial: "NUNCA_FIZ" })).toBe("horas-semanais");
-    expect(getResumeSlug({ estagioInicial: "NUNCA_FIZ", horasSemanaisDisponiveis: 4 })).toBe("orcamento");
-    expect(
-      getResumeSlug({ estagioInicial: "NUNCA_FIZ", horasSemanaisDisponiveis: 4, orcamentoTotal12Semanas: "ATE_300" }),
-    ).toBe("concluido");
+  it("só aceita uma faixa conhecida", () => {
+    expect(orcamentoValido("ATE_300")).toBe(true);
+    expect(orcamentoValido("")).toBe(false);
+    expect(orcamentoValido(null)).toBe(false);
+    expect(orcamentoValido("MUITO_DINHEIRO")).toBe(false);
   });
 });

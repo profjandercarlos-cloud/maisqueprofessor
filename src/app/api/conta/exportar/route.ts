@@ -170,7 +170,7 @@ export async function GET() {
     doc.addPage();
     h1(plan.possibility.titulo);
     meta(
-      `Status: ${PLAN_STATUS_LABEL[plan.status] ?? plan.status} · Iniciado em ${formatDate(plan.activatedAt, { day: "2-digit", month: "long", year: "numeric" })} · ${plan.tempoDisponivelHoras}h/semana declaradas`,
+      `Status: ${PLAN_STATUS_LABEL[plan.status] ?? plan.status} · Iniciado em ${formatDate(plan.activatedAt, { day: "2-digit", month: "long", year: "numeric" })}${plan.tempoDisponivelHoras > 0 ? ` · ${plan.tempoDisponivelHoras}h/semana declaradas` : ""}`,
     );
     rule();
 

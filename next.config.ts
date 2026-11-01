@@ -36,7 +36,11 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Páginas que saíram do produto: quem tinha o link salvo cai no Painel, em vez de um 404.
   async redirects() {
-    return ["/mapa", "/agenda", "/evolucao"].map((source) => ({ source, destination: "/", permanent: false }));
+    return [
+      ...["/mapa", "/agenda", "/evolucao"].map((source) => ({ source, destination: "/", permanent: false })),
+      // O questionário em etapas virou uma tela só: links antigos (/adequacao/<id>/<etapa>) caem nela.
+      { source: "/adequacao/:possibilityId/:etapa", destination: "/adequacao/:possibilityId", permanent: false },
+    ];
   },
   async headers() {
     return [

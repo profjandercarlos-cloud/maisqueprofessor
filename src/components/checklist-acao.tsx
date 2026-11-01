@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useTransition } from "react";
-import { alternarItem } from "@/app/planos/[planId]/acoes/[acaoId]/actions";
+import { alternarItem, marcarAcaoComoFeita } from "@/app/planos/[planId]/acoes/[acaoId]/actions";
 import { STATUS_ACAO_META, statusDaAcao } from "@/lib/plano/acoes";
 
 type Item = { id: string; texto: string; feito: boolean };
@@ -10,8 +10,8 @@ type Item = { id: string; texto: string; feito: boolean };
 // otimista) e grava em seguida; o estado da ação (a fazer, em andamento,
 // concluída) é recalculado aqui e, de forma definitiva, no servidor.
 export function ChecklistAcao({ planId, acaoId, itens }: { planId: string; acaoId: string; itens: Item[] }) {
-  const [otimista, alternarOtimista] = useOptimistic(itens, (atual, id: string) =>
-    atual.map((i) => (i.id === id ? { ...i, feito: !i.feito } : i)),
+  const [otimista, alternarOtimista] = useOptimistic(itens, (atual, id: string | "todos") =>
+    atual.map((i) => (id === "todos" || i.id === id ? { ...i, feito: id === "todos" ? true : !i.feito } : i)),
   );
   const [pendente, iniciar] = useTransition();
 
@@ -19,6 +19,13 @@ export function ChecklistAcao({ planId, acaoId, itens }: { planId: string; acaoI
     iniciar(async () => {
       alternarOtimista(id);
       await alternarItem(planId, acaoId, id);
+    });
+  }
+
+  function marcarTodos() {
+    iniciar(async () => {
+      alternarOtimista("todos");
+      await marcarAcaoComoFeita(planId, acaoId);
     });
   }
 
@@ -73,6 +80,17 @@ export function ChecklistAcao({ planId, acaoId, itens }: { planId: string; acaoI
           </li>
         ))}
       </ul>
+
+      {feitos < otimista.length ? (
+        <button
+          type="button"
+          onClick={marcarTodos}
+          disabled={pendente}
+          className="mt-4 rounded-lg border border-petrol px-4 py-2 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft disabled:opacity-60"
+        >
+          Já fiz esta ação
+        </button>
+      ) : null}
     </div>
   );
 }

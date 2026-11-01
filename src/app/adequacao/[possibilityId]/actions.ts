@@ -5,26 +5,22 @@ import { db } from "@/lib/db";
 import { donoDoNegocio } from "@/lib/plano/dono-do-negocio";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { MENSAGEM_COTA_ESGOTADA, cotaDePlanos } from "@/lib/planos/cota";
-import {
-  type EstagioInicial,
-  NivelExecucao,
-  type OrcamentoFaixa,
-  type Prisma,
-} from "@/generated/prisma/client";
+import { NivelExecucao, type Prisma } from "@/generated/prisma/client";
 import { generatePlanoDeAcoesOpenAI } from "@/lib/ai-engine/generate-plano-acoes-openai";
 import { generateMapaExecucaoOpenAI, type MapaExecucao } from "@/lib/ai-engine/generate-mapa-execucao-openai";
 import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
-import { getResumeSlug } from "@/lib/adequacao/steps";
+import { orcamentoValido } from "@/lib/adequacao/orcamento";
 
 function fail(possibilityId: string, message: string): never {
-  redirect(`/adequacao/${possibilityId}/concluido?error=${encodeURIComponent(message)}`);
+  redirect(`/adequacao/${possibilityId}?error=${encodeURIComponent(message)}`);
 }
 
-// Cria o plano de execução (por ações) logo depois do questionário curto. Não há mais
-// a Etapa de Especificação nem semanas: o plano nasce do primeiro serviço do negócio.
-export async function generatePlan(possibilityId: string) {
+// Cria o plano de execução (por ações) a partir de UMA pergunta, o orçamento. Não há
+// mais recapitulação, horas por semana nem estágio: o plano é o caminho completo até o
+// primeiro serviço do negócio, e quem já fez uma etapa a marca como feita no checklist.
+export async function criarPlano(possibilityId: string, formData: FormData) {
   const user = await requireActiveAccess();
 
   const possibility = await db.possibility.findUnique({
@@ -32,30 +28,32 @@ export async function generatePlan(possibilityId: string) {
     include: { round: { include: { diagnostic: true } }, plan: true },
   });
   if (!possibility || donoDoNegocio(possibility) !== user.id) redirect("/");
-  if (possibility.status === "REJEITADA") redirect("/");
+  if (possibility.status === "REJEITADA") redirect("/planos");
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
-  const response = await getOrCreateAdequacaoResponse(possibilityId);
-  const answers = response.answers as Record<string, unknown>;
-  const resumeSlug = getResumeSlug(answers);
-  if (resumeSlug !== "concluido") {
-    redirect(`/adequacao/${possibilityId}/${resumeSlug}`);
-  }
+  const orcamento = formData.get("orcamento");
+  if (!orcamentoValido(orcamento)) fail(possibilityId, "Escolha uma das opções de orçamento para criar o plano.");
 
   // A cota vem antes de qualquer chamada de IA: todo plano criado conta.
   const cota = cotaDePlanos(await db.plan.count({ where: { userId: user.id } }));
-  if (cota.esgotada) {
-    fail(possibilityId, MENSAGEM_COTA_ESGOTADA);
-  }
+  if (cota.esgotada) fail(possibilityId, MENSAGEM_COTA_ESGOTADA);
+
+  const response = await getOrCreateAdequacaoResponse(possibilityId);
+  await db.adequacaoResponse.update({
+    where: { id: response.id },
+    data: { answers: { ...(response.answers as Record<string, unknown>), orcamentoTotal12Semanas: orcamento } },
+  });
+
+  const diagnosticInput = possibility.round ? formatDiagnosticInput(possibility.round.diagnostic) : null;
 
   // O Mapa de Execução (invisível para a pessoa) só é gerado agora, na primeira vez
-  // que ela chega até aqui com este negócio escolhido. Os 4 não escolhidos nunca
+  // que ela chega até aqui com este negócio escolhido. Os que não escolheu nunca
   // pagam essa chamada.
   let mapaExecucao = possibility.mapaExecucao as unknown as MapaExecucao | null;
   if (!mapaExecucao) {
     try {
       mapaExecucao = await generateMapaExecucaoOpenAI({
-        diagnosticInput: possibility.round ? formatDiagnosticInput(possibility.round.diagnostic) : null,
+        diagnosticInput,
         possibility: {
           titulo: possibility.titulo,
           comoFunciona: possibility.comoFunciona,
@@ -76,10 +74,6 @@ export async function generatePlan(possibilityId: string) {
     });
   }
 
-  const tempoDisponivelHoras = Number(answers.horasSemanaisDisponiveis);
-  const estagioInicial = answers.estagioInicial as EstagioInicial;
-  const investimentoFaixa = answers.orcamentoTotal12Semanas as OrcamentoFaixa;
-
   let plano;
   try {
     plano = await generatePlanoDeAcoesOpenAI({
@@ -91,10 +85,8 @@ export async function generatePlan(possibilityId: string) {
         pontoDeAtencao: possibility.pontoDeAtencao,
       },
       mapaExecucao,
-      estagioInicial,
-      horasPorSemana: tempoDisponivelHoras,
-      orcamentoFaixa: investimentoFaixa,
-      diagnosticInput: possibility.round ? formatDiagnosticInput(possibility.round.diagnostic) : null,
+      orcamentoFaixa: orcamento,
+      diagnosticInput,
     });
   } catch (err) {
     console.error("Erro ao gerar o plano de ações", err);
@@ -104,9 +96,8 @@ export async function generatePlan(possibilityId: string) {
 
   await db.adequacaoResponse.update({ where: { id: response.id }, data: { status: "CONCLUIDO" } });
 
-  // Conflito explícito: alguma condição informada impede o primeiro serviço. Não cria
-  // o Plan e fecha este negócio de vez (REJEITADA), para a pessoa não repetir a chamada
-  // mais cara do app indefinidamente.
+  // Conflito explícito: o orçamento impede o primeiro serviço. Não cria o Plan e fecha
+  // este negócio de vez (REJEITADA), para a pessoa não repetir a chamada mais cara do app.
   if (plano.encaixe.classificacao === "conflito_explicito") {
     await db.possibility.update({ where: { id: possibility.id }, data: { status: "REJEITADA" } });
     const aviso = encodeURIComponent(plano.encaixe.explicacao);
@@ -127,16 +118,16 @@ export async function generatePlan(possibilityId: string) {
     data: {
       userId: user.id,
       possibilityId: possibility.id,
-      tempoDisponivelHoras,
-      horasNucleoSemana: tempoDisponivelHoras,
-      investimentoFaixa,
-      estagioInicial,
+      investimentoFaixa: orcamento,
       classificacaoEncaixe: plano.encaixe.classificacao,
       resultadoMinimoViavel: plano.resumo.resultado_minimo_viavel,
       ttfrResultado: mapaExecucao.primeiroResultadoObservavel,
       relatorio: { versao: "acoes_v1", encaixe: plano.encaixe, resumo: plano.resumo } as Prisma.InputJsonValue,
-      // Colunas do formato antigo (semanas), exigidas pelo banco mas sem uso nos planos
-      // por ações: ficam com valores neutros. "Sistema recomenda" = nenhuma preferência.
+      // Colunas do formato antigo (semanas, horas, estágio), exigidas pelo banco mas sem uso
+      // nos planos por ações: ficam com valores neutros.
+      tempoDisponivelHoras: 0,
+      horasNucleoSemana: 0,
+      estagioInicial: "NUNCA_FIZ",
       diaCheckin: 0,
       distribuicaoTempo: "AGENDA_VARIAVEL",
       regraSegurancaFinanceira: "NAO_SE_APLICA",

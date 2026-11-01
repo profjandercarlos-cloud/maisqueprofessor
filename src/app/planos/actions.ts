@@ -30,7 +30,7 @@ export async function activatePlan(planId: string) {
 }
 
 // Começa um plano a partir de uma ideia favoritada: a ideia vira um negócio da pessoa
-// (uma vez só por favorito) e segue para o mesmo questionário curto dos negócios
+// (uma vez só por favorito) e segue para a mesma tela de criação de plano dos negócios
 // personalizados. A cota é checada de novo antes da IA, na tela final do questionário.
 export async function criarPlanoDeFavorito(ideiaId: string) {
   const user = await requireActiveAccess();

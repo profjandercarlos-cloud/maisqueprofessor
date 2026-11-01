@@ -7,8 +7,9 @@ import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { STATUS_ACAO_META } from "@/lib/plano/acoes";
 import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
 
-// As respostas do questionário curto, em frases curtas, só para leitura: mudar uma
-// delas pediria um plano novo (e uma vaga da cota).
+// As condições informadas ao criar o plano, só para leitura: mudar uma delas pediria um
+// plano novo (e uma vaga da cota). Planos criados antes de out/2026 também guardam o
+// estágio e as horas por semana; os novos guardam só o orçamento.
 const ESTAGIO_CURTO: Record<string, string> = {
   NUNCA_FIZ: "Nunca fiz nada parecido",
   PESQUISEI_NAO_EXECUTEI: "Já pesquisei, mas não executei",
@@ -101,8 +102,10 @@ export default async function PlanPage({ params }: { params: Promise<{ planId: s
 
           <p className="mb-6 text-[13px] leading-[1.6] text-ink-muted">
             <span className="font-semibold text-ink">Suas condições neste plano: </span>
-            {ESTAGIO_CURTO[plan.estagioInicial] ?? plan.estagioInicial} · {String(plan.tempoDisponivelHoras).replace(".", ",")} h por
-            semana · investimento {INVESTIMENTO_LABELS[plan.investimentoFaixa]}
+            {plan.tempoDisponivelHoras > 0
+              ? `${ESTAGIO_CURTO[plan.estagioInicial] ?? plan.estagioInicial} · ${String(plan.tempoDisponivelHoras).replace(".", ",")} h por semana · `
+              : ""}
+            investimento {INVESTIMENTO_LABELS[plan.investimentoFaixa]}
           </p>
 
           <section className="mb-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">

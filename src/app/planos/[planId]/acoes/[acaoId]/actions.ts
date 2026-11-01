@@ -34,3 +34,24 @@ export async function alternarItem(planId: string, acaoId: string, itemId: strin
   revalidatePath(`/planos/${planId}`);
   revalidatePath(`/planos/${planId}/acoes/${acaoId}`);
 }
+
+// "Já fiz esta ação": marca o checklist inteiro de uma vez, para quem já cumpriu essa
+// etapa antes de abrir o plano. Os itens já marcados mantêm a data em que foram feitos.
+export async function marcarAcaoComoFeita(planId: string, acaoId: string): Promise<void> {
+  const user = await requireActiveAccess();
+
+  const acao = await db.planAcao.findFirst({
+    where: { id: acaoId, planId, plan: { userId: user.id } },
+    select: { id: true },
+  });
+  if (!acao) return;
+
+  const agora = new Date();
+  await db.planAcaoItem.updateMany({ where: { acaoId, feito: false }, data: { feito: true, feitoEm: agora } });
+  await db.planAcao.update({ where: { id: acaoId }, data: { status: "CONCLUIDA", concluidaEm: agora } });
+
+  revalidatePath("/");
+  revalidatePath("/planos");
+  revalidatePath(`/planos/${planId}`);
+  revalidatePath(`/planos/${planId}/acoes/${acaoId}`);
+}

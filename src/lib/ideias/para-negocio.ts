@@ -1,7 +1,7 @@
 import type { ConteudoIdeia } from "./conteudo";
 
 // Uma ideia favoritada vira um "negócio" (Possibility) para entrar no mesmo caminho
-// do plano: questionário curto → Mapa de Execução → plano por ações. Os campos de
+// do plano: pergunta de orçamento → Mapa de Execução → plano por ações. Os campos de
 // texto vêm do conteúdo da ideia; os de análise do gerador (impressão digital,
 // horizontes, base no histórico) ficam neutros, porque nenhum diagnóstico existe.
 export function negocioDeIdeia(conteudo: ConteudoIdeia) {

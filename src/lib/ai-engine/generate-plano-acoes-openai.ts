@@ -75,14 +75,6 @@ const JSON_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-const ESTAGIO_TEXTO: Record<string, string> = {
-  NUNCA_FIZ: "Nunca fez nada relacionado e precisa começar do início.",
-  PESQUISEI_NAO_EXECUTEI: "Já pesquisou ou estudou um pouco, mas ainda não executou.",
-  FIZ_ISOLADO: "Já fez algo parecido de forma isolada ou informal.",
-  TENHO_CASO_PORTFOLIO: "Já tem um caso, amostra, portfólio ou resultado que pode organizar.",
-  ATUO_PARCIALMENTE: "Já atua parcialmente nisso e quer estruturar como atividade profissional.",
-};
-
 const ORCAMENTO_TEXTO: Record<string, string> = {
   SEM_INVESTIMENTO: "Não quer investir nada por enquanto.",
   ATE_300: "Até R$ 300 no total.",
@@ -101,8 +93,6 @@ export type NegocioParaPlano = {
 export async function generatePlanoDeAcoesOpenAI(params: {
   negocio: NegocioParaPlano;
   mapaExecucao: MapaExecucao;
-  estagioInicial: string;
-  horasPorSemana: number;
   orcamentoFaixa: string;
   /** Presente só quando o negócio nasceu do diagnóstico; ideias favoritas não têm. */
   diagnosticInput?: string | null;
@@ -126,9 +116,7 @@ Competências a desenvolver: ${m.competenciasADesenvolver.join("; ")}
 Ações essenciais: ${m.acoesEssenciais.join("; ")}
 Principais dependências: ${m.principaisDependencias.join("; ")}
 Complexidade: ${m.nivelComplexidade}`,
-    `CONDIÇÕES DA PESSOA
-Ponto de partida: ${ESTAGIO_TEXTO[params.estagioInicial] ?? params.estagioInicial}
-Horas por semana que consegue reservar: ${params.horasPorSemana}
+    `CONDIÇÃO DA PESSOA
 Orçamento: ${ORCAMENTO_TEXTO[params.orcamentoFaixa] ?? params.orcamentoFaixa}`,
   ].filter((p): p is string => Boolean(p));
 
