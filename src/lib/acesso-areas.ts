@@ -6,6 +6,10 @@ export const AREAS_TRANCADAS: Record<string, { titulo: string; descricao: string
     titulo: "Painel",
     descricao: "O seu painel do dia a dia: o plano ativo, a sua próxima ação, o quanto você já avançou e em que ponto da jornada você está.",
   },
+  "/diagnostico/respostas": {
+    titulo: "Meu diagnóstico",
+    descricao: "As respostas do seu diagnóstico, para reler a qualquer momento o que você contou sobre você.",
+  },
   "/diagnostico/concluido": {
     titulo: "Meus negócios",
     descricao:

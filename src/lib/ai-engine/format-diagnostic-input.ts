@@ -113,6 +113,15 @@ export function formatDiagnosticInput(
   return lines.join("\n");
 }
 
+// Títulos dos blocos para a pessoa ler. BLOCK_TITLES (acima) é o que a IA recebe e não muda.
+const TITULO_DO_BLOCO_NA_TELA: Record<number, string> = {
+  2: "Suas experiências reais",
+  3: "O que te interessa e mobiliza",
+  4: "Seu futuro profissional",
+  5: "Sobre o caminho que você escolheu",
+  6: "Sua realidade financeira",
+};
+
 export type BlocoDeRespostas = {
   titulo: string;
   itens: { pergunta: string; resposta: string }[];
@@ -140,9 +149,14 @@ export function listarRespostas(
   for (const step of getStepsForRoute(rota)) {
     // A intenção e a rota já estão em "Sua direção".
     if (step.type === "intention" || step.slug === ROTA_PROFISSIONAL_SLUG) continue;
+    // O bloco 1 (direção da busca) se junta a "Sua direção", que já abre a lista.
+    if (step.block === 1) {
+      blocos[0].itens.push({ pergunta: step.question, resposta: formatAnswer(step, answers) });
+      continue;
+    }
     if (step.block !== blocoAtual) {
       blocoAtual = step.block;
-      atual = { titulo: BLOCK_TITLES[blocoAtual] ?? `Bloco ${blocoAtual}`, itens: [] };
+      atual = { titulo: TITULO_DO_BLOCO_NA_TELA[blocoAtual] ?? `Bloco ${blocoAtual}`, itens: [] };
       blocos.push(atual);
     }
     atual?.itens.push({ pergunta: step.question, resposta: formatAnswer(step, answers) });

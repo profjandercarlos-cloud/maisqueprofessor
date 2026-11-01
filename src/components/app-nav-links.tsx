@@ -13,6 +13,15 @@ function PainelIcon() {
   );
 }
 
+function DiagnosticoIcon() {
+  return (
+    <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
+      <rect x="3.5" y="2.5" width="11" height="13" rx="1.6" />
+      <path d="M6.2 6.5h5.6M6.2 9h5.6M6.2 11.5h3.2" />
+    </svg>
+  );
+}
+
 function PossibilidadesIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
@@ -91,6 +100,7 @@ const NEGOCIOS_ITEM = { href: "/negocios", label: "Ideias de negócios", Icon: N
 
 const BASE_ITEMS = [
   { href: "/", label: "Painel", Icon: PainelIcon },
+  { href: "/diagnostico/respostas", label: "Meu diagnóstico", Icon: DiagnosticoIcon },
   { href: "/diagnostico/concluido", label: "Meus negócios", Icon: PossibilidadesIcon },
   { href: "/planos", label: "Planos de execução", Icon: PlanosIcon },
   { href: "/anti-procrastinacao", label: "Antiprocrastinação", Icon: AntiProcrastinacaoIcon },
@@ -104,7 +114,11 @@ function isActiveHref(pathname: string, href: string) {
   // "Possibilidades" cobre toda a árvore /diagnostico (wizard, incremento,
   // ajuste, tela das 5 possibilidades) — não só o /diagnostico/concluido
   // exato pro qual o item aponta.
-  if (href.startsWith("/diagnostico")) return pathname.startsWith("/diagnostico");
+  // "Meu diagnóstico" (as respostas) é um item à parte e não acende "Meus negócios".
+  if (href === "/diagnostico/respostas") return pathname.startsWith("/diagnostico/respostas");
+  if (href.startsWith("/diagnostico")) {
+    return pathname.startsWith("/diagnostico") && !pathname.startsWith("/diagnostico/respostas");
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -134,7 +148,7 @@ export function AppNavLinks({
   // produto continuam no menu, com cadeado, apontando pra página de compra.
   // Conta paga: tudo liberado, com Pequenos Negócios logo depois de Possibilidades.
   const base = pago
-    ? [...BASE_ITEMS.slice(0, 3), NEGOCIOS_ITEM, ...BASE_ITEMS.slice(3)]
+    ? [...BASE_ITEMS.slice(0, 4), NEGOCIOS_ITEM, ...BASE_ITEMS.slice(4)]
     : [NEGOCIOS_ITEM, ...BASE_ITEMS];
   const items = (isAdmin ? [...base, ADMIN_ITEM] : base).map((item) => {
     const trancado = !pago && item.href in AREAS_TRANCADAS;

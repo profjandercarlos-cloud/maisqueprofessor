@@ -177,6 +177,27 @@ export default async function Home() {
         </section>
       )}
 
+      {diagnosticoConcluido ? (
+        <a
+          href="/diagnostico/respostas"
+          className="mt-6 flex items-center gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised p-4 shadow-[var(--shadow)] transition-colors hover:border-petrol"
+        >
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-gold-soft text-petrol">
+            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[22px] w-[22px]" aria-hidden>
+              <rect x="3.5" y="2.5" width="11" height="13" rx="1.6" />
+              <path d="M6.2 6.5h5.6M6.2 9h5.6M6.2 11.5h3.2" />
+            </svg>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-serif text-[17px] font-medium text-ink">Seu diagnóstico</span>
+            <span className="block text-[13.5px] text-ink-muted">
+              Veja o que você respondeu em {formatDate(diagnostic!.updatedAt, { day: "2-digit", month: "long", year: "numeric" })}.
+            </span>
+          </span>
+          <span className="shrink-0 text-[13px] font-semibold text-petrol">Ver respostas →</span>
+        </a>
+      ) : null}
+
       {/* Seu caminho: o antigo Mapa, em três passos. Diagnóstico e favoritos são duas portas para os mesmos planos. */}
       <section className="mt-9" aria-label="Seu caminho">
         <h2 className="mb-4 font-mono text-[11px] tracking-[0.08em] text-gold uppercase">Seu caminho</h2>
@@ -195,7 +216,7 @@ export default async function Home() {
             }
             links={
               diagnosticoConcluido
-                ? [{ href: "/diagnostico/respostas", texto: "Ver minhas respostas" }]
+                ? []
                 : [{ href: diagnosticCta.href, texto: diagnostic ? "Continuar diagnóstico" : "Começar diagnóstico" }]
             }
           />
