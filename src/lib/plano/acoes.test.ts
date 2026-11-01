@@ -81,13 +81,19 @@ describe("plano gerado pela IA", () => {
     acoes: Array.from({ length: n }, (_, i) => acao(i + 1)),
   });
 
-  it("aceita de 5 a 10 ações", () => {
+  it("aceita de 5 a 12 ações (o prompt pede de 5 a 10, a validação é uma folga)", () => {
     expect(planoDeAcoesSchema.safeParse(base(5)).success).toBe(true);
     expect(planoDeAcoesSchema.safeParse(base(10)).success).toBe(true);
+    expect(planoDeAcoesSchema.safeParse(base(12)).success).toBe(true);
   });
-  it("recusa menos de 5, mais de 10, checklist curto e classificação desconhecida", () => {
+  it("não recusa um plano só porque um checklist passou de 9 passos", () => {
+    const longo = base(6);
+    longo.acoes[2].checklist = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"];
+    expect(planoDeAcoesSchema.safeParse(longo).success).toBe(true);
+  });
+  it("recusa menos de 5, mais de 12, checklist curto e classificação desconhecida", () => {
     expect(planoDeAcoesSchema.safeParse(base(4)).success).toBe(false);
-    expect(planoDeAcoesSchema.safeParse(base(11)).success).toBe(false);
+    expect(planoDeAcoesSchema.safeParse(base(13)).success).toBe(false);
     const curto = base(5);
     curto.acoes[0].checklist = ["só um"];
     expect(planoDeAcoesSchema.safeParse(curto).success).toBe(false);
