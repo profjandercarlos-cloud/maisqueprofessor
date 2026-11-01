@@ -12,6 +12,7 @@ import { logDebugError } from "@/lib/debug-error-log";
 import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { getOrCreateAdequacaoResponse } from "@/lib/adequacao/get-active-response";
 import { orcamentoValido } from "@/lib/adequacao/orcamento";
+import { normalizarMarcos } from "@/lib/plano/marcos";
 
 function fail(possibilityId: string, message: string): never {
   redirect(`/adequacao/${possibilityId}?error=${encodeURIComponent(message)}`);
@@ -114,6 +115,9 @@ export async function criarPlano(possibilityId: string, formData: FormData) {
     data: { status: "PAUSADO", pausedAt: new Date() },
   });
 
+  // 5 marcos (medalhas), cada um fechado por uma ação; se a IA errou a lista, ela é refeita aqui.
+  const nomeDoMarco = new Map(normalizarMarcos(plano.marcos, plano.acoes.length).map((m) => [m.acao, m.nome]));
+
   const plan = await db.plan.create({
     data: {
       userId: user.id,
@@ -143,6 +147,7 @@ export async function criarPlano(possibilityId: string, formData: FormData) {
           nome: acao.nome,
           objetivo: acao.objetivo,
           escopoMinimo: acao.definicao_de_pronto,
+          marco: nomeDoMarco.get(index + 1) ?? null,
           orientacoes: {
             comoFazer: acao.como_fazer,
             pontosDeAtencao: acao.pontos_de_atencao,

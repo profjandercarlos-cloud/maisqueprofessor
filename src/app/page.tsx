@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/app-header";
 import { PapelIcon } from "@/components/papel-icon";
+import { MedalhasDoPlano } from "@/components/medalhas-do-plano";
 import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
@@ -92,6 +93,11 @@ export default async function Home() {
           {/* Evolução: o progresso do plano ativo, num lugar só (era uma página à parte). */}
           <section className="mb-5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
             <ProgressoPlano acoes={acoes} />
+            {acoes.some((a) => a.marco) ? (
+              <div className="mt-5 border-t border-line pt-4">
+                <MedalhasDoPlano acoes={acoes} />
+              </div>
+            ) : null}
           </section>
 
           {proxima ? (

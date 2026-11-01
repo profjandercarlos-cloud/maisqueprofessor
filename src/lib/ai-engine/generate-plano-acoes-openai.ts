@@ -31,6 +31,9 @@ export const planoDeAcoesSchema = z.object({
     )
     .min(5)
     .max(10),
+  // Os 5 marcos (medalhas): cada um aponta a ação (1 a N) que o fecha. Não é validado aqui:
+  // se vier errado, marcos.ts distribui os marcos por conta própria em vez de falhar o plano.
+  marcos: z.array(z.object({ acao: z.number().int(), nome: texto })).default([]),
 });
 
 export type PlanoDeAcoes = z.infer<typeof planoDeAcoesSchema>;
@@ -70,8 +73,17 @@ const JSON_SCHEMA = {
         additionalProperties: false,
       },
     },
+    marcos: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { acao: { type: "integer" }, nome: str },
+        required: ["acao", "nome"],
+        additionalProperties: false,
+      },
+    },
   },
-  required: ["encaixe", "resumo", "acoes"],
+  required: ["encaixe", "resumo", "acoes", "marcos"],
   additionalProperties: false,
 } as const;
 

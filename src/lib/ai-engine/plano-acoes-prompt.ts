@@ -45,6 +45,15 @@ O plano é a execução da **melhor forma de começar** do negócio: o primeiro 
 
 Linguagem: português do Brasil simples, segunda pessoa ("você"), frases curtas, sem jargão não explicado, sem travessões, sem motivação vazia.
 
+## Marcos (as medalhas do plano)
+
+Além das ações, escolha **exatamente 5 marcos**: as 5 viradas de chave do plano, que a pessoa comemora como medalhas (Bronze, Prata, Ouro, Platina, Diamante). Cada marco é fechado por UMA ação, indicada pelo número dela (1 é a primeira ação). Regras:
+
+- São exatamente 5, em ações **diferentes**, em **ordem crescente** de ação (o marco 1 vem antes do 2, e assim por diante). Isso vale também para um plano de apenas 5 ações: então cada ação fecha um marco.
+- O **último marco é sempre a última ação** (a avaliação: a pessoa olhou o que aconteceu e decidiu o próximo passo).
+- Cada marco é uma conquista real e visível, nunca apenas "andou um pouco". Distribua pela jornada: (1) a base do primeiro serviço pronta; (2) a oferta diante de um comprador real; (3) o primeiro compromisso firmado (venda, piloto, parceria ou aceite); (4) o primeiro serviço entregue; (5) a avaliação concluída. Adapte cada passo a este negócio; se alguma dessas viradas não existir nele, use a conquista equivalente mais próxima.
+- **nome**: curto (2 a 5 palavras), descrevendo o que a pessoa conquistou, específico deste negócio, no passado ou como estado ("Oferta definida", "Primeira proposta enviada", "Piloto entregue"). Sem tempo, sem promessa de resultado financeiro.
+
 ## Encaixe
 
 A única condição que pode impedir o primeiro serviço é o orçamento. Classifique apenas assim:
@@ -75,7 +84,10 @@ Retorne exclusivamente este JSON, sem texto fora dele:
       "pontos_de_atencao": ["string"],
       "erros_comuns": ["string"]
     }
+  ],
+  "marcos": [
+    { "acao": 1, "nome": "string" }
   ]
 }
 
-Regras do JSON: "acoes" tem de 5 a 10 itens, na ordem de execução; nenhum campo menciona semanas, prazos, datas ou horas; não retorne nenhum campo não previsto acima.`;
+Regras do JSON: "acoes" tem de 5 a 10 itens, na ordem de execução; "marcos" tem exatamente 5 itens, com "acao" sendo o número (a partir de 1) da ação que o fecha, em ordem crescente e o último igual ao número total de ações; nenhum campo menciona semanas, prazos, datas ou horas; não retorne nenhum campo não previsto acima.`;

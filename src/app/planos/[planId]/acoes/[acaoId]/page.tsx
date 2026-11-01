@@ -6,6 +6,7 @@ import { SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { lerOrientacoes } from "@/lib/plano/acoes";
+import { LEVEL_LABELS, LEVEL_ORDER } from "@/lib/plano/evolucao";
 import type { ReactNode } from "react";
 
 function Bloco({ titulo, icone, itens }: { titulo: string; icone: ReactNode; itens: string[] }) {
@@ -37,7 +38,7 @@ export default async function AcaoPage({ params }: { params: Promise<{ planId: s
     where: { id: planId },
     include: {
       possibility: { select: { titulo: true } },
-      acoes: { orderBy: { sequencia: "asc" }, select: { id: true, sequencia: true, nome: true } },
+      acoes: { orderBy: { sequencia: "asc" }, select: { id: true, sequencia: true, nome: true, marco: true } },
     },
   });
   if (!plan || plan.userId !== user.id) notFound();
@@ -51,6 +52,8 @@ export default async function AcaoPage({ params }: { params: Promise<{ planId: s
   const orientacoes = lerOrientacoes(acao.orientacoes);
   const indice = plan.acoes.findIndex((a) => a.id === acao.id);
   const anterior = indice > 0 ? plan.acoes[indice - 1] : null;
+  const posicaoDoMarco = acao.marco ? plan.acoes.filter((a) => a.marco).findIndex((a) => a.id === acao.id) : -1;
+  const medalha = posicaoDoMarco >= 0 ? LEVEL_LABELS[LEVEL_ORDER[posicaoDoMarco + 1]] : null;
   const proxima = indice >= 0 && indice < plan.acoes.length - 1 ? plan.acoes[indice + 1] : null;
 
   return (
@@ -73,6 +76,25 @@ export default async function AcaoPage({ params }: { params: Promise<{ planId: s
         </h1>
         <p className="text-[15.5px] leading-[1.55] text-ink">{acao.objetivo}</p>
       </div>
+
+      {acao.marco && medalha ? (
+        <p
+          className={`mb-5 rounded-lg px-4 py-3 text-[13.5px] leading-[1.5] ${
+            acao.status === "CONCLUIDA" ? "bg-gold-soft text-ink" : "border border-line text-ink-muted"
+          }`}
+        >
+          {acao.status === "CONCLUIDA" ? (
+            <>
+              <span className="font-semibold text-petrol">Medalha {medalha} conquistada:</span> {acao.marco}.
+            </>
+          ) : (
+            <>
+              Concluir esta ação conquista a <span className="font-semibold text-petrol">medalha {medalha}</span>:{" "}
+              {acao.marco}.
+            </>
+          )}
+        </p>
+      ) : null}
 
       <div className="flex flex-col gap-3.5">
         <section className="rounded-[var(--radius-app)] border border-gold bg-gold-soft p-5">

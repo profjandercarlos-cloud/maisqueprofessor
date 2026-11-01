@@ -472,6 +472,10 @@ model PlanAcao {
   concluidaEm  DateTime?
   // { comoFazer: string[], pontosDeAtencao: string[], errosComuns: string[] } — null nos planos antigos
   orientacoes  Json?
+  // Nome do marco (medalha) que esta ação fecha, escolhido pela IA ao gerar o plano. Cada plano tem 5
+  // marcos, em ações diferentes e em ordem crescente, e o último é sempre a ação de avaliação.
+  // null na maioria das ações e em todas as dos planos anteriores a esta coluna.
+  marco        String?
   createdAt    DateTime   @default(now())
 
   weeks PlanWeek[]
