@@ -8,6 +8,9 @@ import { formatDiagnosticInput } from "@/lib/ai-engine/format-diagnostic-input";
 import { OBSTACLE_LABELS } from "@/lib/orientacao/biblioteca";
 import { REPORT_SECTIONS, type Relatorio } from "@/lib/plano/relatorio";
 import { INVESTIMENTO_LABELS } from "@/lib/plano/investimento-labels";
+import { ANTI_PROCRASTINACAO_ITENS } from "@/lib/anti-procrastinacao/itens";
+import { nomeDaCategoria } from "@/lib/dicas/categorias";
+import { dataParaDia } from "@/lib/presenca/dias";
 
 const MANROPE_PATH = join(process.cwd(), "src/assets/fonts/Manrope-ExtraBold.woff");
 
@@ -67,6 +70,18 @@ export async function GET() {
   if (!dbUser) {
     return NextResponse.json({ error: "usuário não encontrado" }, { status: 404 });
   }
+
+  // Lista de presença, caderno de dicas e as respostas da antiprocrastinação antiga (a página
+  // saiu do produto, mas os dados continuam sendo da pessoa).
+  const [presencas, reacoesDeDicas, respostasAntigas] = await Promise.all([
+    db.presenca.findMany({ where: { userId: user.id }, select: { dia: true }, orderBy: { dia: "asc" } }),
+    db.dicaReacao.findMany({ where: { userId: user.id }, include: { dica: true }, orderBy: { updatedAt: "asc" } }),
+    db.antiProcrastinacaoResposta.findMany({
+      where: { plan: { userId: user.id } },
+      include: { plan: { select: { possibility: { select: { titulo: true } } } } },
+      orderBy: { updatedAt: "asc" },
+    }),
+  ]);
 
   const doc = new PDFDocument({ size: "A4", margins: { top: 60, bottom: 60, left: 60, right: 60 } });
   const chunks: Buffer[] = [];
@@ -244,6 +259,39 @@ export async function GET() {
         if (week.checkin.guidance) meta(`Orientação recebida: ${week.checkin.guidance.personalizedText}`);
       }
       if (week.journalEntry) body(`Diário desta semana: ${week.journalEntry.text}`);
+    }
+  }
+
+  if (presencas.length > 0) {
+    rule();
+    h1("Lista de presença");
+    body(`${presencas.length} ${presencas.length === 1 ? "dia" : "dias"} em que você marcou presença.`);
+    const porMes = new Map<string, string[]>();
+    for (const pr of presencas) {
+      const dia = dataParaDia(pr.dia);
+      porMes.set(dia.slice(0, 7), [...(porMes.get(dia.slice(0, 7)) ?? []), dia.slice(8)]);
+    }
+    for (const [mes, dias] of porMes) {
+      const [ano, m] = mes.split("-");
+      meta(`${m}/${ano}: dias ${dias.join(", ")}`);
+    }
+  }
+
+  if (reacoesDeDicas.length > 0) {
+    const ROTULO: Record<string, string> = { GUARDADA: "guardada", JA_FACO: "já faço isso", NAO_E_PARA_MIM: "não é para mim" };
+    h2("Dicas e suas respostas");
+    for (const r of reacoesDeDicas) {
+      h3(`${r.dica.titulo} (${nomeDaCategoria(r.dica.categoria)}): ${ROTULO[r.tipo] ?? r.tipo}`);
+      if (r.nota) body(`Sua anotação: ${r.nota}`);
+    }
+  }
+
+  if (respostasAntigas.length > 0) {
+    h2("Antiprocrastinação (respostas antigas)");
+    for (const r of respostasAntigas) {
+      const item = ANTI_PROCRASTINACAO_ITENS.find((i) => i.key === r.itemKey);
+      h3(`${item?.titulo ?? r.itemKey} — ${r.plan.possibility.titulo}`);
+      body(r.resposta);
     }
   }
 

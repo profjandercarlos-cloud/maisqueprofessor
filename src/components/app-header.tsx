@@ -3,10 +3,22 @@ import { AppLogoMark } from "@/components/app-logo-mark";
 import { Medal } from "@/components/medal";
 import { PapelIcon, PAPEL_LABELS } from "@/components/papel-icon";
 import { loadActivePlanBadge } from "@/lib/plano/active-plan-badge";
+import { carregarTotalDePresencas } from "@/lib/presenca/cabecalho";
 import { LEVEL_ORDER } from "@/lib/plano/evolucao";
 
 export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
-  const badge = await loadActivePlanBadge();
+  const [badge, diasDePresenca] = await Promise.all([loadActivePlanBadge(), carregarTotalDePresencas()]);
+  // Selo do contador de dias (aparece a partir da primeira presença).
+  const seloDias =
+    diasDePresenca > 0 ? (
+      <a
+        href="/lista-de-presenca"
+        title="Seus dias de presença"
+        className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2.5 py-[3px] font-mono text-[10.5px] font-semibold tracking-wide text-petrol uppercase transition-colors hover:bg-gold hover:text-paper"
+      >
+        Dia {diasDePresenca}
+      </a>
+    ) : null;
 
   return (
     <>
@@ -28,7 +40,7 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
           <ThemeToggle />
         </div>
 
-        {badge || progressLabel ? (
+        {badge || progressLabel || seloDias ? (
           <div className="flex items-center justify-between gap-3">
             {badge ? (
               <div className="flex items-center gap-2" title={PAPEL_LABELS[badge.papel]}>
@@ -46,11 +58,14 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
             ) : (
               <span />
             )}
-            {progressLabel ? (
-              <span className="font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
-                {progressLabel}
-              </span>
-            ) : null}
+            <div className="flex items-center gap-2.5">
+              {seloDias}
+              {progressLabel ? (
+                <span className="font-mono text-[10.5px] tracking-wide text-ink-muted uppercase">
+                  {progressLabel}
+                </span>
+              ) : null}
+            </div>
           </div>
         ) : null}
       </header>
@@ -91,6 +106,7 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
         </div>
 
         <div className="flex items-center gap-3.5">
+          {seloDias}
           {progressLabel ? (
             <span className="font-mono text-[11px] tracking-wide text-ink-muted">
               {progressLabel}

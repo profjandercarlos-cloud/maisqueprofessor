@@ -37,6 +37,8 @@ model User {
   negociosNaLista     NegocioNaLista[]
   ideiasFavoritas     IdeiaFavorita[]
   negociosDeFavoritos Possibility[]
+  dicaReacoes         DicaReacao[]
+  presencas           Presenca[]
 
   @@map("users")
 }
@@ -1032,4 +1034,106 @@ model NegocioDesbloqueado {
 
   @@unique([userId, negocioId])
   @@map("negocios_desbloqueados")
+}
+
+// =========================================================================
+// Lista de presença (nov/2026): o app recebe a pessoa todo dia, ela marca "Presente"
+// (compromisso de executar o plano) e ganha a dica do dia. O contador de dias nunca zera.
+// =========================================================================
+
+enum DicaOrigem {
+  MANUAL // escrita e revisada à mão (banco inicial)
+  IA // gerada automaticamente quando o banco está acabando para alguém
+
+  @@map("dica_origem")
+}
+
+enum DicaStatus {
+  ATIVA
+  APOSENTADA // some do sorteio (muito dispensada ou retirada pelo admin); quem já recebeu continua vendo no caderno
+
+  @@map("dica_status")
+}
+
+enum DicaReacaoTipo {
+  GUARDADA
+  JA_FACO
+  NAO_E_PARA_MIM
+
+  @@map("dica_reacao_tipo")
+}
+
+enum DicaLoteStatus {
+  EM_ANDAMENTO
+  CONCLUIDO
+  FALHOU
+
+  @@map("dica_lote_status")
+}
+
+// Banco de dicas, compartilhado por todos. As iniciais vêm de src/lib/dicas/iniciais.ts
+// (chave estável "m-001"...); as geradas pela IA entram com chave "ia-<lote>-<n>".
+model Dica {
+  id        String     @id @default(uuid())
+  chave     String     @unique
+  categoria String // ver src/lib/dicas/categorias.ts
+  titulo    String
+  texto     String     @db.Text // 2 a 3 frases, abre com uma situação que a pessoa reconhece
+  tenteHoje String     @db.Text // a ação do dia, no formato "se..., então..."
+  ideia     String? // de onde vem a ideia (autor ou conceito), quando há
+  origem    DicaOrigem @default(MANUAL)
+  lote      Int        @default(0) // 0 = banco inicial; 1, 2... = lotes gerados pela IA
+  status    DicaStatus @default(ATIVA)
+  createdAt DateTime   @default(now())
+
+  reacoes   DicaReacao[]
+  presencas Presenca[]
+
+  @@map("dicas")
+}
+
+// O que cada pessoa fez com cada dica. Uma por pessoa e dica; pode mudar depois (ex.: de
+// "Não é para mim" para "Já faço isso"). A nota é opcional e só aparece para quem guardou.
+model DicaReacao {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dicaId    String
+  dica      Dica           @relation(fields: [dicaId], references: [id], onDelete: Cascade)
+  tipo      DicaReacaoTipo
+  nota      String?        @db.Text
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([userId, dicaId])
+  @@map("dica_reacoes")
+}
+
+// Um registro por pessoa e dia em que ela respondeu "Presente". O dia é o do fuso de
+// Brasília (a virada é à meia-noite de lá). Guarda a dica que ela recebeu naquele dia e a
+// mensagem de incentivo que viu, para não repetir a mesma duas vezes seguidas.
+model Presenca {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dia        DateTime @db.Date
+  dicaId     String?
+  dica       Dica?    @relation(fields: [dicaId], references: [id], onDelete: SetNull)
+  mensagemId String?
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, dia])
+  @@map("presencas")
+}
+
+// Controle da geração automática de novos lotes de dicas (um por vez, com teto).
+model DicaLote {
+  id         Int            @id @default(autoincrement())
+  status     DicaLoteStatus @default(EM_ANDAMENTO)
+  quantidade Int            @default(0)
+  erro       String?        @db.Text
+  createdAt  DateTime       @default(now())
+  finishedAt DateTime?
+
+  @@map("dica_lotes")
 }

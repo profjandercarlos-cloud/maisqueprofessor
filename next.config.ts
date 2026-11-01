@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       ...["/mapa", "/agenda", "/evolucao"].map((source) => ({ source, destination: "/", permanent: false })),
+      // A Antiprocrastinação virou a Lista de presença (dicas diárias, em vez de 9 exercícios).
+      { source: "/anti-procrastinacao", destination: "/lista-de-presenca", permanent: false },
       // O questionário em etapas virou uma tela só: links antigos (/adequacao/<id>/<etapa>) caem nela.
       { source: "/adequacao/:possibilityId/:etapa", destination: "/adequacao/:possibilityId", permanent: false },
     ];

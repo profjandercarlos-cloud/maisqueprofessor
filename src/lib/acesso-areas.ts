@@ -19,9 +19,10 @@ export const AREAS_TRANCADAS: Record<string, { titulo: string; descricao: string
     titulo: "Planos de execução",
     descricao: "Até 5 planos de execução: as ações essenciais, na ordem certa e com checklist, para colocar em prática os negócios que você escolher.",
   },
-  "/anti-procrastinacao": {
-    titulo: "Antiprocrastinação",
-    descricao: "Estratégias para manter o ritmo quando a execução trava.",
+  "/lista-de-presenca": {
+    titulo: "Lista de presença",
+    descricao:
+      "Marque presença todo dia para se comprometer com o seu plano, acompanhe os seus dias em um calendário e guarde as dicas que fazem sentido para você.",
   },
 };
 

@@ -45,12 +45,12 @@ function PlanosIcon() {
   );
 }
 
-function AntiProcrastinacaoIcon() {
+function ListaDePresencaIcon() {
   return (
     <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px] shrink-0">
-      <circle cx="9" cy="9" r="6.5" />
-      <circle cx="9" cy="9" r="3.2" />
-      <circle cx="9" cy="9" r="0.6" fill="currentColor" stroke="none" />
+      <rect x="2.5" y="3.5" width="13" height="12" rx="1.8" />
+      <path d="M2.5 7.5h13M6 2v3M12 2v3" />
+      <path d="M6.6 11.4l1.7 1.7 3.1-3.3" />
     </svg>
   );
 }
@@ -103,7 +103,7 @@ const BASE_ITEMS = [
   { href: "/diagnostico/respostas", label: "Meu diagnóstico", Icon: DiagnosticoIcon },
   { href: "/diagnostico/concluido", label: "Meus negócios", Icon: PossibilidadesIcon },
   { href: "/planos", label: "Planos de execução", Icon: PlanosIcon },
-  { href: "/anti-procrastinacao", label: "Antiprocrastinação", Icon: AntiProcrastinacaoIcon },
+  { href: "/lista-de-presenca", label: "Lista de presença", Icon: ListaDePresencaIcon },
   { href: "/configuracoes", label: "Configurações", Icon: ConfiguracoesIcon },
 ];
 

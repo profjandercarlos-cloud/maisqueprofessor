@@ -1,4 +1,13 @@
+import { cookies } from "next/headers";
 import { AppHeader } from "@/components/app-header";
+import { ChamadaDoDia } from "@/components/chamada-do-dia";
+import { PresencaMarcada } from "@/components/presenca-marcada";
+import { SubmitButton } from "@/components/submit-button";
+import { marcarPresencaAction } from "@/app/lista-de-presenca/actions";
+import { lerMes } from "@/lib/presenca/calendario";
+import { COOKIE_ADIOU_PRESENCA, contextoDaPessoa } from "@/lib/presenca/contexto";
+import { diaLocal } from "@/lib/presenca/dias";
+import { diasDePresenca, estadoDeHoje } from "@/lib/presenca/servico";
 import { PapelIcon } from "@/components/papel-icon";
 import { MedalhasDoPlano } from "@/components/medalhas-do-plano";
 import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
@@ -11,8 +20,47 @@ import { formatDate } from "@/lib/format-date";
 import { cotaDePlanos } from "@/lib/planos/cota";
 import { LogoutButton } from "./logout-button";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await requireActiveAccess({ gratuitoVaiPara: "/negocios" });
+  const query = await searchParams;
+
+  // Lista de presença: na primeira abertura do dia, a pessoa passa pela chamada. O dia só conta
+  // quando ela responde "Presente"; "Só passei por aqui" entra no app sem contar.
+  const hoje = diaLocal(new Date());
+  const dias = await diasDePresenca(user.id);
+  const presenteHoje = dias.includes(hoje);
+  const adiouHoje = (await cookies()).get(COOKIE_ADIOU_PRESENCA)?.value === hoje;
+
+  if (!presenteHoje && !adiouHoje) {
+    const contexto = await contextoDaPessoa(user.id);
+    return (
+      <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
+        <AppHeader progressLabel="LISTA DE PRESENÇA" />
+        <ChamadaDoDia
+          contexto={contexto}
+          total={dias.length}
+          presentes={new Set(dias)}
+          hoje={hoje}
+          mes={lerMes(typeof query.mes === "string" ? query.mes : undefined, hoje)}
+        />
+      </div>
+    );
+  }
+
+  if (presenteHoje && query.presente === "1") {
+    const contexto = await contextoDaPessoa(user.id);
+    const estado = await estadoDeHoje(user.id, { nome: contexto.nome, proximaAcao: contexto.proximaAcao });
+    return (
+      <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
+        <AppHeader progressLabel="LISTA DE PRESENÇA" />
+        <PresencaMarcada estado={estado} nome={contexto.nome} />
+      </div>
+    );
+  }
 
   const [diagnostic, activePlan, dbUser, planos, favoritos, rodada] = await Promise.all([
     db.diagnostic.findFirst({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
@@ -79,6 +127,21 @@ export default async function Home() {
         </div>
         <LogoutButton />
       </div>
+
+      {!presenteHoje ? (
+        <form
+          action={marcarPresencaAction}
+          className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-app)] border border-line bg-paper-raised px-4 py-3"
+        >
+          <p className="text-[13.5px] text-ink-muted">Hoje você ainda não marcou presença.</p>
+          <SubmitButton
+            pendingText="Registrando..."
+            className="rounded-lg border border-petrol px-4 py-1.5 text-[13px] font-semibold text-petrol transition-colors hover:bg-gold-soft"
+          >
+            Marcar presença de hoje
+          </SubmitButton>
+        </form>
+      ) : null}
 
       {activePlan && planoNovo ? (
         <>
