@@ -146,16 +146,24 @@ export default async function Home({
 
       {activePlan && planoNovo ? (
         <>
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <PapelIcon papel={activePlan.possibility.papel} className="h-[15px] w-[15px] shrink-0 text-petrol" />
-            <span className="font-mono text-[10px] tracking-wide text-ink-muted uppercase">Plano ativo</span>
-            <a href={`/planos/${activePlan.id}`} className="text-[13px] font-semibold text-petrol hover:underline">
-              {activePlan.possibility.titulo} →
-            </a>
-          </div>
-
-          {/* Evolução: o progresso do plano ativo, num lugar só (era uma página à parte). */}
+          {/* Evolução: o progresso do plano ativo, num lugar só (era uma página à parte).
+              O nome do plano é o cabeçalho do card, para ficar claro de qual plano é o progresso. */}
           <section className="mb-5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
+            <a
+              href={`/planos/${activePlan.id}`}
+              className="group mb-4 flex items-center gap-3 border-b border-line pb-4"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-soft">
+                <PapelIcon papel={activePlan.possibility.papel} className="h-[20px] w-[20px] text-petrol" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-mono text-[10.5px] tracking-[0.06em] text-gold uppercase">Plano ativo</span>
+                <span className="block font-serif text-[20px] leading-tight font-medium tracking-tight text-petrol group-hover:underline">
+                  {activePlan.possibility.titulo}
+                </span>
+              </span>
+              <span className="shrink-0 text-[13px] font-semibold text-petrol">Abrir →</span>
+            </a>
             <ProgressoPlano acoes={acoes} />
             {acoes.some((a) => a.marco) ? (
               <div className="mt-5 border-t border-line pt-4">
