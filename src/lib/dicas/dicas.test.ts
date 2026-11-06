@@ -11,6 +11,7 @@ import {
 } from "./escolher";
 import { equilibrarPorCategoria, filtrarDicasGeradas, motivoDeRecusa, pareceRepetida, type DicaGerada } from "./gerar-lote";
 import { DICAS_INICIAIS } from "./iniciais";
+import { diferencasDoBancoInicial } from "./sincronizar";
 
 describe("banco inicial de dicas", () => {
   it("tem 60 dicas, com chaves únicas e todas as categorias representadas", () => {
@@ -32,6 +33,13 @@ describe("banco inicial de dicas", () => {
       expect(d.tenteHoje.length, d.chave).toBeLessThanOrEqual(240);
     }
   });
+  it("toda dica abre com uma situação que a pessoa reconhece (a primeira frase é uma pergunta)", () => {
+    for (const d of DICAS_INICIAIS) {
+      const fim = d.texto.search(/[?.!]/);
+      expect(fim, d.chave).toBeGreaterThan(10);
+      expect(d.texto[fim], `${d.chave}: a primeira frase deveria ser uma pergunta`).toBe("?");
+    }
+  });
   it("respeita o estilo: sem travessão, sem promessa de renda e sem culpa", () => {
     for (const d of DICAS_INICIAIS) {
       const tudo = `${d.titulo} ${d.texto} ${d.tenteHoje} ${d.ideia ?? ""}`;
@@ -39,6 +47,34 @@ describe("banco inicial de dicas", () => {
       expect(tudo, d.chave).not.toMatch(/\b(garant\w+|ficar rico|enriquec\w+|dinheiro fácil)\b/i);
       expect(motivoDeRecusa({ categoria: d.categoria, titulo: d.titulo, texto: d.texto, tente_hoje: d.tenteHoje, ideia: d.ideia ?? null }), d.chave).toBeNull();
     }
+  });
+});
+
+describe("sincronização do banco inicial", () => {
+  const gravar = (d: (typeof DICAS_INICIAIS)[number]) => ({
+    chave: d.chave,
+    categoria: d.categoria,
+    titulo: d.titulo,
+    texto: d.texto,
+    tenteHoje: d.tenteHoje,
+    ideia: d.ideia ?? null,
+  });
+
+  it("banco igual ao arquivo: nada a fazer", () => {
+    expect(diferencasDoBancoInicial(DICAS_INICIAIS, DICAS_INICIAIS.map(gravar))).toEqual({ novas: [], mudadas: [] });
+  });
+  it("banco vazio: tudo é novo", () => {
+    const r = diferencasDoBancoInicial(DICAS_INICIAIS, []);
+    expect(r.novas).toHaveLength(60);
+    expect(r.mudadas).toHaveLength(0);
+  });
+  it("texto reescrito no arquivo vira atualização, e dica acrescentada vira nova", () => {
+    const antigas = DICAS_INICIAIS.slice(0, 58).map(gravar);
+    antigas[0] = { ...antigas[0], texto: "Texto antigo, antes da reescrita." };
+    antigas[1] = { ...antigas[1], ideia: "Autor antigo" };
+    const r = diferencasDoBancoInicial(DICAS_INICIAIS, antigas);
+    expect(r.mudadas.map((d) => d.chave)).toEqual([DICAS_INICIAIS[0].chave, DICAS_INICIAIS[1].chave]);
+    expect(r.novas.map((d) => d.chave)).toEqual([DICAS_INICIAIS[58].chave, DICAS_INICIAIS[59].chave]);
   });
 });
 

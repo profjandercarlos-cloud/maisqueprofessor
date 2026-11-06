@@ -1,8 +1,10 @@
-// Banco inicial de dicas (escritas e revisadas à mão). Entra no banco de dados na primeira vez que
-// alguém marca presença (ver banco.ts); a `chave` é estável, então editar o texto aqui e subir de
-// novo NÃO duplica nem altera as já gravadas: para mudar uma dica existente, use o admin.
-// Estilo: português simples, abre com uma situação que a pessoa reconhece, sem travessão e sem
-// promessa de resultado. "ideia" só quando a fonte é conhecida (autor ou conceito), nunca citação.
+// Banco inicial de dicas (escritas e revisadas à mão). Este arquivo é a fonte da verdade das dicas
+// MANUAIS: na próxima presença depois de um deploy, o app grava as novas e atualiza o texto das que
+// mudaram aqui (ver sincronizar.ts), pela `chave`, que é estável. Aposentar ou reativar uma dica
+// continua sendo pelo admin.
+// Estilo: português simples, abre SEMPRE com uma situação que a pessoa reconhece (uma pergunta),
+// sem travessão e sem promessa de resultado. "ideia" só quando a fonte é conhecida (autor ou
+// conceito), nunca citação.
 import type { CategoriaDica } from "./categorias";
 
 export type DicaInicial = {
@@ -30,7 +32,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "O primeiro passo pode ser feio",
     texto:
-      "Esperar o momento certo para começar costuma durar semanas. A primeira versão de qualquer coisa é ruim, e é ela que mostra o que melhorar.",
+      "Você está esperando o momento certo para começar? Esse momento costuma durar semanas. A primeira versão de qualquer coisa é ruim, e é ela que mostra o que melhorar.",
     tenteHoje: "Se eu estiver adiando uma ação, então escrevo agora a pior versão possível dela, só para ela existir.",
   },
   {
@@ -38,7 +40,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "Procure o passo de entrada",
     texto:
-      "Algumas ações têm um passo de entrada simples, como abrir um arquivo ou escrever o nome de um cliente. Esse passo derruba a resistência do resto.",
+      "Tem uma ação que você nem consegue olhar de frente? Quase sempre ela tem um passo de entrada simples, como abrir um arquivo ou escrever o nome de um cliente. Esse passo derruba a resistência do resto.",
     tenteHoje: "Se a próxima ação me assusta, então procuro nela o passo de entrada mais simples e faço só ele.",
     ideia: "Tiny Habits, BJ Fogg",
   },
@@ -47,7 +49,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "O que foi começado fica na cabeça",
     texto:
-      "Aquilo que ficou pela metade volta à mente e pede para ser terminado. Você pode usar isso a seu favor: começar já cria a vontade de continuar.",
+      "Alguma coisa ficou pela metade e não sai da sua cabeça? A mente pede para terminar o que começou. Você pode usar isso a seu favor: começar já cria a vontade de continuar.",
     tenteHoje: "Se eu tiver só cinco minutos, então começo uma ação do plano e deixo anotado o próximo passo.",
     ideia: "Efeito Zeigarnik, Bluma Zeigarnik",
   },
@@ -56,7 +58,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "Diga quando e onde vai fazer",
     texto:
-      "Um plano guardado só na cabeça escapa fácil. Dito com hora e lugar, ele vira compromisso e fica bem mais difícil de ser esquecido.",
+      "Você diz que vai fazer, mas o dia passa? Um plano só na cabeça escapa fácil. Dito com hora e lugar, ele vira compromisso e fica bem mais difícil de esquecer.",
     tenteHoje:
       "Se eu escolher uma ação para hoje, então escrevo a hora e o lugar em que vou fazê-la e deixo essa frase à vista.",
     ideia: "Intenções de implementação, Peter Gollwitzer",
@@ -66,7 +68,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "Olhe só a próxima ação",
     texto:
-      "Ver a lista inteira de uma vez pesa e paralisa. A ação seguinte é a única que precisa caber na sua cabeça hoje.",
+      "Você olha a lista inteira e já se sente cansado? Ver tudo de uma vez pesa e paralisa. A ação seguinte é a única que precisa caber na sua cabeça hoje.",
     tenteHoje: "Se eu abrir o plano, então olho só a próxima ação e ignoro o resto da lista.",
   },
   {
@@ -74,7 +76,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "Comece antes de se sentir pronto",
     texto:
-      "A sensação de estar preparado costuma vir depois da prática, e não antes dela. Quem espera se sentir seguro acaba esperando muito.",
+      "Você está esperando se sentir pronto para começar? Essa sensação costuma vir depois da prática, e não antes dela. Quem espera se sentir seguro acaba esperando muito.",
     tenteHoje: "Se eu estiver me preparando há dias, então escolho um item do checklist para fazer hoje, mesmo sem segurança.",
   },
   {
@@ -82,7 +84,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "comecar",
     titulo: "Dois minutos para aquecer",
     texto:
-      "Prometer a você mesmo trinta minutos de trabalho trava. Prometer dois funciona. O mais comum é continuar depois que a resistência passa.",
+      "Falta vontade e trinta minutos de trabalho parecem uma montanha? Prometa só dois. Funciona porque o mais comum é continuar depois que a resistência passa.",
     tenteHoje: "Se eu estiver sem vontade, então marco um timer de dois minutos e trabalho só até ele tocar.",
   },
 
@@ -92,7 +94,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "atrito",
     titulo: "Deixe a próxima ação à vista",
     texto:
-      "O que está escondido não acontece. Deixe aberto, de véspera, o documento ou a conversa de que você precisa amanhã.",
+      "Você senta para executar e ainda precisa procurar por onde começar? O que está escondido não acontece. Deixe aberto, de véspera, o documento ou a conversa de que você precisa amanhã.",
     tenteHoje: "Se eu for dormir hoje, então deixo aberta a primeira coisa que preciso fazer amanhã.",
     ideia: "Hábitos Atômicos, James Clear",
   },
@@ -109,7 +111,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "atrito",
     titulo: "Reúna o material antes",
     texto:
-      "Procurar o que falta atrasa e esfria o impulso. Deixar tudo à mão antes remove a desculpa do 'não achei'.",
+      "Você senta para trabalhar e descobre que falta alguma coisa? Procurar atrasa e esfria o impulso. Deixar tudo à mão antes remove a desculpa do 'não achei'.",
     tenteHoje: "Se amanhã eu precisar de algo para executar, então separo isso hoje à noite.",
   },
   {
@@ -117,7 +119,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "atrito",
     titulo: "Tenha um lugar de trabalho",
     texto:
-      "Trabalhar sempre no mesmo lugar ensina o corpo a entrar no modo de execução. O sofá lembra descanso, e a mesa lembra trabalho.",
+      "Você tenta trabalhar no sofá, na cama, em qualquer canto? Trabalhar sempre no mesmo lugar ensina o corpo a entrar no modo de execução. O sofá lembra descanso, e a mesa lembra trabalho.",
     tenteHoje: "Se eu for executar, então vou ao mesmo lugar de sempre e uso esse lugar só para isso.",
   },
   {
@@ -125,7 +127,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "atrito",
     titulo: "Prenda o hábito a algo que já existe",
     texto:
-      "Um hábito novo gruda melhor quando vem logo depois de outro que você já tem, como o café da manhã ou o banho.",
+      "Você esquece de executar porque o dia não tem um horário certo para isso? Um hábito novo gruda melhor quando vem logo depois de outro que você já tem, como o café da manhã ou o banho.",
     tenteHoje: "Se eu terminar o café da manhã, então abro o plano e faço um item.",
     ideia: "Empilhamento de hábitos, BJ Fogg e James Clear",
   },
@@ -134,7 +136,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "atrito",
     titulo: "Facilite o que ajuda, dificulte o que atrapalha",
     texto:
-      "Você escolhe com mais facilidade o que está mais perto. Deixe a próxima ação a um clique e o que distrai a vários.",
+      "Você sabe o que deveria fazer, mas acaba fazendo o que está mais à mão? Todo mundo faz isso. Deixe a próxima ação a um clique e o que distrai a vários.",
     tenteHoje:
       "Se eu notar uma distração que se repete, então crio um pequeno obstáculo para chegar nela, como sair da conta ou fechar o aplicativo.",
     ideia: "Arquitetura de escolha, Thaler e Sunstein (Nudge)",
@@ -144,7 +146,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "atrito",
     titulo: "Decida hoje o que faz amanhã",
     texto:
-      "Decidir tudo na hora cansa. Uma decisão tomada de antemão poupa a energia que você precisaria para escolher e deixa só o fazer.",
+      "Você começa o dia sem saber por onde ir e gasta energia só decidindo? Decidir tudo na hora cansa. Uma decisão tomada de antemão deixa só o fazer.",
     tenteHoje: "Se eu souber o que farei amanhã, então escrevo hoje a hora e a ação em uma linha.",
   },
 
@@ -154,7 +156,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "Vinte e cinco minutos de uma coisa só",
     texto:
-      "Misturar tarefas gasta energia sem avançar. Escolha uma e dê a ela um tempo fechado, com uma pausa no fim.",
+      "Você abre várias coisas ao mesmo tempo e termina o dia sem concluir nenhuma? Misturar tarefas gasta energia sem avançar. Escolha uma e dê a ela um tempo fechado, com uma pausa no fim.",
     tenteHoje: "Se eu começar uma ação, então ponho um timer de 25 minutos e faço só ela.",
     ideia: "Técnica Pomodoro, Francesco Cirillo",
   },
@@ -163,7 +165,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "Descubra a sua melhor hora",
     texto:
-      "Todo mundo rende mais em algum horário. Coloque o passo mais difícil nele e deixe o que é leve para quando a energia cai.",
+      "Tem horas do dia em que você rende muito mais? Todo mundo tem. Coloque o passo mais difícil nesse horário e deixe o que é leve para quando a energia cai.",
     tenteHoje: "Se eu souber meu melhor horário, então reservo esse horário hoje para a próxima ação do plano.",
   },
   {
@@ -171,7 +173,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "Faça primeiro o que mais pesa",
     texto:
-      "Aquela ação que você evita ocupa a cabeça o dia inteiro. Fazê-la logo cedo libera o resto do dia.",
+      "Tem uma ação que você evita e que ocupa a sua cabeça o dia inteiro? Fazê-la logo cedo libera o resto do dia.",
     tenteHoje: "Se eu abrir o plano hoje, então começo pela ação que mais venho evitando.",
     ideia: "Eat That Frog, Brian Tracy",
   },
@@ -180,7 +182,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "O trabalho cresce para caber no tempo",
     texto:
-      "Se você dá um dia inteiro para uma tarefa de uma hora, ela leva o dia inteiro. Um tempo curto e definido ajuda a decidir o que realmente importa.",
+      "Você dá um dia inteiro a uma tarefa que levaria uma hora? Ela vai levar o dia inteiro. Um tempo curto e definido ajuda a decidir o que realmente importa.",
     tenteHoje: "Se eu tiver uma ação hoje, então escolho quanto tempo ela merece e começo a contar.",
     ideia: "Lei de Parkinson, C. Northcote Parkinson",
   },
@@ -189,7 +191,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "Pausa não é preguiça",
     texto:
-      "Trabalhar sem parar derruba o rendimento. Uma pausa curta recupera a atenção e evita o cansaço que leva a desistir.",
+      "Você trabalha horas seguidas e, no fim, já não rende? Trabalhar sem parar derruba o rendimento. Uma pausa curta recupera a atenção e evita o cansaço que leva a desistir.",
     tenteHoje: "Se eu terminar um bloco de trabalho, então paro cinco minutos longe da tela.",
   },
   {
@@ -197,7 +199,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "Foco profundo se treina",
     texto:
-      "Ficar concentrado por muito tempo é uma habilidade que cresce com a prática, como um músculo. Comece com blocos pequenos e aumente aos poucos.",
+      "Você perde o foco depois de poucos minutos? Ficar concentrado é uma habilidade que cresce com a prática, como um músculo. Comece com blocos pequenos e aumente aos poucos.",
     tenteHoje: "Se eu conseguir 20 minutos sem distração hoje, então amanhã tento 25.",
     ideia: "Deep Work, Cal Newport",
   },
@@ -206,7 +208,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "foco",
     titulo: "Dormir bem também é parte do plano",
     texto:
-      "Dormir mal faz tudo parecer mais difícil, até começar. Cuidar do sono é cuidar da sua capacidade de executar.",
+      "Dormiu mal e tudo parece mais difícil, até começar? É assim mesmo. Cuidar do sono é cuidar da sua capacidade de executar.",
     tenteHoje: "Se eu estiver exausto hoje, então escolho a menor ação do plano e me deito mais cedo.",
   },
   {
@@ -224,7 +226,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Parou? Recomece pelo menor passo",
     texto:
-      "Perder uns dias não apaga o que você já fez. O que pesa é o tamanho do recomeço, então não tente recuperar o tempo perdido.",
+      "Ficou uns dias sem executar e está com vergonha de voltar? Perder uns dias não apaga o que você já fez. O que pesa é o tamanho do recomeço, então não tente recuperar o tempo perdido.",
     tenteHoje: "Se eu voltei depois de uma pausa, então faço a menor ação possível do meu plano.",
   },
   {
@@ -232,7 +234,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Um dia perdido não vale uma semana",
     texto:
-      "Depois de falhar uma vez, muita gente pensa 'já que estraguei, deixo para lá' e abandona tudo. É esse pensamento que custa caro, e não a falha.",
+      "Falhou um dia e pensou 'já que estraguei, deixo para lá'? Muita gente pensa isso e abandona tudo. É esse pensamento que custa caro, e não a falha.",
     tenteHoje: "Se eu faltar um dia, então retomo no seguinte sem tentar compensar.",
     ideia: "Efeito 'que se dane' (what-the-hell effect), Polivy e Herman",
   },
@@ -241,7 +243,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Evite faltar duas vezes seguidas",
     texto:
-      "Faltar um dia acontece com todo mundo. Faltar dois começa a virar hábito. Um passo mínimo no dia seguinte já interrompe isso.",
+      "Ontem não deu para fazer nada? Faltar um dia acontece com todo mundo. Faltar dois começa a virar hábito. Um passo mínimo hoje já interrompe isso.",
     tenteHoje: "Se eu não tiver feito nada ontem, então hoje faço pelo menos um item do checklist.",
     ideia: "Hábitos Atômicos, James Clear",
   },
@@ -250,7 +252,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Fale consigo como falaria com um amigo",
     texto:
-      "Você costuma cobrar de si o que nunca cobraria de alguém querido. A autocrítica dura cansa e atrapalha quem tenta de novo.",
+      "Você se cobra por ter parado como nunca cobraria um amigo? A autocrítica dura cansa e atrapalha quem tenta de novo.",
     tenteHoje:
       "Se eu me criticar por ter parado, então penso no que diria a um amigo na mesma situação e digo isso a mim mesmo.",
     ideia: "Autocompaixão, Kristin Neff",
@@ -260,7 +262,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Releia o que você já fez",
     texto:
-      "Quem para costuma esquecer o caminho percorrido. Rever as ações já concluídas devolve a prova de que você é capaz de avançar.",
+      "Parou e agora só enxerga o que falta? Quem para costuma esquecer o caminho percorrido. Rever as ações já concluídas devolve a prova de que você é capaz de avançar.",
     tenteHoje: "Se eu estiver desanimado, então abro as minhas conquistas no plano e leio o que já concluí.",
   },
   {
@@ -268,7 +270,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Crie o seu próprio recomeço",
     texto:
-      "O início de um mês ou de uma segunda-feira dá a sensação de página em branco. Você pode criar um recomeço desses hoje, em qualquer dia.",
+      "Você está esperando a próxima segunda-feira para recomeçar? O início de um mês ou de uma semana dá a sensação de página em branco, mas você pode criar um recomeço desses hoje, em qualquer dia.",
     tenteHoje: "Se eu sentir que me atrasei, então declaro hoje como o meu dia 1 e faço o primeiro passo.",
     ideia: "Efeito do recomeço (fresh start), Dai, Milkman e Riis",
   },
@@ -277,7 +279,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "recomecar",
     titulo: "Descubra o que te fez parar",
     texto:
-      "Quase sempre há uma razão: uma ação difícil demais, falta de tempo ou medo. Descobrir qual foi evita a mesma pausa na próxima vez.",
+      "Você parou e nem sabe direito por quê? Quase sempre há uma razão: uma ação difícil demais, falta de tempo ou medo. Descobrir qual foi evita a mesma pausa na próxima vez.",
     tenteHoje: "Se eu estiver parado, então escrevo numa frase o que me travou e divido essa ação em duas menores.",
   },
 
@@ -295,7 +297,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Treine ouvir 'não'",
     texto:
-      "Quem busca ouvir 'não' de propósito, em pequenos pedidos, perde o medo aos poucos. O 'não' deixa de assustar quando vira rotina.",
+      "O medo de ouvir 'não' faz você adiar o contato? Quem busca ouvir 'não' de propósito, em pequenos pedidos, perde o medo aos poucos. O 'não' deixa de assustar quando vira rotina.",
     tenteHoje: "Se eu tiver coragem hoje, então faço um pedido pequeno com chance de ouvir 'não' e observo o que sinto.",
     ideia: "Rejection Proof, Jia Jiang",
   },
@@ -304,7 +306,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Você não está pedindo um favor",
     texto:
-      "Oferecer um serviço pago não é pedir ajuda. É propor uma troca em que a outra pessoa também ganha.",
+      "Você sente que está pedindo um favor quando oferece o seu serviço? Oferecer um serviço pago não é pedir ajuda. É propor uma troca em que a outra pessoa também ganha.",
     tenteHoje: "Se eu for falar com um possível cliente, então começo pelo que posso resolver para ele e só depois falo do preço.",
   },
   {
@@ -312,7 +314,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Comece por quem já te conhece",
     texto:
-      "O primeiro cliente costuma estar perto: alguém que já viu o seu trabalho ou confia em você. É mais fácil começar a conversa ali.",
+      "Não sabe com quem falar primeiro? O primeiro cliente costuma estar perto: alguém que já viu o seu trabalho ou confia em você. É mais fácil começar a conversa ali.",
     tenteHoje: "Se eu precisar de um primeiro contato, então listo cinco pessoas que já conhecem o meu trabalho e escolho uma.",
   },
   {
@@ -320,7 +322,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Faça uma pergunta, não um discurso",
     texto:
-      "Falar demais do seu serviço afasta. Perguntar sobre o problema da outra pessoa aproxima e mostra que você está ouvindo.",
+      "Você conta tudo sobre o seu serviço assim que alguém demonstra interesse? Falar demais afasta. Perguntar sobre o problema da outra pessoa aproxima e mostra que você está ouvindo.",
     tenteHoje: "Se eu conversar com um possível cliente, então faço duas perguntas antes de falar do que ofereço.",
   },
   {
@@ -328,7 +330,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Silêncio não é rejeição",
     texto:
-      "Quando ninguém responde, a mente conclui que é um 'não'. Na maioria das vezes, a pessoa só estava ocupada.",
+      "Mandou a mensagem e ninguém respondeu? A mente conclui que é um 'não'. Na maioria das vezes, a pessoa só estava ocupada.",
     tenteHoje: "Se eu não tiver resposta em alguns dias, então envio uma segunda mensagem curta e cordial.",
   },
   {
@@ -336,7 +338,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Ensaie a conversa em voz alta",
     texto:
-      "Falar o que você vai dizer em voz alta reduz o nervosismo. Na hora da conversa, as palavras já estão no corpo.",
+      "Você fica nervoso só de pensar na conversa de venda? Falar o que você vai dizer em voz alta reduz o nervosismo. Na hora da conversa, as palavras já estão no corpo.",
     tenteHoje: "Se eu tiver uma conversa de venda, então ensaio em voz alta a abertura e as respostas às dúvidas mais comuns.",
   },
   {
@@ -344,7 +346,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "medo",
     titulo: "Venda o resultado, não o serviço",
     texto:
-      "As pessoas compram o que muda na vida ou no trabalho delas, e não a lista do que você faz.",
+      "Você explica tudo o que faz e a pessoa não se anima? As pessoas compram o que muda na vida ou no trabalho delas, e não a lista do que você faz.",
     tenteHoje: "Se eu descrever o meu serviço, então reescrevo a frase dizendo o que a pessoa terá depois dele.",
   },
 
@@ -354,7 +356,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Pergunte da vida dela, não da sua ideia",
     texto:
-      "As pessoas elogiam ideias, mas contam a verdade sobre os próprios problemas. Pergunte como ela resolve isso hoje.",
+      "Todo mundo achou a sua ideia ótima? As pessoas elogiam ideias, mas contam a verdade sobre os próprios problemas. Pergunte como ela resolve isso hoje.",
     tenteHoje:
       "Se eu conversar com alguém do meu público, então pergunto como ela lida hoje com o problema e quanto isso custa.",
     ideia: "The Mom Test, Rob Fitzpatrick",
@@ -364,7 +366,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Elogio não é compra",
     texto:
-      "Ouvir 'que ideia boa' é agradável, mas não prova que alguém pagaria. O sinal forte é tempo, dinheiro ou um compromisso.",
+      "Ouviu 'que ideia boa' e ficou animado? É agradável, mas não prova que alguém pagaria. O sinal forte é tempo, dinheiro ou um compromisso.",
     tenteHoje: "Se alguém elogiar o meu serviço, então pergunto qual seria o próximo passo para contratá-lo.",
   },
   {
@@ -372,7 +374,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Teste pequeno antes de construir muito",
     texto:
-      "Antes de preparar tudo, descubra se alguém quer. Um teste simples pode poupar semanas de trabalho em algo que ninguém pediu.",
+      "Você está preparando tudo antes de saber se alguém quer? Antes disso, descubra se há interesse. Um teste simples pode poupar semanas de trabalho em algo que ninguém pediu.",
     tenteHoje: "Se eu estiver construindo algo grande, então penso na versão mais simples que um cliente real aceitaria.",
     ideia: "Produto mínimo viável, Eric Ries",
   },
@@ -381,7 +383,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Saia do prédio",
     texto:
-      "As respostas que importam estão do lado de fora, com as pessoas que vão pagar. Planilhas e pesquisas não substituem uma conversa.",
+      "Você já pesquisou muito e ainda não falou com ninguém? As respostas que importam estão do lado de fora, com as pessoas que vão pagar. Planilhas e pesquisas não substituem uma conversa.",
     tenteHoje: "Se eu estiver pesquisando há dias, então marco uma conversa real com alguém do meu público.",
     ideia: "Steve Blank",
   },
@@ -390,7 +392,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Peça o sim antes de fazer tudo",
     texto:
-      "Se uma pessoa se compromete antes de o serviço existir por completo, você sabe que ele vale. Pedir um compromisso, mesmo pequeno, ensina mais do que perguntar.",
+      "Você pergunta se a pessoa compraria e ouve sempre 'talvez'? Quando alguém se compromete antes de o serviço existir por completo, você sabe que ele vale. Pedir um compromisso, mesmo pequeno, ensina mais do que perguntar.",
     tenteHoje: "Se eu tiver um interessado, então proponho um piloto pago, com escopo pequeno e claro.",
   },
   {
@@ -398,7 +400,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Registre o que as pessoas disseram",
     texto:
-      "A memória distorce. O que o cliente disse, com as palavras dele, vira a melhor matéria-prima para a sua oferta.",
+      "Saiu de uma conversa e já não lembra o que a pessoa disse? A memória distorce. O que o cliente disse, com as palavras dele, vira a melhor matéria-prima para a sua oferta.",
     tenteHoje: "Se eu conversar com alguém, então anoto logo depois três frases que a pessoa usou.",
   },
   {
@@ -406,7 +408,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Imagine que falhou e por quê",
     texto:
-      "Antes de começar, pergunte: se isso der errado daqui a três meses, qual terá sido o motivo? Isso mostra riscos que você ainda pode evitar.",
+      "Prestes a começar algo importante, você só pensa em como vai dar certo? Pergunte também: se isso der errado daqui a três meses, qual terá sido o motivo? Isso mostra riscos que você ainda pode evitar.",
     tenteHoje:
       "Se eu estiver iniciando uma ação importante, então escrevo três motivos pelos quais ela poderia falhar e um jeito de evitar cada um.",
     ideia: "Pré-mortem, Gary Klein",
@@ -416,7 +418,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "validar",
     titulo: "Uma pessoa só já ensina",
     texto:
-      "Você não precisa de cem respostas para aprender. A primeira conversa real costuma mostrar mais do que muita pesquisa.",
+      "Está esperando ter mais dados para agir? Você não precisa de cem respostas para aprender. A primeira conversa real costuma mostrar mais do que muita pesquisa.",
     tenteHoje: "Se eu estiver esperando 'ter mais dados', então converso hoje com uma única pessoa do meu público.",
   },
 
@@ -426,7 +428,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Preço baixo demais também afasta",
     texto:
-      "Cobrar pouco para evitar um 'não' costuma passar a sensação de que o serviço vale pouco. Calcule o que o trabalho custa e cobre isso.",
+      "Você pensou em cobrar menos para ninguém dizer 'não'? Isso costuma passar a sensação de que o serviço vale pouco. Calcule o que o trabalho custa e cobre isso.",
     tenteHoje: "Se eu definir um preço, então escrevo a conta por trás dele: tempo, custos e resultado para o cliente.",
   },
   {
@@ -434,7 +436,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Diga o preço e espere",
     texto:
-      "Depois de falar o valor, quem fala primeiro costuma ceder. Aguente o silêncio e deixe a outra pessoa pensar.",
+      "Você falou o preço e logo começou a justificá-lo? Depois de falar o valor, quem fala primeiro costuma ceder. Aguente o silêncio e deixe a outra pessoa pensar.",
     tenteHoje: "Se eu falar um preço, então paro de falar e espero a resposta.",
   },
   {
@@ -442,7 +444,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Cobre pelo resultado, não pelas horas",
     texto:
-      "Se você cobra por hora, ganha menos quanto mais rápido fica. O cliente paga pelo que muda para ele.",
+      "Você cobra por hora trabalhada? Assim, ganha menos quanto mais rápido fica. O cliente paga pelo que muda para ele.",
     tenteHoje: "Se eu montar uma proposta, então descrevo o resultado e dou um valor por ele.",
   },
   {
@@ -450,7 +452,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Faça o piloto com preço, não de graça",
     texto:
-      "Trabalho gratuito ensina pouco, porque ninguém leva muito a sério o que não paga. Um preço pequeno já mostra se há interesse de verdade.",
+      "Pensou em fazer o primeiro serviço de graça, só para testar? Trabalho gratuito ensina pouco, porque ninguém leva muito a sério o que não paga. Um preço pequeno já mostra se há interesse de verdade.",
     tenteHoje: "Se eu oferecer um piloto, então coloco um valor, mesmo reduzido, e explico o motivo.",
   },
   {
@@ -458,7 +460,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Combine tudo antes de começar",
     texto:
-      "Escopo, prazo e forma de pagamento sem acordo viram dor de cabeça depois. Uma combinação clara protege os dois lados.",
+      "Fechou um serviço só na conversa? Escopo, prazo e forma de pagamento sem acordo viram dor de cabeça depois. Uma combinação clara protege os dois lados.",
     tenteHoje: "Se eu fechar um serviço, então registro por escrito o que está incluso e o que não está.",
   },
   {
@@ -466,7 +468,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Saiba o mínimo que você aceita",
     texto:
-      "Negociar sem saber o seu mínimo leva a aceitar qualquer valor. Defina antes o piso que mantém o trabalho viável para você.",
+      "Vai negociar e não sabe até onde pode ceder? Negociar sem saber o seu mínimo leva a aceitar qualquer valor. Defina antes o piso que mantém o trabalho viável para você.",
     tenteHoje:
       "Se eu for negociar, então defino antes o menor valor que aceitaria e o que eu poderia incluir ou tirar da proposta.",
   },
@@ -475,7 +477,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "preco",
     titulo: "Pergunte quanto o problema custa",
     texto:
-      "Quando você sabe quanto o problema custa ao cliente, o seu preço fica pequeno perto do que ele resolve.",
+      "O seu preço parece alto para o cliente? Quando você sabe quanto o problema custa a ele, o seu preço fica pequeno perto do que ele resolve.",
     tenteHoje: "Se eu conversar com um cliente, então pergunto o que esse problema custa a ele hoje.",
   },
 
@@ -493,7 +495,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "constancia",
     titulo: "Constância vale mais que intensidade",
     texto:
-      "Um pouco todo dia vence muito de vez em quando. Quem sustenta um ritmo possível chega mais longe do que quem se esgota.",
+      "Você fez muito em um dia e depois sumiu por uma semana? Um pouco todo dia vence muito de vez em quando. Quem sustenta um ritmo possível chega mais longe do que quem se esgota.",
     tenteHoje: "Se eu estiver animado hoje, então faço o que planejei e não o dobro.",
   },
   {
@@ -501,7 +503,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "constancia",
     titulo: "Comemore o que já foi feito",
     texto:
-      "Muita gente só olha o que falta. Reconhecer o que já avançou dá combustível para continuar.",
+      "Você só vê o que ainda falta fazer? Reconhecer o que já avançou dá combustível para continuar.",
     tenteHoje: "Se eu concluir uma ação, então paro um minuto para reconhecer o que consegui.",
   },
   {
@@ -509,7 +511,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "constancia",
     titulo: "Compare-se com você de ontem",
     texto:
-      "Ver o que os outros já conquistaram desanima. O que importa é se você está mais perto do que estava na semana passada.",
+      "Viu o que alguém já conquistou e sentiu que está atrasado? Comparar assim desanima. O que importa é se você está mais perto do que estava na semana passada.",
     tenteHoje: "Se eu me comparar com alguém, então volto a olhar só o que avancei na última semana.",
   },
   {
@@ -517,7 +519,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "constancia",
     titulo: "Seja generoso com o seu ritmo",
     texto:
-      "Você tem uma vida além do plano: trabalho, família, cansaço. Um ritmo possível vale mais do que um ideal que você abandona.",
+      "Sua semana está cheia de trabalho, família e cansaço? Você tem uma vida além do plano. Um ritmo possível vale mais do que um ideal que você abandona.",
     tenteHoje: "Se a minha semana estiver cheia, então escolho o mínimo do plano e aceito que seja pouco.",
   },
   {
@@ -525,7 +527,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "constancia",
     titulo: "Peça companhia",
     texto:
-      "É mais difícil abandonar algo que outra pessoa sabe que você está fazendo. Contar a alguém de confiança cria apoio.",
+      "Você tem um objetivo difícil e está tentando sozinho? É mais difícil abandonar algo que outra pessoa sabe que você está fazendo. Contar a alguém de confiança cria apoio.",
     tenteHoje: "Se eu tiver um objetivo difícil, então conto a uma pessoa o que vou fazer esta semana.",
   },
   {
@@ -533,7 +535,7 @@ export const DICAS_INICIAIS: DicaInicial[] = [
     categoria: "constancia",
     titulo: "Aprenda com o erro sem se punir",
     texto:
-      "Errar faz parte de executar. A pergunta útil é 'o que isso me mostrou?', e não 'o que há de errado comigo?'.",
+      "Algo deu errado e você só consegue pensar no erro? Errar faz parte de executar. A pergunta útil é 'o que isso me mostrou?', e não 'o que há de errado comigo?'.",
     tenteHoje: "Se algo der errado, então escrevo uma coisa que aprendi e uma que vou mudar.",
   },
 ];

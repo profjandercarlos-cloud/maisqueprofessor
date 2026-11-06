@@ -9,6 +9,7 @@ import { COOKIE_ADIOU_PRESENCA, contextoDaPessoa } from "@/lib/presenca/contexto
 import { diaLocal } from "@/lib/presenca/dias";
 import { diasDePresenca, estadoDeHoje } from "@/lib/presenca/servico";
 import { PapelIcon } from "@/components/papel-icon";
+import { ListaDeAcoes } from "@/components/lista-de-acoes";
 import { MedalhasDoPlano } from "@/components/medalhas-do-plano";
 import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
@@ -192,11 +193,18 @@ export default async function Home({
             </section>
           )}
 
+          {/* Visão geral: todas as ações do plano, com o estado de cada uma e a de agora em destaque. */}
+          <section className="mb-5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5 shadow-[var(--shadow)]">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-serif text-[18px] font-medium tracking-tight text-petrol">Todas as ações do plano</h2>
+              <a href={`/planos/${activePlan.id}`} className="text-[13px] font-semibold text-petrol hover:underline">
+                Abrir o plano completo →
+              </a>
+            </div>
+            <ListaDeAcoes planId={activePlan.id} acoes={acoes} atual={resumo.proxima} resumida />
+          </section>
+
           <p className="text-[13px] text-ink-muted">
-            <a href={`/planos/${activePlan.id}`} className="font-semibold text-petrol hover:underline">
-              Ver todas as ações
-            </a>{" "}
-            ·{" "}
             <a href="/planos" className="font-semibold text-petrol hover:underline">
               Planos de execução ({cota.usados} de {cota.limite})
             </a>

@@ -2,27 +2,44 @@
 import { db } from "@/lib/db";
 import { logDebugError } from "@/lib/debug-error-log";
 import { DICAS_INICIAIS } from "./iniciais";
+import { diferencasDoBancoInicial } from "./sincronizar";
 import { ESPERA_APOS_FALHA_MS, LOTE_TRAVADO_APOS_MS, TETO_DE_LOTES } from "./escolher";
 import { filtrarDicasGeradas, gerarLoteDeDicas } from "./gerar-lote";
 
-// As dicas iniciais entram na primeira vez que alguém marca presença. Idempotente: a `chave`
-// é única, então rodar de novo (ou depois de acrescentar dicas ao arquivo) só grava as que faltam.
+// O arquivo das dicas iniciais é a fonte da verdade das dicas MANUAIS. Na primeira presença depois
+// de um deploy, grava as que faltam e atualiza o texto das que foram reescritas (pela `chave`).
+// Idempotente e barato: uma leitura das ~60 dicas manuais, comparada em memória.
 export async function garantirBancoInicial(): Promise<void> {
-  const gravadas = await db.dica.count({ where: { origem: "MANUAL" } });
-  if (gravadas >= DICAS_INICIAIS.length) return;
-  await db.dica.createMany({
-    data: DICAS_INICIAIS.map((d) => ({
-      chave: d.chave,
-      categoria: d.categoria,
-      titulo: d.titulo,
-      texto: d.texto,
-      tenteHoje: d.tenteHoje,
-      ideia: d.ideia ?? null,
-      origem: "MANUAL" as const,
-      lote: 0,
-    })),
-    skipDuplicates: true,
+  const gravadas = await db.dica.findMany({
+    where: { origem: "MANUAL" },
+    select: { chave: true, categoria: true, titulo: true, texto: true, tenteHoje: true, ideia: true },
   });
+  const { novas, mudadas } = diferencasDoBancoInicial(DICAS_INICIAIS, gravadas);
+
+  if (novas.length > 0) {
+    await db.dica.createMany({
+      data: novas.map((d) => ({
+        chave: d.chave,
+        categoria: d.categoria,
+        titulo: d.titulo,
+        texto: d.texto,
+        tenteHoje: d.tenteHoje,
+        ideia: d.ideia ?? null,
+        origem: "MANUAL" as const,
+        lote: 0,
+      })),
+      skipDuplicates: true,
+    });
+  }
+  // Reescrever o texto não mexe em reações nem em presenças: elas apontam para o id da dica.
+  await Promise.all(
+    mudadas.map((d) =>
+      db.dica.update({
+        where: { chave: d.chave },
+        data: { categoria: d.categoria, titulo: d.titulo, texto: d.texto, tenteHoje: d.tenteHoje, ideia: d.ideia ?? null },
+      }),
+    ),
+  );
 }
 
 // Situação dos lotes automáticos, para decidir se vale gerar mais um.

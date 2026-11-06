@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { AppHeader } from "@/components/app-header";
+import { ListaDeAcoes } from "@/components/lista-de-acoes";
 import { MedalhasDoPlano } from "@/components/medalhas-do-plano";
 import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
@@ -139,6 +140,11 @@ export default async function PlanPage({ params }: { params: Promise<{ planId: s
             </section>
           )}
 
+          <section className="mb-8" aria-label="Todas as ações do plano">
+            <h2 className="mb-3 font-serif text-lg font-medium tracking-tight text-petrol">Todas as suas ações, na ordem</h2>
+            <ListaDeAcoes planId={plan.id} acoes={plan.acoes} atual={resumo.proxima} />
+          </section>
+
           {concluidas.length > 0 ? (
             <section className="mb-8">
               <h2 className="mb-3 font-serif text-lg font-medium tracking-tight text-petrol">Suas conquistas</h2>
@@ -172,44 +178,6 @@ export default async function PlanPage({ params }: { params: Promise<{ planId: s
               </ul>
             </section>
           ) : null}
-
-          <h2 className="mb-3 font-serif text-lg font-medium tracking-tight text-petrol">Suas ações, na ordem</h2>
-          <ol className="flex flex-col gap-2.5">
-            {plan.acoes.map((acao) => {
-              const meta = STATUS_ACAO_META[acao.status];
-              const feitos = acao.itens.filter((i) => i.feito).length;
-              return (
-                <li key={acao.id}>
-                  <a
-                    href={`/planos/${plan.id}/acoes/${acao.id}`}
-                    className="flex items-start gap-3.5 rounded-[var(--radius-app)] border border-line bg-paper-raised p-4 transition-colors hover:border-petrol"
-                  >
-                    <span
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-[13px] font-semibold"
-                      style={{ background: meta.corFundo, color: meta.cor }}
-                    >
-                      {acao.status === "CONCLUIDA" ? "✓" : acao.sequencia}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="mb-1 flex flex-wrap items-center gap-2">
-                        <span className="font-serif text-[17px] font-medium text-ink">{acao.nome}</span>
-                        <SeloStatusAcao status={acao.status} />
-                      </span>
-                      {acao.marco ? (
-                        <span className="mb-1 inline-block rounded-full bg-gold-soft px-2 py-[2px] text-[11px] font-semibold text-petrol">
-                          Medalha {nivelDoMarco(acao.sequencia)}: {acao.marco}
-                        </span>
-                      ) : null}
-                      <span className="block text-[13.5px] leading-[1.5] text-ink-muted">{acao.objetivo}</span>
-                      <span className="mt-1.5 block text-[12px] text-ink-muted">
-                        {feitos} de {acao.itens.length} passos feitos
-                      </span>
-                    </span>
-                  </a>
-                </li>
-              );
-            })}
-          </ol>
 
           <details className="mt-8 rounded-[var(--radius-app)] border border-line bg-paper-raised p-5">
             <summary className="cursor-pointer font-serif text-[16px] font-medium tracking-tight text-petrol">

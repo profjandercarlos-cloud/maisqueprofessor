@@ -61,7 +61,7 @@ export default async function AcaoPage({ params }: { params: Promise<{ planId: s
       <AppHeader progressLabel="PLANO DE EXECUÇÃO" />
 
       <a href={`/planos/${plan.id}`} className="mb-4 inline-block text-[13px] font-semibold text-petrol hover:underline">
-        ← {plan.possibility.titulo}
+        ← Todas as ações do plano: {plan.possibility.titulo}
       </a>
 
       <div className="mb-5">
