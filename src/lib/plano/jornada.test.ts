@@ -7,23 +7,57 @@ const vazio = { diagnosticoConcluido: false, negociosGerados: 0, favoritos: 0, p
 describe("jornada do Painel", () => {
   it("quem acabou de chegar começa pelo diagnóstico", () => {
     expect(passoAtualDaJornada(vazio)).toBe("diagnostico");
-    expect(estadosDaJornada(vazio)).toEqual({ diagnostico: "atual", negocios: "pendente", planos: "pendente" });
+    expect(estadosDaJornada(vazio)).toEqual({
+      diagnostico: "atual",
+      negocios: "pendente",
+      planos: "pendente",
+      execucao: "pendente",
+    });
   });
   it("diagnóstico concluído, mas negócios ainda não gerados: o passo é Negócios", () => {
     expect(passoAtualDaJornada({ ...vazio, diagnosticoConcluido: true })).toBe("negocios");
   });
   it("negócios gerados e sem plano: o próximo é criar o plano", () => {
     const s = { ...vazio, diagnosticoConcluido: true, negociosGerados: 5 };
-    expect(estadosDaJornada(s)).toEqual({ diagnostico: "feito", negocios: "feito", planos: "atual" });
+    expect(estadosDaJornada(s)).toEqual({
+      diagnostico: "feito",
+      negocios: "feito",
+      planos: "atual",
+      execucao: "pendente",
+    });
   });
   it("favoritos sem diagnóstico também levam ao plano (duas portas, um funil)", () => {
     const s = { ...vazio, favoritos: 2 };
-    expect(estadosDaJornada(s)).toEqual({ diagnostico: "pendente", negocios: "feito", planos: "atual" });
+    expect(estadosDaJornada(s)).toEqual({
+      diagnostico: "pendente",
+      negocios: "feito",
+      planos: "atual",
+      execucao: "pendente",
+    });
   });
-  it("com plano criado nenhum passo fica 'atual' (o topo mostra o plano)", () => {
-    const s = { diagnosticoConcluido: true, negociosGerados: 5, favoritos: 0, planos: 1 };
+  it("com plano criado e ainda não concluído, a pessoa está na Execução", () => {
+    const s = { diagnosticoConcluido: true, negociosGerados: 5, favoritos: 0, planos: 1, planosConcluidos: 0 };
+    expect(passoAtualDaJornada(s)).toBe("execucao");
+    expect(estadosDaJornada(s)).toEqual({
+      diagnostico: "feito",
+      negocios: "feito",
+      planos: "feito",
+      execucao: "atual",
+    });
+  });
+  it("com um plano concluído e outro em andamento, continua na Execução", () => {
+    const s = { ...vazio, favoritos: 1, planos: 2, planosConcluidos: 1 };
+    expect(passoAtualDaJornada(s)).toBe("execucao");
+  });
+  it("todos os planos concluídos: a jornada está completa e nenhum passo fica 'atual'", () => {
+    const s = { diagnosticoConcluido: true, negociosGerados: 5, favoritos: 0, planos: 1, planosConcluidos: 1 };
     expect(passoAtualDaJornada(s)).toBeNull();
-    expect(estadosDaJornada(s)).toEqual({ diagnostico: "feito", negocios: "feito", planos: "feito" });
+    expect(estadosDaJornada(s)).toEqual({
+      diagnostico: "feito",
+      negocios: "feito",
+      planos: "feito",
+      execucao: "feito",
+    });
   });
 });
 

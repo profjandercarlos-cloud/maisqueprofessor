@@ -10,14 +10,14 @@ import { diaLocal } from "@/lib/presenca/dias";
 import { diasDePresenca, estadoDeHoje } from "@/lib/presenca/servico";
 import { PapelIcon } from "@/components/papel-icon";
 import { ListaDeAcoes } from "@/components/lista-de-acoes";
+import { MapaDaJornada } from "@/components/mapa-da-jornada";
 import { MedalhasDoPlano } from "@/components/medalhas-do-plano";
 import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
 import { resumoDasAcoes } from "@/lib/plano/acoes";
-import { estadosDaJornada, type EstadoDoPasso } from "@/lib/plano/jornada";
-import { formatDate } from "@/lib/format-date";
+import { estadosDaJornada } from "@/lib/plano/jornada";
 import { cotaDePlanos } from "@/lib/planos/cota";
 import { LogoutButton } from "./logout-button";
 
@@ -88,16 +88,14 @@ export default async function Home({
   const negocios = rodada?.possibilities ?? [];
   const negociosComPlano = negocios.filter((n) => n.plan).length;
   const diagnosticoConcluido = diagnostic?.status === "CONCLUIDO";
+  const planosConcluidos = planos.filter((pl) => pl.acoes.length > 0 && pl.acoes.every((a) => a.status === "CONCLUIDA")).length;
   const estados = estadosDaJornada({
     diagnosticoConcluido,
     negociosGerados: negocios.length,
     favoritos,
     planos: totalPlanos,
+    planosConcluidos,
   });
-  const planosEmExecucao = planos.filter(
-    (pl) => pl.acoes.length > 0 && pl.acoes.some((a) => a.status !== "A_FAZER") && !pl.acoes.every((a) => a.status === "CONCLUIDA"),
-  ).length;
-  const planosConcluidos = planos.filter((pl) => pl.acoes.length > 0 && pl.acoes.every((a) => a.status === "CONCLUIDA")).length;
 
   const diagnosticCta = !diagnostic
     ? { label: "Começar diagnóstico", href: `/diagnostico/${SHARED_STEPS[0].slug}` }
@@ -262,147 +260,70 @@ export default async function Home({
         </section>
       )}
 
-      {diagnosticoConcluido ? (
-        <a
-          href="/diagnostico/respostas"
-          className="mt-6 flex items-center gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised p-4 shadow-[var(--shadow)] transition-colors hover:border-petrol"
-        >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-gold-soft text-petrol">
-            <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-[22px] w-[22px]" aria-hidden>
-              <rect x="3.5" y="2.5" width="11" height="13" rx="1.6" />
-              <path d="M6.2 6.5h5.6M6.2 9h5.6M6.2 11.5h3.2" />
-            </svg>
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block font-serif text-[17px] font-medium text-ink">Seu diagnóstico</span>
-            <span className="block text-[13.5px] text-ink-muted">
-              Veja o que você respondeu em {formatDate(diagnostic!.updatedAt, { day: "2-digit", month: "long", year: "numeric" })}.
-            </span>
-          </span>
-          <span className="shrink-0 text-[13px] font-semibold text-petrol">Ver respostas →</span>
-        </a>
-      ) : null}
-
-      {/* Seu caminho: o antigo Mapa, em três passos. Diagnóstico e favoritos são duas portas para os mesmos planos. */}
+      {/* Seu caminho: o antigo Mapa. Uma trilha com as quatro paradas e o "Você está aqui". */}
       <section className="mt-9" aria-label="Seu caminho">
-        <h2 className="mb-4 font-mono text-[11px] tracking-[0.08em] text-gold uppercase">Seu caminho</h2>
-        <ol className="flex flex-col">
-          <PassoDoCaminho
-            numero={1}
-            estado={estados.diagnostico}
-            titulo="Diagnóstico"
-            ultimo={false}
-            resumo={
-              diagnosticoConcluido
-                ? `Concluído em ${formatDate(diagnostic!.updatedAt, { day: "2-digit", month: "long", year: "numeric" })}`
-                : diagnostic
-                  ? "Em andamento"
-                  : "Ainda não iniciado"
-            }
-            links={
-              diagnosticoConcluido
-                ? []
-                : [{ href: diagnosticCta.href, texto: diagnostic ? "Continuar diagnóstico" : "Começar diagnóstico" }]
-            }
-          />
-          <PassoDoCaminho
-            numero={2}
-            estado={estados.negocios}
-            titulo="Negócios"
-            ultimo={false}
-            resumo={
-              negocios.length > 0
-                ? `Gerados para você: ${negocios.length}${negociosComPlano > 0 ? ` · ${negociosComPlano} com plano` : ""}`
-                : diagnosticoConcluido
-                  ? "Seus negócios personalizados ainda não foram gerados"
-                  : "Os negócios personalizados aparecem depois do diagnóstico"
-            }
-            segundoResumo={`Ideias favoritas: ${favoritos}`}
-            links={[
-              ...(negocios.length > 0 || diagnosticoConcluido ? [{ href: "/diagnostico/concluido", texto: "Meus negócios" }] : []),
-              favoritos > 0
-                ? { href: "/negocios/favoritos", texto: "Meus favoritos" }
-                : { href: "/negocios", texto: "Explorar ideias de negócios" },
-            ]}
-          />
-          <PassoDoCaminho
-            numero={3}
-            estado={estados.planos}
-            titulo="Planos de execução"
-            ultimo
-            resumo={`${cota.usados} de ${cota.limite} planos usados`}
-            segundoResumo={
-              planosEmExecucao + planosConcluidos > 0
+        <h2 className="mb-5 font-mono text-[11px] tracking-[0.08em] text-gold uppercase">Seu caminho</h2>
+        <MapaDaJornada
+          estados={estados}
+          destinos={{
+            diagnostico: diagnosticoConcluido ? "/diagnostico/respostas" : diagnosticCta.href,
+            negocios: negocios.length > 0 ? "/diagnostico/concluido" : favoritos > 0 ? "/negocios/favoritos" : "/negocios",
+            planos: "/planos",
+            execucao: activePlan && planoNovo ? `/planos/${activePlan.id}` : "/planos",
+          }}
+          resumos={{
+            diagnostico: [diagnosticoConcluido ? "Concluído" : diagnostic ? "Em andamento" : "Não iniciado"],
+            negocios:
+              negocios.length + favoritos > 0
                 ? [
-                    planosEmExecucao > 0 ? `${planosEmExecucao} em execução` : null,
-                    planosConcluidos > 0 ? `${planosConcluidos} ${planosConcluidos === 1 ? "concluído" : "concluídos"}` : null,
+                    ...(negocios.length > 0 ? [`${negocios.length} personalizados`] : []),
+                    ...(favoritos > 0 ? [`${favoritos} ${favoritos === 1 ? "favorito" : "favoritos"}`] : []),
                   ]
-                    .filter(Boolean)
-                    .join(" · ")
-                : undefined
-            }
-            links={[{ href: "/planos", texto: "Ver planos de execução" }]}
-          />
-        </ol>
+                : ["Nenhum ainda"],
+            planos: [`${cota.usados} de ${cota.limite} criados`],
+            execucao:
+              activePlan && planoNovo
+                ? [`${resumo.concluidas} de ${resumo.total} ações`]
+                : totalPlanos > 0 && planosConcluidos === totalPlanos
+                  ? ["Concluída"]
+                  : ["Ainda não começou"],
+          }}
+          proximo={
+            estados.diagnostico === "atual"
+              ? {
+                  texto:
+                    "Responda o diagnóstico para receber negócios sob medida para você. Se preferir, explore as ideias de negócios e favorite as que combinam com você.",
+                  links: [
+                    { href: diagnosticCta.href, texto: diagnosticCta.label },
+                    { href: "/negocios", texto: "Explorar ideias de negócios" },
+                  ],
+                }
+              : estados.negocios === "atual"
+                ? {
+                    texto:
+                      "Seu diagnóstico está pronto. Veja os negócios personalizados ou favorite ideias do catálogo para escolher de onde sai o seu plano.",
+                    links: [
+                      { href: "/diagnostico/concluido", texto: "Meus negócios" },
+                      { href: "/negocios", texto: "Explorar ideias de negócios" },
+                    ],
+                  }
+                : estados.planos === "atual"
+                  ? {
+                      texto:
+                        "Você já tem negócios para escolher. Crie o plano de execução de um deles: pode ser um dos personalizados ou um dos seus favoritos.",
+                      links: [{ href: "/planos", texto: "Criar meu plano" }],
+                    }
+                  : estados.execucao === "feito"
+                    ? {
+                        texto: cota.esgotada
+                          ? "Você concluiu todos os seus planos. Parabéns pela execução."
+                          : `Você concluiu seus planos. Ainda dá para criar mais ${cota.restantes} (${cota.usados} de ${cota.limite} usados), de um negócio personalizado ou favorito.`,
+                        links: cota.esgotada ? [] : [{ href: "/planos", texto: "Criar outro plano" }],
+                      }
+                    : null
+          }
+        />
       </section>
     </div>
-  );
-}
-
-const MARCADOR: Record<EstadoDoPasso, { fundo: string; borda: string; cor: string }> = {
-  feito: { fundo: "var(--petrol)", borda: "var(--petrol)", cor: "var(--paper)" },
-  atual: { fundo: "var(--gold-soft)", borda: "var(--gold)", cor: "var(--petrol)" },
-  pendente: { fundo: "transparent", borda: "var(--line)", cor: "var(--ink-muted)" },
-};
-
-function PassoDoCaminho({
-  numero,
-  estado,
-  titulo,
-  resumo,
-  segundoResumo,
-  links,
-  ultimo,
-}: {
-  numero: number;
-  estado: EstadoDoPasso;
-  titulo: string;
-  resumo: string;
-  segundoResumo?: string;
-  links: { href: string; texto: string }[];
-  ultimo: boolean;
-}) {
-  const m = MARCADOR[estado];
-  return (
-    <li className="flex gap-3.5">
-      <div className="flex flex-col items-center">
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 font-mono text-[11px] font-semibold"
-          style={{ background: m.fundo, borderColor: m.borda, color: m.cor }}
-        >
-          {estado === "feito" ? "✓" : numero}
-        </span>
-        {!ultimo ? <span className="my-1 w-px flex-1 bg-line" aria-hidden /> : null}
-      </div>
-      <div className={`min-w-0 flex-1 ${ultimo ? "" : "pb-6"}`}>
-        <p className="flex flex-wrap items-center gap-2 font-serif text-[16px] font-medium text-ink">
-          {titulo}
-          {estado === "atual" ? (
-            <span className="rounded-full bg-gold px-2 py-[1px] font-mono text-[9px] font-semibold tracking-[0.06em] text-paper uppercase">
-              Você está aqui
-            </span>
-          ) : null}
-        </p>
-        <p className="text-[13.5px] text-ink-muted">{resumo}</p>
-        {segundoResumo ? <p className="text-[13.5px] text-ink-muted">{segundoResumo}</p> : null}
-        <p className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1">
-          {links.map((l) => (
-            <a key={l.href} href={l.href} className="text-[13px] font-semibold text-petrol hover:underline">
-              {l.texto} →
-            </a>
-          ))}
-        </p>
-      </div>
-    </li>
   );
 }
