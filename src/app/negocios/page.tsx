@@ -61,6 +61,16 @@ export default async function IdeiasDeNegociosPage({
         </a>
       </div>
 
+      <p className="mb-5 max-w-[66ch] text-[14.5px] leading-[1.6] text-ink-muted">
+        Estas ideias são as mesmas para todos os professores. Favorite as que combinam com você: cada ideia favorita
+        pode virar um plano de execução, com as ações em ordem e um checklist. Os negócios feitos só para você, a partir
+        do seu diagnóstico, ficam em{" "}
+        <a href="/diagnostico/concluido" className="font-semibold text-petrol hover:underline">
+          Meus negócios
+        </a>
+        .
+      </p>
+
       <nav aria-label="Categorias" className="mb-3 flex flex-wrap gap-2">
         <a href="/negocios" className={chip(!categoriaAtiva)} aria-current={!categoriaAtiva ? "page" : undefined}>
           Todas · {totalVisiveis}

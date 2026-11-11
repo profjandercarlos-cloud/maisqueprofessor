@@ -68,13 +68,13 @@ const HORIZONTE_LABELS: Record<HorizonteEconomico, string> = {
   CURTO_PRAZO: "Curto prazo",
   MEDIO_PRAZO: "Médio prazo",
   LONGO_PRAZO: "Longo prazo",
-  A_VALIDAR: "A validar",
+  A_VALIDAR: "A definir",
 };
 
 const LASTRO_LABELS: Record<NivelLastro, string> = {
-  FORTE: "Base forte",
-  MODERADO: "Base moderada",
-  EXPLORATORIO: "Exploratório",
+  FORTE: "forte",
+  MODERADO: "média",
+  EXPLORATORIO: "nova para você",
 };
 
 const MECANISMO_LABELS: Record<string, string> = {
@@ -105,9 +105,9 @@ function ComparisonTable({ possibilities }: { possibilities: PossibilityData[] }
         <thead>
           <tr className="bg-badge-bg text-badge-text">
             <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Negócio</th>
-            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Domínio</th>
-            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Mecanismo</th>
-            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Profundidade</th>
+            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Área de atuação</th>
+            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Como gera renda</th>
+            <th className="px-3 py-2 text-left font-mono text-[10px] tracking-[0.06em] uppercase">Tipo de entrega</th>
           </tr>
         </thead>
         <tbody>
@@ -224,10 +224,10 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                       </span>
                     ) : null}
                     <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
-                      Tempo para validar: {HORIZONTE_LABELS[p.tempoPrimeiraValidacao]}
+                      Tempo para testar: {HORIZONTE_LABELS[p.tempoPrimeiraValidacao]}
                     </span>
                     <span className="inline-block rounded-full bg-badge-bg px-2 py-[3px] text-[10px] font-medium text-badge-text">
-                      Base no seu histórico: {LASTRO_LABELS[p.baseNoHistorico]}
+                      Ligação com o seu histórico: {LASTRO_LABELS[p.baseNoHistorico]}
                     </span>
                   </span>
                   <span className="mb-1 block font-serif text-[19px] font-medium tracking-tight text-ink">
@@ -279,7 +279,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                     {conexao ? (
                       <div className="rounded-[10px] border border-line bg-badge-bg p-3.5">
                         <div className="mb-1 font-mono text-[10px] tracking-[0.06em] text-badge-text uppercase">
-                          Conexão com o mundo real
+                          Como isso existe no mercado
                         </div>
                         {conexao.nomeDeMercado ? (
                           <div className="mb-1.5 text-[14px] leading-[1.55] font-semibold text-ink">
@@ -358,7 +358,7 @@ export function PossibilityCards({ possibilities }: { possibilities: Possibility
                         pendingText="Confirmando..."
                         className="mt-[18px] rounded-lg bg-gold px-[18px] py-[11px] text-[13.5px] font-semibold text-paper transition-colors hover:opacity-90"
                       >
-                        Quero explorar este negócio →
+                        Criar o plano deste negócio →
                       </SubmitButton>
                     </form>
                   )}

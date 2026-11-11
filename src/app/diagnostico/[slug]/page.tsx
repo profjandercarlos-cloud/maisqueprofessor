@@ -5,6 +5,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { StepErrorBanner } from "@/components/step-error-banner";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { ExemploDeRespostaBox } from "@/components/exemplo-de-resposta";
+import { FaixaDaJornada } from "@/components/faixa-da-jornada";
+import { IntroDoDiagnostico } from "@/components/intro-do-diagnostico";
 import { getDiagnosticoParaRevisao, getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
 import { EXEMPLOS_DE_RESPOSTA } from "@/lib/diagnostico/exemplos";
 import { deepGet } from "@/lib/wizard/deep-set";
@@ -49,14 +51,34 @@ export default async function DiagnosticStepPage({
       : undefined;
 
   const index = getStepIndex(slug, rota);
-  const totalSteps = getTotalSteps(rota);
+  // Antes de escolher a rota (pergunta 2) o total real ainda não é conhecido; usa o das rotas mais
+  // longas (26) para o contador não pular de 20 para 26 logo na pergunta seguinte.
+  const totalSteps = getTotalSteps(rota ?? "CRIACAO_VALOR");
   const prevSlug = getPrevSlug(slug, rota);
   const progressPct = Math.round(((index + 1) / totalSteps) * 100);
   const action = saveStep.bind(null, slug);
 
+  // Primeira vez no diagnóstico: antes da pergunta 1, mostra como o app funciona.
+  const primeiraVez =
+    slug === "intencao" &&
+    !revisao &&
+    query.comecar !== "1" &&
+    diagnostic.intention === "NAO_SEI" &&
+    Object.keys(answers).length === 0;
+  if (primeiraVez) {
+    return (
+      <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
+        <AppHeader progressLabel="DIAGNÓSTICO" />
+        <IntroDoDiagnostico comecarHref="/diagnostico/intencao?comecar=1" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel={revisao ? "REVISANDO UMA RESPOSTA" : `PERGUNTA ${index + 1}/${totalSteps}`} />
+
+      <FaixaDaJornada atual="diagnostico" />
 
       {revisao ? null : (
         <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-line">

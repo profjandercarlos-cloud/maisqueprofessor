@@ -162,6 +162,9 @@ export default async function Home({
               </span>
               <span className="shrink-0 text-[13px] font-semibold text-petrol">Abrir →</span>
             </a>
+            <p className="-mt-1 mb-4 text-[12.5px] leading-[1.5] text-ink-muted">
+              É o plano que você está executando agora. Você pode criar até 5 e trocar o ativo em Planos de execução.
+            </p>
             <ProgressoPlano acoes={acoes} />
             {acoes.some((a) => a.marco) ? (
               <div className="mt-5 border-t border-line pt-4">

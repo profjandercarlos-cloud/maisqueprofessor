@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/app-header";
+import { FaixaDaJornada } from "@/components/faixa-da-jornada";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { situacaoDoNegocio } from "@/lib/plano/situacao-do-negocio";
@@ -39,10 +40,11 @@ export default async function PossibilitiesReviewPage({
   if (EM_ANDAMENTO.includes(round.status)) {
     return (
       <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
-        <AppHeader progressLabel="ETAPA 03 / 10" />
+        <AppHeader progressLabel="MEUS NEGÓCIOS" />
+        <FaixaDaJornada atual="negocios" />
         <div className="mb-11">
           <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-            Preparando seu diagnóstico
+            Gerando seus negócios
           </span>
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
             Cinco negócios a caminho.
@@ -60,7 +62,8 @@ export default async function PossibilitiesReviewPage({
   if (round.status === "FALHOU") {
     return (
       <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
-        <AppHeader progressLabel="ETAPA 03 / 10" />
+        <AppHeader progressLabel="MEUS NEGÓCIOS" />
+        <FaixaDaJornada atual="negocios" />
         <div className="mb-11">
           <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
             Não conseguimos gerar seus negócios agora.
@@ -85,20 +88,22 @@ export default async function PossibilitiesReviewPage({
 
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="ETAPA 03 / 10" />
+      <AppHeader progressLabel="MEUS NEGÓCIOS" />
+      <FaixaDaJornada atual="negocios" />
 
       <div className="mb-11">
         <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
-          Seu diagnóstico está pronto
+          Seus 5 negócios estão prontos
         </span>
         <h1 className="mb-3.5 font-serif text-[clamp(28px,5vw,38px)] leading-[1.15] font-medium tracking-tight text-petrol">
           Cinco negócios.
           <br />
-          Um deles <em className="text-gold not-italic italic">é seu</em>.
+          Escolha por onde <em className="text-gold not-italic italic">começar</em>.
         </h1>
         <p className="max-w-[46ch] text-[15.5px] text-ink-muted">
           Cada um nasce de um ângulo diferente do que você respondeu, não são cinco variações do
-          mesmo negócio. Abra e veja o que reconhece em você.
+          mesmo negócio. Abra e veja o que reconhece em você. Para executar um negócio, você cria o plano
+          de execução dele: pode ter até 5 planos, e só um fica ativo por vez.
         </p>
       </div>
 
@@ -133,8 +138,8 @@ export default async function PossibilitiesReviewPage({
                 <path d="M8 7v4.5M8 4.8v.1" stroke="var(--gold)" strokeWidth="1.4" strokeLinecap="round" />
               </svg>
               <span>
-                Isto não é um ranking. Observe o que desperta reconhecimento em cada um e reaja com
-                sinceridade, isso ajuda a refinar os próximos.
+                Isto não é um ranking. Abra cada negócio e observe o que desperta reconhecimento em
+                você. Se nenhum servir, dá para ajustar o conjunto no fim desta página.
               </span>
             </div>
           ) : null}
@@ -175,8 +180,14 @@ export default async function PossibilitiesReviewPage({
 
       {alreadyApproved ? (
         <footer className="mt-9 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px]">
-          <p className="text-[14px] font-semibold text-ink">Negócio aprovado.</p>
-          <p className="text-[12.5px] text-ink-muted">Vamos seguir para o próximo passo.</p>
+          <p className="text-[14px] font-semibold text-ink">Quer executar mais de um negócio?</p>
+          <p className="mb-2 text-[12.5px] text-ink-muted">
+            Abra o negócio e use &quot;Criar o plano deste negócio&quot;. Você pode ter até 5 planos, e só um fica ativo por
+            vez.
+          </p>
+          <Link href="/planos" className="text-[13.5px] font-semibold text-petrol hover:underline">
+            Ver meus planos →
+          </Link>
         </footer>
       ) : canAdjust ? (
         <footer className="mt-9 flex flex-col items-start justify-between gap-4 rounded-[var(--radius-app)] border border-line bg-paper-raised px-5 py-[18px] sm:flex-row sm:items-center">
@@ -191,7 +202,7 @@ export default async function PossibilitiesReviewPage({
             href={`/diagnostico/possibilidades/${round.id}/ajustar`}
             className="text-[13.5px] font-semibold whitespace-nowrap text-petrol hover:underline"
           >
-            Ajustar conjunto →
+            Ajustar meus negócios →
           </Link>
         </footer>
       ) : (

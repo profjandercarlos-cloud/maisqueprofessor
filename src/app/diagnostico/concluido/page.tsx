@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { FaixaDaJornada } from "@/components/faixa-da-jornada";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
@@ -78,6 +79,7 @@ export default async function DiagnosticoConcluidoPage({
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="DIAGNÓSTICO CONCLUÍDO" />
+      <FaixaDaJornada atual="diagnostico" />
       <div>
         <span className="mb-[18px] inline-block rounded-full bg-badge-bg px-2.5 py-[5px] font-mono text-[11px] tracking-[0.12em] text-badge-text uppercase">
           Diagnóstico concluído

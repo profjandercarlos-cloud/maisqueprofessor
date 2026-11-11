@@ -43,7 +43,10 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
         {badge || progressLabel || seloDias ? (
           <div className="flex items-center justify-between gap-3">
             {badge ? (
-              <div className="flex items-center gap-2" title={PAPEL_LABELS[badge.papel]}>
+              <div
+                className="flex items-center gap-2"
+                title={`${PAPEL_LABELS[badge.papel]}. Medalhas do plano ativo: cada marco concluído conquista uma.`}
+              >
                 <PapelIcon papel={badge.papel} className="h-4 w-4 shrink-0 text-petrol" />
                 <div className="flex items-center gap-1">
                   {badge.achievedCount === 0 ? (
@@ -88,7 +91,7 @@ export async function AppHeader({ progressLabel }: { progressLabel?: string }) {
           {badge ? (
             <div
               className="flex items-center gap-2.5 border-l border-line pl-3 xl:border-l-0 xl:pl-0"
-              title={PAPEL_LABELS[badge.papel]}
+              title={`${PAPEL_LABELS[badge.papel]}. Medalhas do plano ativo: cada marco concluído conquista uma.`}
             >
               <PapelIcon papel={badge.papel} className="h-[17px] w-[17px] shrink-0 text-petrol" />
               <span className="h-4 w-px bg-line" />

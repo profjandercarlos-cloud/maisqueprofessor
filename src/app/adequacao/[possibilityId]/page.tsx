@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { FaixaDaJornada } from "@/components/faixa-da-jornada";
 import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { donoDoNegocio } from "@/lib/plano/dono-do-negocio";
@@ -31,6 +32,11 @@ export default async function CriarPlanoPage({
   if (possibility.plan) redirect(`/planos/${possibility.plan.id}`);
 
   const cota = cotaDePlanos(await db.plan.count({ where: { userId: user.id } }));
+  // Criar um plano o torna o ativo e pausa o atual: a pessoa precisa saber disso antes de criar.
+  const planoAtivo = await db.plan.findFirst({
+    where: { userId: user.id, status: "ATIVO" },
+    select: { possibility: { select: { titulo: true } } },
+  });
 
   // Negócio fechado por conflito de orçamento: não há o que criar.
   if (possibility.status === "REJEITADA") {
@@ -56,6 +62,7 @@ export default async function CriarPlanoPage({
   return (
     <div className="mx-auto w-full max-w-[640px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="CRIAR PLANO" />
+      <FaixaDaJornada atual="planos" />
 
       <a href="/planos" className="mb-4 inline-block text-[13px] font-semibold text-petrol hover:underline">
         ← Planos de execução
@@ -104,6 +111,13 @@ export default async function CriarPlanoPage({
           </p>
         ) : (
           <>
+            {planoAtivo ? (
+              <p className="mb-5 max-w-[52ch] rounded-lg bg-gold-soft px-4 py-3 text-[13.5px] leading-[1.55] text-ink">
+                <span className="font-semibold">Este plano vai ser o seu plano ativo.</span> O plano atual, &quot;
+                {planoAtivo.possibility.titulo}&quot;, fica pausado. O progresso dele fica guardado e você pode ativá-lo
+                de novo em Planos de execução.
+              </p>
+            ) : null}
             <SubmitButton
               pendingText="Criando seu plano... pode levar 1 a 2 minutos, não feche esta página"
               className="rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-paper transition-colors hover:opacity-90"

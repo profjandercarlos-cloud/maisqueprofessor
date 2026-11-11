@@ -161,5 +161,5 @@ export async function criarPlano(possibilityId: string, formData: FormData) {
 
   await db.possibility.update({ where: { id: possibility.id }, data: { status: "APROVADA" } });
 
-  redirect(`/planos/${plan.id}`);
+  redirect(`/planos/${plan.id}?novo=1`);
 }

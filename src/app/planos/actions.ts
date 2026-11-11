@@ -29,6 +29,23 @@ export async function activatePlan(planId: string) {
   redirect(`/planos/${planId}`);
 }
 
+// Botão "Criar o plano desta ideia" na própria página da ideia: favorita a ideia (se ainda não for) e
+// segue o mesmo caminho do plano de um favorito. Evita a volta por Meus favoritos > Planos.
+export async function criarPlanoDaIdeia(ideiaId: string) {
+  const user = await requireActiveAccess();
+  if (!PLANOS_DOS_FAVORITOS_DISPONIVEIS) redirect("/planos");
+
+  const ideia = await db.ideiaNegocio.findFirst({ where: { id: ideiaId, status: "APROVADO" }, select: { id: true } });
+  if (!ideia) redirect("/negocios");
+
+  await db.ideiaFavorita.upsert({
+    where: { userId_ideiaId: { userId: user.id, ideiaId } },
+    create: { userId: user.id, ideiaId },
+    update: {},
+  });
+  return criarPlanoDeFavorito(ideiaId);
+}
+
 // Começa um plano a partir de uma ideia favoritada: a ideia vira um negócio da pessoa
 // (uma vez só por favorito) e segue para a mesma tela de criação de plano dos negócios
 // personalizados. A cota é checada de novo antes da IA, na tela final do questionário.

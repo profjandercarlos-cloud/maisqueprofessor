@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { FaixaDaJornada } from "@/components/faixa-da-jornada";
 import { ChecklistAcao } from "@/components/checklist-acao";
 import { AlvoIcon, EscudoIcon, LivroIcon } from "@/components/ficha-icons";
 import { SeloStatusAcao } from "@/components/progresso-plano";
@@ -59,6 +60,7 @@ export default async function AcaoPage({ params }: { params: Promise<{ planId: s
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="PLANO DE EXECUÇÃO" />
+      <FaixaDaJornada atual="execucao" />
 
       <a href={`/planos/${plan.id}`} className="mb-4 inline-block text-[13px] font-semibold text-petrol hover:underline">
         ← Todas as ações do plano: {plan.possibility.titulo}

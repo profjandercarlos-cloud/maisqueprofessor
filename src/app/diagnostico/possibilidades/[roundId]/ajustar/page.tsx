@@ -41,7 +41,7 @@ export default async function AjustarConjuntoPage({
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel="AJUSTAR CONJUNTO" />
+      <AppHeader progressLabel="AJUSTAR MEUS NEGÓCIOS" />
       <h1 className="mb-2 font-serif text-2xl font-medium tracking-tight text-petrol">
         O que você quer manter, e o que você quer trocar?
       </h1>

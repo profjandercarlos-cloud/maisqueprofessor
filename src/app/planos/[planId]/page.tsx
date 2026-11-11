@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { AppHeader } from "@/components/app-header";
+import { FaixaDaJornada } from "@/components/faixa-da-jornada";
 import { ListaDeAcoes } from "@/components/lista-de-acoes";
 import { MedalhasDoPlano } from "@/components/medalhas-do-plano";
 import { ProgressoPlano, SeloStatusAcao } from "@/components/progresso-plano";
@@ -37,8 +38,15 @@ const AVISO_ENCAIXE: Record<string, string> = {
   construcao_medio_prazo: "Este plano constrói a base antes do primeiro serviço",
 };
 
-export default async function PlanPage({ params }: { params: Promise<{ planId: string }> }) {
+export default async function PlanPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ planId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { planId } = await params;
+  const planoNovo = (await searchParams).novo === "1";
   const user = await requireActiveAccess();
 
   const plan = await db.plan.findUnique({
@@ -68,10 +76,18 @@ export default async function PlanPage({ params }: { params: Promise<{ planId: s
   return (
     <div className="mx-auto w-full max-w-[760px] flex-1 px-5 pb-20">
       <AppHeader progressLabel="PLANO DE EXECUÇÃO" />
+      <FaixaDaJornada atual="execucao" />
 
       <a href="/planos" className="mb-4 inline-block text-[13px] font-semibold text-petrol hover:underline">
         ← Planos de execução
       </a>
+
+      {planoNovo && plan.status === "ATIVO" ? (
+        <p className="mb-5 rounded-lg bg-gold-soft px-4 py-3 text-[13.5px] leading-[1.55] text-ink">
+          <span className="font-semibold">Plano criado.</span> Ele agora é o seu plano ativo e aparece no Painel. Para
+          trocar o plano ativo, use Planos de execução.
+        </p>
+      ) : null}
 
       <h1 className="mb-5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
         {plan.possibility.titulo}
