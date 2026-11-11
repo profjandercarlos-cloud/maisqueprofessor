@@ -136,9 +136,10 @@ export function AppNavLinks({
 
   // Conta gratuita: Pequenos Negócios primeiro e liberado; as áreas do
   // produto continuam no menu, com cadeado, apontando pra página de compra.
-  // Conta paga: tudo liberado, com Pequenos Negócios logo depois de Possibilidades.
+  // Conta paga: tudo liberado, na ordem Painel, Meus negócios, Ideias de negócios, Planos de
+  // execução, Lista de presença, Configurações.
   const base = pago
-    ? [...BASE_ITEMS.slice(0, 4), NEGOCIOS_ITEM, ...BASE_ITEMS.slice(4)]
+    ? [...BASE_ITEMS.slice(0, 2), NEGOCIOS_ITEM, ...BASE_ITEMS.slice(2)]
     : [NEGOCIOS_ITEM, ...BASE_ITEMS];
   const items = (isAdmin ? [...base, ADMIN_ITEM] : base).map((item) => {
     const trancado = !pago && item.href in AREAS_TRANCADAS;
