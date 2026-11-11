@@ -1,10 +1,10 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { SubmitButton } from "@/components/submit-button";
 import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import { SHARED_STEPS, getResumeSlug } from "@/lib/diagnostico/steps";
-import { generateForActiveDiagnostic } from "./actions";
+import { CarregandoRevisao, RevisaoDoDiagnostico } from "./revisao-do-diagnostico";
 
 // maxDuration tem que ficar aqui (na page), não no arquivo "use server" —
 // um arquivo "use server" só pode exportar funções async. Isto rege o
@@ -85,20 +85,16 @@ export default async function DiagnosticoConcluidoPage({
         <h1 className="mb-3.5 font-serif text-[clamp(26px,5vw,34px)] leading-[1.15] font-medium tracking-tight text-petrol">
           Suas respostas foram salvas.
         </h1>
-        <p className="mb-7 max-w-[46ch] text-[15.5px] text-ink-muted">
-          Agora vamos gerar seus cinco negócios a partir do que você respondeu.
+        <p className="mb-7 max-w-[52ch] text-[15.5px] text-ink-muted">
+          Antes de gerar seus cinco negócios, confira como entendemos o que você contou. Se algo estiver diferente do
+          que você quis dizer, corrija agora: leva um minuto.
         </p>
         {error ? (
           <p className="mb-5 max-w-[46ch] text-[14px] text-role-3">{error}</p>
         ) : null}
-        <form action={generateForActiveDiagnostic}>
-          <SubmitButton
-            pendingText="Preparando sua geração..."
-            className="rounded-lg bg-gold px-5 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
-          >
-            Gerar meus 5 negócios →
-          </SubmitButton>
-        </form>
+        <Suspense fallback={<CarregandoRevisao />}>
+          <RevisaoDoDiagnostico diagnostic={diagnostic} />
+        </Suspense>
       </div>
     </div>
   );

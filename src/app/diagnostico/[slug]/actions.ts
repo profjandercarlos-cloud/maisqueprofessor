@@ -5,12 +5,14 @@ import { db } from "@/lib/db";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
 import type { Intention, Prisma, RotaProfissional } from "@/generated/prisma/client";
 import { getStepBySlug, getNextSlug, ROTA_PROFISSIONAL_SLUG } from "@/lib/diagnostico/steps";
-import { getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
+import { getDiagnosticoParaRevisao, getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
+import { acaoSemSubstancia, lerMetaFinanceira, problemaNoTexto } from "@/lib/diagnostico/qualidade";
 import { deepGet, deepSet } from "@/lib/wizard/deep-set";
 import { otherDetailPath } from "@/lib/wizard/step-types";
 
 const SKIP_SENTINEL = "__SEM_RESPOSTA__";
 const GENERIC_ACAO_ANSWERS = ["ajudei", "participei", "dei suporte", "ajudei a organizar", "dei apoio"];
+const META_FINANCEIRA_SLUG = "meta-financeira-mensal";
 
 function normalize(text: string): string {
   return text
@@ -25,12 +27,19 @@ function normalize(text: string): string {
 export async function saveStep(slug: string, formData: FormData) {
   const user = await requireActiveAccess();
 
-  const diagnostic = await getOrCreateActiveDiagnostic(user.id);
+  // Modo conferência: a pessoa voltou de /diagnostico/concluido para corrigir uma resposta antes de
+  // gerar os negócios. Ao salvar, volta para a conferência em vez de seguir para a próxima pergunta.
+  const revisao = formData.get("revisao") === "1";
+  const diagnostic = revisao
+    ? await getDiagnosticoParaRevisao(user.id)
+    : await getOrCreateActiveDiagnostic(user.id);
   if (!diagnostic) redirect("/diagnostico/concluido");
   const rota = diagnostic.rotaProfissional;
 
   const step = getStepBySlug(slug, rota);
   if (!step) redirect("/diagnostico/intencao");
+  // Trocar a intenção ou a rota mudaria o conjunto de perguntas: isso não se corrige por aqui.
+  if (revisao && (step.type === "intention" || slug === ROTA_PROFISSIONAL_SLUG)) redirect("/diagnostico/concluido");
 
   const currentAnswers = diagnostic.answers as Record<string, unknown>;
 
@@ -44,6 +53,12 @@ export async function saveStep(slug: string, formData: FormData) {
   // pessoa tinha acabado de escrever, porque a tela seguinte recarregava a
   // partir do banco (que nunca chegou a ser atualizado).
   let errorMessage: string | null = null;
+
+  const exigirDetalheDeOutro = (marcouOutro: boolean, detalhe: string) => {
+    if (marcouOutro && detalhe.length < 3) {
+      errorMessage = 'Você marcou "Outro": escreva no campo abaixo qual é, para eu entender a sua resposta.';
+    }
+  };
 
   switch (step.type) {
     case "intention": {
@@ -69,6 +84,12 @@ export async function saveStep(slug: string, formData: FormData) {
         errorMessage = `Escreva pelo menos ${step.minChars} caracteres.`;
       } else if (value && step.maxChars && value.length > step.maxChars) {
         errorMessage = `Escreva no máximo ${step.maxChars} caracteres.`;
+      } else if (value && step.minChars) {
+        // Só onde há mínimo: texto sem sentido não pode servir só para bater o número de caracteres.
+        errorMessage = problemaNoTexto(value, step.minChars);
+      } else if (value && slug === META_FINANCEIRA_SLUG && !lerMetaFinanceira(value)) {
+        errorMessage =
+          "Informe um valor ou uma faixa em reais, por mês (ex.: R$ 5.000, ou entre R$ 4.000 e R$ 6.000). Se preferir não informar, deixe em branco.";
       }
       break;
     }
@@ -83,8 +104,8 @@ export async function saveStep(slug: string, formData: FormData) {
     }
     case "single-select": {
       const value = String(formData.get("value") ?? "");
+      const detail = String(formData.get("outro_detalhe") ?? "").trim();
       if (step.allowOther) {
-        const detail = String(formData.get("outro_detalhe") ?? "").trim();
         answers = deepSet(answers, otherDetailPath(step.path), detail);
       }
       if (!value) {
@@ -99,13 +120,14 @@ export async function saveStep(slug: string, formData: FormData) {
         }
         rotaProfissional = value as RotaProfissional;
       }
+      if (step.allowOther) exigirDetalheDeOutro(value === "outro", detail);
       break;
     }
     case "multi-select": {
       const values = formData.getAll("value").map(String);
       answers = deepSet(answers, step.path, values);
+      const detail = String(formData.get("outro_detalhe") ?? "").trim();
       if (step.allowOther) {
-        const detail = String(formData.get("outro_detalhe") ?? "").trim();
         answers = deepSet(answers, otherDetailPath(step.path), detail);
       }
       const min = step.minSelect ?? 0;
@@ -114,6 +136,8 @@ export async function saveStep(slug: string, formData: FormData) {
         errorMessage = `Selecione pelo menos ${min}.`;
       } else if (values.length > max) {
         errorMessage = `Selecione no máximo ${max}.`;
+      } else if (step.allowOther) {
+        exigirDetalheDeOutro(values.includes("outro"), detail);
       }
       break;
     }
@@ -139,8 +163,17 @@ export async function saveStep(slug: string, formData: FormData) {
           errorMessage = `"${field.label}" pode ter no máximo ${field.maxChars} caracteres.`;
           break;
         }
+        const problema = problemaNoTexto(value, field.minChars);
+        if (problema) {
+          errorMessage = `Em "${field.label}": ${problema}`;
+          break;
+        }
       }
-      if (!errorMessage && values.acao && GENERIC_ACAO_ANSWERS.includes(normalize(values.acao))) {
+      if (
+        !errorMessage &&
+        values.acao &&
+        (GENERIC_ACAO_ANSWERS.includes(normalize(values.acao)) || acaoSemSubstancia(values.acao))
+      ) {
         errorMessage = "Descreva sua contribuição específica — o que exatamente você fez, decidiu ou mudou.";
       }
       if (!errorMessage && step.rejectIfSameAs) {
@@ -186,8 +219,10 @@ export async function saveStep(slug: string, formData: FormData) {
   });
 
   if (errorMessage) {
-    redirect(`/diagnostico/${slug}?error=${encodeURIComponent(errorMessage)}`);
+    redirect(`/diagnostico/${slug}?${revisao ? "revisao=1&" : ""}error=${encodeURIComponent(errorMessage)}`);
   }
+
+  if (revisao) redirect("/diagnostico/concluido");
 
   const effectiveRota = rotaProfissional ?? rota;
   const next = getNextSlug(slug, effectiveRota);

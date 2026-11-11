@@ -13,6 +13,19 @@ import type { Diagnostic } from "@/generated/prisma/client";
 // a Home mostra, fazendo a pessoa parecer ter perdido todo o progresso
 // (possibilidades e plano já gerados a partir do diagnóstico concluído
 // continuavam existindo, só ficavam "escondidos" atrás do diagnóstico novo).
+// Diagnóstico que ainda pode ser corrigido a partir da tela de conferência: o mais recente, já
+// concluído, e que ainda não gerou nenhuma rodada de negócios. Depois que os negócios são gerados
+// as respostas ficam como foram dadas, porque os negócios nasceram delas.
+export async function getDiagnosticoParaRevisao(userId: string): Promise<Diagnostic | null> {
+  const mostRecent = await db.diagnostic.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!mostRecent || mostRecent.status !== "CONCLUIDO") return null;
+  const rodadas = await db.generationRound.count({ where: { diagnosticId: mostRecent.id } });
+  return rodadas === 0 ? mostRecent : null;
+}
+
 export async function getOrCreateActiveDiagnostic(userId: string): Promise<Diagnostic | null> {
   const mostRecent = await db.diagnostic.findFirst({
     where: { userId },

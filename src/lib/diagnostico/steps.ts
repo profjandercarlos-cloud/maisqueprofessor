@@ -329,7 +329,8 @@ export const SHARED_STEPS: WizardStep[] = [
     block: 4,
     type: "matrix",
     question: "O que você não quer que faça parte da sua próxima vida profissional?",
-    helper: "Classifique apenas preferências duradouras. Condições temporárias, como falta de tempo ou dinheiro hoje, serão tratadas depois.",
+    helper:
+      'Classifique apenas preferências duradouras. Condições temporárias, como falta de tempo ou dinheiro hoje, serão tratadas depois. Leia cada linha como "eu não quero isso": "Não me incomoda" quer dizer que pode fazer parte, e "Não aceito" tira essa condição das possibilidades.',
     rows: [
       { value: "atendimentoConstante", label: "Atendimento constante ao público." },
       { value: "exposicaoPublica", label: "Exposição pública frequente." },

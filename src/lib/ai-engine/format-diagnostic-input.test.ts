@@ -34,4 +34,13 @@ describe("respostas do diagnóstico na tela", () => {
   it("os blocos que a IA recebe continuam com os títulos originais", () => {
     expect(formatDiagnosticInput(diagnostico)).toContain("BLOCO 2 — EVIDÊNCIAS REAIS");
   });
+
+  it("o resumo da conferência guardado junto das respostas (_revisao) não vai para a IA nem muda o texto lido", () => {
+    const comResumo = {
+      ...diagnostico,
+      answers: { _revisao: { assinatura: "x", resumo: { entendi: ["Você organiza eventos."], meta: null, pontosFracos: [] } } },
+    };
+    expect(formatDiagnosticInput(comResumo)).toBe(formatDiagnosticInput(diagnostico));
+    expect(formatDiagnosticInput(comResumo)).not.toContain("organiza eventos");
+  });
 });

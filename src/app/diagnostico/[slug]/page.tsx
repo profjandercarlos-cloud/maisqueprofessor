@@ -4,10 +4,18 @@ import { StepFields } from "@/components/wizard-step-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { StepErrorBanner } from "@/components/step-error-banner";
 import { requireActiveAccess } from "@/lib/auth/require-active-access";
-import { getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
+import { ExemploDeRespostaBox } from "@/components/exemplo-de-resposta";
+import { getDiagnosticoParaRevisao, getOrCreateActiveDiagnostic } from "@/lib/diagnostico/get-active-diagnostic";
+import { EXEMPLOS_DE_RESPOSTA } from "@/lib/diagnostico/exemplos";
 import { deepGet } from "@/lib/wizard/deep-set";
 import { otherDetailPath } from "@/lib/wizard/step-types";
-import { getPrevSlug, getStepBySlug, getStepIndex, getTotalSteps } from "@/lib/diagnostico/steps";
+import {
+  ROTA_PROFISSIONAL_SLUG,
+  getPrevSlug,
+  getStepBySlug,
+  getStepIndex,
+  getTotalSteps,
+} from "@/lib/diagnostico/steps";
 import { saveStep } from "./actions";
 
 export default async function DiagnosticStepPage({
@@ -20,12 +28,18 @@ export default async function DiagnosticStepPage({
 
   const user = await requireActiveAccess();
 
-  const diagnostic = await getOrCreateActiveDiagnostic(user.id);
+  // Modo conferência: vem de /diagnostico/concluido para corrigir uma resposta antes de gerar os negócios.
+  const revisao = query.revisao === "1";
+  const diagnostic = revisao
+    ? await getDiagnosticoParaRevisao(user.id)
+    : await getOrCreateActiveDiagnostic(user.id);
   if (!diagnostic) redirect("/diagnostico/concluido");
   const rota = diagnostic.rotaProfissional;
 
   const step = getStepBySlug(slug, rota);
   if (!step) notFound();
+  if (revisao && (step.type === "intention" || slug === ROTA_PROFISSIONAL_SLUG)) redirect("/diagnostico/concluido");
+  const exemplo = EXEMPLOS_DE_RESPOSTA[slug];
 
   const answers = diagnostic.answers as Record<string, unknown>;
   const currentValue = step.type === "intention" ? diagnostic.intention : deepGet(answers, step.path);
@@ -42,16 +56,19 @@ export default async function DiagnosticStepPage({
 
   return (
     <div className="mx-auto w-full max-w-[680px] flex-1 px-5 pb-20">
-      <AppHeader progressLabel={`PERGUNTA ${index + 1}/${totalSteps}`} />
+      <AppHeader progressLabel={revisao ? "REVISANDO UMA RESPOSTA" : `PERGUNTA ${index + 1}/${totalSteps}`} />
 
-      <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-line">
-        <div
-          className="h-full rounded-full bg-gold transition-[width] duration-300"
-          style={{ width: `${progressPct}%` }}
-        />
-      </div>
+      {revisao ? null : (
+        <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-line">
+          <div
+            className="h-full rounded-full bg-gold transition-[width] duration-300"
+            style={{ width: `${progressPct}%` }}
+          />
+        </div>
+      )}
 
-      <form action={action} className="flex flex-col gap-6">
+      <form action={action} className={`flex flex-col gap-6 ${revisao ? "mt-8" : ""}`}>
+        {revisao ? <input type="hidden" name="revisao" value="1" /> : null}
         <div>
           <h1 className="mb-2 font-serif text-2xl leading-snug font-medium tracking-tight text-petrol md:text-[27px]">
             {step.question}
@@ -66,22 +83,24 @@ export default async function DiagnosticStepPage({
           ) : null}
         </div>
 
+        {exemplo ? <ExemploDeRespostaBox exemplo={exemplo} /> : null}
+
         <StepFields step={step} currentValue={currentValue} otherDetailValue={otherDetailValue} />
 
         {error ? <StepErrorBanner error={error} /> : null}
 
         <div className="flex items-center justify-between gap-4 pt-2">
           <a
-            href={prevSlug ? `/diagnostico/${prevSlug}` : "/"}
+            href={revisao ? "/diagnostico/concluido" : prevSlug ? `/diagnostico/${prevSlug}` : "/"}
             className="text-sm font-medium text-ink-muted hover:text-ink"
           >
-            ← Voltar
+            ← {revisao ? "Voltar para a conferência" : "Voltar"}
           </a>
           <SubmitButton
             pendingText="Salvando..."
             className="rounded-lg bg-gold px-6 py-2.5 text-sm font-semibold text-paper transition-colors hover:opacity-90"
           >
-            Continuar
+            {revisao ? "Salvar e voltar" : "Continuar"}
           </SubmitButton>
         </div>
       </form>
