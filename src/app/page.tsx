@@ -323,6 +323,14 @@ export default async function Home({
                     : null
           }
         />
+        {diagnosticoConcluido ? (
+          <p className="mt-5 text-[13px] text-ink-muted">
+            Quer reler o que você respondeu?{" "}
+            <a href="/diagnostico/respostas" className="font-semibold text-petrol hover:underline">
+              Ver as respostas do meu diagnóstico →
+            </a>
+          </p>
+        ) : null}
       </section>
     </div>
   );
